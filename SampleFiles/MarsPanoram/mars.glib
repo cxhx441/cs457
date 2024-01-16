@@ -1,0 +1,17 @@
+##OpenGL GLIB
+#Perspective 80
+Ortho -2.5 2.5.   -2.5 2.5
+LookAt 0 0 0   0 0 -5   0 1 0
+
+Texture2D 6 MarsPanoram.bmp
+# this image is 3000x885 = 3.3898 : 1
+
+Vertex   mars.vert
+Fragment mars.frag
+Program  Mars  					\
+			uOffsetS <0. 0. 4.> 	\
+			uTexUnit 6
+Translate 0 -4.6 0
+Rotate -10  1 0 0
+Cylinder 5. 9.26778
+# cylinder height needs to be (2.*PI*radius) / 3.3898
