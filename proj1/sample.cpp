@@ -48,7 +48,7 @@
 
 // title of these windows:
 
-const char *WINDOWTITLE = "OpenGL / GLUT Sample -- Joe Graphics";
+const char *WINDOWTITLE = "OpenGL / GLUT Project 1 -- Craig Harris";
 const char *GLUITITLE   = "User Interface Window";
 
 // what the glui package defines as true and false:
@@ -170,6 +170,7 @@ int		NowColor;				// index into Colors[ ]
 int		NowProjection;			// ORTHO or PERSP
 float	Scale;					// scaling factor
 float	Time;					// used for animation, this has a value between 0. and 1.
+float	AnimationCycleTime;		// used for Keytime class animation
 int		Xmouse, Ymouse;			// mouse values
 float	Xrot, Yrot;				// rotation angles in degrees
 
@@ -260,8 +261,9 @@ MulArray3(float factor, float a, float b, float c )
 #include "keytime.cpp"
 #include "glslprogram.cpp"
 
-float NowS0, NowT0, NowD;
-GLSLProgram Pattern;
+float Now_uAd, Now_uBd, Now_uTol;
+GLSLProgram OvalShader;
+Keytimes uAd_kt, uBd_kt, uTol_kt;
 
 
 // main program:
@@ -320,6 +322,7 @@ Animate( )
 
 	int ms = glutGet(GLUT_ELAPSED_TIME);
 	ms %= MS_PER_CYCLE;							// makes the value of ms between 0 and MS_PER_CYCLE-1
+	AnimationCycleTime = ms / (float)1000.f;
 	Time = (float)ms / (float)MS_PER_CYCLE;		// makes the value of Time between 0. and slightly less than 1.
 
 	// for example, if you wanted to spin an object in Display( ), you might call: glRotatef( 360.f*Time,   0., 1., 0. );
@@ -388,8 +391,7 @@ Display( )
 
 	// uniformly scale the scene:
 
-	if( Scale < MINSCALE )
-		Scale = MINSCALE;
+	if( Scale < MINSCALE ) Scale = MINSCALE;
 	glScalef( (GLfloat)Scale, (GLfloat)Scale, (GLfloat)Scale );
 
 	// possibly draw the axes:
@@ -406,20 +408,23 @@ Display( )
 
 	// draw the box object by calling up its display list:
 
-	Pattern.Use( );
+	OvalShader.Use( );
 
 	// set the uniform variables that will change over time:
 
-	NowS0 = 0.5f;
-	NowT0 = 0.5f;
-	NowD  = 0.25f;
-	Pattern.SetUniformVariable( "uS0", NowS0 );
-	Pattern.SetUniformVariable( "uT0", NowT0 );
-	Pattern.SetUniformVariable( "uD" , NowD  );
+	Now_uAd = uAd_kt.GetValue(AnimationCycleTime);
+	Now_uBd = uBd_kt.GetValue(AnimationCycleTime);
+	float freq = 5.f;
+	Now_uTol = abs(sin(F_2_PI*0.5 * freq * Time));// 0 - 0.5;
+	fprintf(stdout, "uTol: %f", Now_uTol);
+	fprintf(stdout, " Time: %f\n", Time);
+	OvalShader.SetUniformVariable( "uAd", Now_uAd );
+	OvalShader.SetUniformVariable( "uBd", Now_uBd );
+	OvalShader.SetUniformVariable( "uTol" , Now_uTol );
 
 	glCallList( SphereList );
 
-	Pattern.UnUse( );       // Pattern.Use(0);  also works
+	OvalShader.UnUse( );       // OvalShader.Use(0);  also works
 
 
 	// draw some gratuitous text that just rotates on top of the scene:
@@ -717,23 +722,50 @@ InitGraphics( )
 
 	// all other setups go here, such as GLSLProgram and KeyTime setups:
 
-	Pattern.Init( );
-	bool valid = Pattern.Create( "pattern.vert", "pattern.frag" );
+	// SHADERS
+	OvalShader.Init( );
+	bool valid = OvalShader.Create( "ovals.vert", "ovals.frag" );
 	if( !valid )
-		fprintf( stderr, "Could not create the Pattern shader!\n" );
+		fprintf( stderr, "Could not create the OvalShader shader!\n" );
 	else
-		fprintf( stderr, "Pattern shader created!\n" );
+		fprintf( stderr, "OvalShader shader created!\n" );
 
 	// set the uniform variables that will not change:
 	
-	Pattern.Use( );
-	Pattern.SetUniformVariable( "uKa", 0.1f );
-	Pattern.SetUniformVariable( "uKd", 0.5f );
-	Pattern.SetUniformVariable( "uKs", 0.4f );
-	Pattern.SetUniformVariable( "uColor", 1.f, 0.5f, 0.f );
-	Pattern.SetUniformVariable( "uSpecularColor", 1.f, 1.f, 1.f );
-	Pattern.SetUniformVariable( "uShininess", 12.f );
-	Pattern.UnUse( );
+	OvalShader.Use( );
+	OvalShader.SetUniformVariable( "uAd", 0.1f );
+	OvalShader.SetUniformVariable( "uBd", 0.1f );
+	OvalShader.SetUniformVariable( "uTol", 0.f );
+	OvalShader.SetUniformVariable( "uKa", 0.1f );
+	OvalShader.SetUniformVariable( "uKd", 0.5f );
+	OvalShader.SetUniformVariable( "uKs", 0.4f );
+	OvalShader.SetUniformVariable( "uColor", 1.f, 0.5f, 0.f );
+	OvalShader.SetUniformVariable( "uSpecularColor", 1.f, 1.f, 1.f );
+	OvalShader.SetUniformVariable( "uShininess", 128.f );
+	OvalShader.UnUse( );
+
+	// KEYTIMES
+	uAd_kt.Init();
+	uBd_kt.Init();
+	uTol_kt.Init();
+
+	uAd_kt.AddTimeValue(0.f, 0.1f); // set start and end
+	uBd_kt.AddTimeValue(0.f, 0.1f);
+	uAd_kt.AddTimeValue(9.99f, 0.1f);
+	uBd_kt.AddTimeValue(9.99f, 0.1f);
+
+	uAd_kt.AddTimeValue(2.5f, 0.5f);
+	uBd_kt.AddTimeValue(2.5f, 0.1f);
+
+	uAd_kt.AddTimeValue(5.f, 0.1f);
+	uBd_kt.AddTimeValue(5.f, 0.5f);
+
+	uAd_kt.AddTimeValue(7.5f, 0.5f);
+	uBd_kt.AddTimeValue(7.5f, 0.5f);
+
+	uAd_kt.AddTimeValue(9.f, 0.05f);
+	uBd_kt.AddTimeValue(9.f, 0.05f);
+
 }
 
 

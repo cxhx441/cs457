@@ -1,1 +1,4 @@
-﻿  Sample.vcxproj -> Y:\CS557\ShaderSample2022\Debug\Sample.exe
+﻿  sample.cpp
+C:\Users\craig\Documents\GitHub\cs457\proj1\sample.cpp(418,16): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+sample.obj : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/INCREMENTAL:NO' specification
+  Sample.vcxproj -> C:\Users\craig\Documents\GitHub\cs457\proj1\Debug\Sample.exe
