@@ -156,7 +156,7 @@ const float	WHITE[ ] = { 1.,1.,1.,1. };
 
 // for animation:
 
-const int MS_PER_CYCLE = 10000;		// 10000 milliseconds = 10 seconds
+const int MS_PER_CYCLE = 20000;		// 10000 milliseconds = 10 seconds
 
 // non-constant global variables:
 
@@ -414,8 +414,8 @@ Display( )
 
 	Now_uAd = uAd_kt.GetValue(AnimationCycleTime);
 	Now_uBd = uBd_kt.GetValue(AnimationCycleTime);
-	float freq = 5.f;
-	Now_uTol = abs(sin(F_2_PI*0.5 * freq * Time));// 0 - 0.5;
+	float freq = 10.f;
+	Now_uTol = 0.25 * abs(sin(F_2_PI*0.5 * freq * Time));// 0 - 0.25;
 	fprintf(stdout, "uTol: %f", Now_uTol);
 	fprintf(stdout, " Time: %f\n", Time);
 	OvalShader.SetUniformVariable( "uAd", Now_uAd );
@@ -724,7 +724,7 @@ InitGraphics( )
 
 	// SHADERS
 	OvalShader.Init( );
-	bool valid = OvalShader.Create( "ovals.vert", "ovals.frag" );
+	bool valid = OvalShader.Create( "ovals_2.vert", "ovals_2.frag" );
 	if( !valid )
 		fprintf( stderr, "Could not create the OvalShader shader!\n" );
 	else
@@ -741,7 +741,7 @@ InitGraphics( )
 	OvalShader.SetUniformVariable( "uKs", 0.4f );
 	OvalShader.SetUniformVariable( "uColor", 1.f, 0.5f, 0.f );
 	OvalShader.SetUniformVariable( "uSpecularColor", 1.f, 1.f, 1.f );
-	OvalShader.SetUniformVariable( "uShininess", 128.f );
+	OvalShader.SetUniformVariable( "uShininess", 12.f );
 	OvalShader.UnUse( );
 
 	// KEYTIMES
@@ -751,20 +751,20 @@ InitGraphics( )
 
 	uAd_kt.AddTimeValue(0.f, 0.1f); // set start and end
 	uBd_kt.AddTimeValue(0.f, 0.1f);
-	uAd_kt.AddTimeValue(9.99f, 0.1f);
-	uBd_kt.AddTimeValue(9.99f, 0.1f);
+	uAd_kt.AddTimeValue(19.99f, 0.1f);
+	uBd_kt.AddTimeValue(19.99f, 0.1f);
 
-	uAd_kt.AddTimeValue(2.5f, 0.5f);
-	uBd_kt.AddTimeValue(2.5f, 0.1f);
+	uAd_kt.AddTimeValue(5.f, 0.5f);
+	uBd_kt.AddTimeValue(5.f, 0.1f);
 
-	uAd_kt.AddTimeValue(5.f, 0.1f);
-	uBd_kt.AddTimeValue(5.f, 0.5f);
+	uAd_kt.AddTimeValue(10.f, 0.1f);
+	uBd_kt.AddTimeValue(10.f, 0.5f);
 
-	uAd_kt.AddTimeValue(7.5f, 0.5f);
-	uBd_kt.AddTimeValue(7.5f, 0.5f);
+	uAd_kt.AddTimeValue(15.f, 0.5f);
+	uBd_kt.AddTimeValue(15.f, 0.5f);
 
-	uAd_kt.AddTimeValue(9.f, 0.05f);
-	uBd_kt.AddTimeValue(9.f, 0.05f);
+	uAd_kt.AddTimeValue(18.f, 0.05f);
+	uBd_kt.AddTimeValue(18.f, 0.05f);
 
 }
 
