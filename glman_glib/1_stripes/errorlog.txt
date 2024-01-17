@@ -1,0 +1,3 @@
+
+0(21) : error C1038: declaration of "MCposition" conflicts with previous declaration at 0(20)
+

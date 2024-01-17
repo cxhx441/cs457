@@ -1,0 +1,4 @@
+
+0(30) : error C1503: undefined variable "fmax"
+0(31) : error C1503: undefined variable "fmin"
+
