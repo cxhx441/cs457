@@ -16,14 +16,16 @@ in vec2  vST;
 
 const vec3 WHITE = vec3( 1., 1., 1. );
 
+vec3 
+ToneMapReinard(vec3 color){
+	return color / (vec3(1., 1., 1.) + color);
+}
+
 vec3
 perFragLight(vec3 normal, vec3 light, vec3 eye, vec3 rgb){
 	vec3 n = normalize(normal);
 	vec3 l = normalize(light);
 	vec3 e = normalize(eye);
-
-	// ambient
-	vec3 ambient = uKa * rgb;
 
 	// diffuse
 	float dd = max( dot(n,l), 0. );       // only do diffuse if the light can see the point
@@ -65,6 +67,7 @@ main( )
     //vec3 rgb = mix( WHITE, uColor, smstep );
 
     vec3 rgb = uColor;
+	vec3 ambient = uKa * rgb;
 
     // PER-FRAGMENT LIGHTING
 	//vec3 Normal = normalize(vN);
@@ -87,7 +90,12 @@ main( )
 	vec3 rgb_l1 = perFragLight(vN, vL1, vE, rgb);
 	vec3 rgb_l2 = perFragLight(vN, vL2, vE, rgb);
 	vec3 rgb_l3 = perFragLight(vN, vL3, vE, rgb);
-	rgb = rgb_l1 + rgb_l2 + rgb_l3;
+
+	rgb = rgb_l1 + rgb_l2 + rgb_l3 + ambient;
+	rgb = ToneMapReinard(rgb);
+
+	// ambient
+
 
 	//rgb = max(rgb, rgb_l3);
 	//gl_FragColor = vec4( ambient + diffuse + specular,  1. );

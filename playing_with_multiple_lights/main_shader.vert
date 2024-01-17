@@ -10,7 +10,7 @@ out vec3 vL3; // point to light vector
 out vec3 vE; // point to eye vector
 out vec2 vST;
 
-const vec3 LIGHTPOS1 = vec3( 10., 10., 10. ); // light position
+const vec3 LIGHTPOS1 = vec3( 10., 100., 10. ); // light position
 const vec3 LIGHTPOS2 = vec3( -10., 10., 10. ); // light position
 const vec3 LIGHTPOS3 = vec3( 0., -10., 10. ); // light position
 
