@@ -416,8 +416,11 @@ Display( )
 	Now_uBd = uBd_kt.GetValue(AnimationCycleTime);
 	float freq = 10.f;
 	Now_uTol = 0.25 * abs(sin(F_2_PI*0.5 * freq * Time));// 0 - 0.25;
-	fprintf(stdout, "uTol: %f", Now_uTol);
-	fprintf(stdout, " Time: %f\n", Time);
+	Now_uAd = .1;
+	Now_uBd = .1;
+	Now_uTol = 0.;
+	//fprintf(stdout, "uTol: %f", Now_uTol);
+	//fprintf(stdout, " Time: %f\n", Time);
 	OvalShader.SetUniformVariable( "uAd", Now_uAd );
 	OvalShader.SetUniformVariable( "uBd", Now_uBd );
 	OvalShader.SetUniformVariable( "uTol" , Now_uTol );
