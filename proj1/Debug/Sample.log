@@ -1,6 +1,0 @@
-﻿  sample.cpp
-C:\Users\craig\Documents\GitHub\cs457\proj1\sample.cpp(418,18): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\craig\Documents\GitHub\cs457\proj1\sample.cpp(419,12): warning C4305: '=': truncation from 'double' to 'float'
-C:\Users\craig\Documents\GitHub\cs457\proj1\sample.cpp(420,12): warning C4305: '=': truncation from 'double' to 'float'
-sample.obj : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/INCREMENTAL:NO' specification
-  Sample.vcxproj -> C:\Users\craig\Documents\GitHub\cs457\proj1\Debug\Sample.exe

@@ -1,3 +1,0 @@
-﻿  sample.cpp
-sample.obj : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/INCREMENTAL:NO' specification
-  Sample.vcxproj -> C:\Users\craig\Documents\GitHub\cs457\SampleFiles\ShaderSampleWindows\Debug\Sample.exe

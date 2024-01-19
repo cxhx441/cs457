@@ -1,4 +1,3 @@
 
-0(24) : error C1503: undefined variable "uDiam"
-0(25) : error C1503: undefined variable "uDiam"
+0(12) : error C1068: too much data in type constructor
 
