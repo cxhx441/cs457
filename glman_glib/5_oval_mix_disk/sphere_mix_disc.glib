@@ -1,0 +1,33 @@
+##OpenGL GLIB
+
+Perspective 90
+LookAt      0 0 2  0 0 0  0 1 0
+
+Background 0 0 0 0
+
+Vertex       sphere_mix_disc.vert
+Fragment     sphere_mix_disc.frag
+
+Program sphere_mix_disc         \
+    uKa    <0. 0.10 1.>\
+    uKd    <0. 0.50 1.>\
+    uKs    <0. 0.40 1.>\
+    uOffsetS <0. 0. 1.> \
+    uOffsetT <0. 0. 1.> \
+    uBlend   <0. 0. 1.> \
+    uShininess    <1. 12. 128.>\
+    uSpecularColor {1.0, 1.0, 1.0, 1.0} \
+
+Sphere      1.  200  200
+
+#Teapot      1.  200  200
+#Box          1. 1. 1.
+#Cylinder     1. 1.
+#Cone         1. 1.
+#DiskXY
+#JitterCloud
+#Obj           dragon037_med.obj
+#QuadBox      6
+#Soccerball   1.
+#Torus        0.5 0.25 200 200
+
