@@ -3,7 +3,8 @@
 //uniform float uOffsetS, uOffsetT, uFrequency;
 uniform float uHeightScale;
 uniform float uSeaLevel;
-uniform sampler2D uTexUnitMoonHeight;
+uniform sampler2D uDispUnit;
+uniform bool uDoDisplacement;
 out vec3 vN; // normal vector
 out vec3 vL; // point to light vector
 out vec3 vE; // point to eye vector
@@ -18,24 +19,24 @@ const float MOON_RADIUS = 1727400.; // meters
 void
 main( )
 {
+	vec2 st = gl_MultiTexCoord0.st;
+	vST = st; // you have to do this for the texture to work...
+	vec3 norm = normalize( gl_NormalMatrix * gl_Normal );  // normal vector
+	vN = norm; // you have to do this for the texture to work...
 
+  	vec3 ECposition = (gl_ModelViewMatrix * gl_Vertex).xyz;
+	vL = LIGHTPOS - ECposition.xyz;
+	vE = vec3( 0., 0., 0. ) - ECposition;
 
-	// original model coords of sphere;
-	vec4 vertex = gl_Vertex;
-	vec3 normal = gl_Normal;
-    //vST = (gl_MultiTexCoord0.st + vec2( uOffsetS, uOffsetT )) * uFrequency;
-    vST = gl_MultiTexCoord0.st;
+	vec3 vert = gl_Vertex.xyz;
 
-	float moonRad = texture( uTexUnitMoonHeight, vST ).r;
-	vertex.xyz += vec3 (moonRad, moonRad, moonRad) * normal * uHeightScale;
+	if ( uDoDisplacement )
+	{
+		float disp = texture( uDispUnit, vST ).r;
+		disp -= uSeaLevel;
+		disp *= uHeightScale;
+		vert += normalize( gl_Normal ) * disp;
+	}
 
-
-  	vec3 ECposition = (gl_ModelViewMatrix * vertex).xyz;
-	vN = normalize( gl_NormalMatrix * normal );  // normal vector
-	vL = LIGHTPOS - ECposition.xyz;	    // vector from the point
-										// to the light position
-	vE = vec3( 0., 0., 0. ) - ECposition;       // vector from the point to
-
-
-    gl_Position = gl_ModelViewProjectionMatrix * vertex;
+    gl_Position = gl_ModelViewProjectionMatrix * vec4 ( vert, 1.0 );
 }

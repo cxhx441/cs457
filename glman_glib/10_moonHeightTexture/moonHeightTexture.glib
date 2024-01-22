@@ -13,16 +13,15 @@ Vertex       moonHeightTexture.vert
 Fragment     moonHeightTexture.frag
 
 Program earthDayNightTexure \
-    uTexUnitMoonColor 4 \
-    uTexUnitMoonHeight 5 \
+    uDoDisplacement <false> \
+    uDoLighting     <false> \
     uSeaLevel    <0. .25 1.> \
     uHeightScale <0. .25 .5> \
     uNormalScale <0. .04 .1> \
-    uKa    <0. 0.0 1.> \
-    uKd    <0. 0.9 1.> \
-    uKs    <0. 0.1 1.> \
-    uShininess    <1. 12. 128.> \
-    uSpecularColor {1. 1. 1. 1.} \
+    uKa    <0. 0.5 1.> \
+    uKd    <0. 1.0 1.> \
+    uColorUnit 4 \
+    uDispUnit 5 \
 
 
 Sphere      1.  200  200
