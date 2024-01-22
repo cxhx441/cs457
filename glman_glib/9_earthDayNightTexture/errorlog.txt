@@ -1,0 +1,6 @@
+
+0(19) : error C1503: undefined variable "uSunLLng"
+0(24) : error C1503: undefined variable "uOffsetS"
+0(41) : error C1503: undefined variable "uBlend"
+0(41) : error C1503: undefined variable "uBlend"
+

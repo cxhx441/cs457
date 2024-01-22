@@ -1,0 +1,39 @@
+##OpenGL GLIB
+
+#Perspective 90
+Ortho
+LookAt      0 0 2  0 0 0  0 1 0
+
+Background 0 0 0 0
+
+Texture2D 4 texMoonColor.bmp
+Texture2D 5 texMoonHeight.bmp
+
+Vertex       moonHeightTexture.vert
+Fragment     moonHeightTexture.frag
+
+Program earthDayNightTexure \
+    uTexUnitMoonColor 4 \
+    uTexUnitMoonHeight 5 \
+    uSeaLevel    <0. .25 1.> \
+    uHeightScale <0. .25 .5> \
+    uNormalScale <0. .04 .1> \
+    uKa    <0. 0.0 1.> \
+    uKd    <0. 0.9 1.> \
+    uKs    <0. 0.1 1.> \
+    uShininess    <1. 12. 128.> \
+    uSpecularColor {1. 1. 1. 1.} \
+
+
+Sphere      1.  200  200
+#Teapot      1.  200  200
+#Obj          cow.obj
+#Box          1. 1. 1.
+#Cylinder     1. 1.
+#Cone         1. 1.
+#DiskXY
+#JitterCloud 25 25 25
+#QuadBox      6
+#Soccerball   1.
+#Torus        0.5 0.25 200 200
+
