@@ -1,0 +1,41 @@
+##OpenGL GLIB
+
+Perspective 90
+LookAt      0 0 2  0 0 0  0 1 0
+
+Background 0 0 0 0
+
+Vertex       proj2_oval_noise.vert
+Fragment     proj2_oval_noise.frag
+Texture3D    3 noise3d.064.tex
+
+Program Proj1_Ovals         \
+    uAd    <.001 .1 .5> \
+    uBd    <.001 .1 .5> \
+    uTol   <0. 0. .5>  \
+    uNoiseTexUnit3 3 \
+    uNoiseAmp <0. 0. 1.> \
+    uNoiseFreq <0. 1. 10.> \
+    uUseXYZForNoise <false> \
+    uKa    <0. 0.10 1.>\
+    uKd    <0. 0.50 1.>\
+    uKs    <0. 0.40 1.>\
+    uShininess    <1. 12. 128.>\
+    uSphereColor     {1.0, 0.5, 0.0, 1.0}\
+    uOvalColor   {0.3, 0.2, 1.0, 1.0}\
+    uSpecularColor {1.0, 1.0, 1.0, 1.0} \
+
+Sphere      1.  200  200
+Sphere      .5  200  200
+
+#Teapot      1.  200  200
+#Box          1. 1. 1.
+#Cylinder     1. 1.
+#Cone         1. 1.
+#DiskXY
+#JitterCloud
+#Obj           dragon037_med.obj
+#QuadBox      6
+#Soccerball   1.
+#Torus        0.5 0.25 200 200
+

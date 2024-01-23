@@ -1,0 +1,4 @@
+
+0(64) : error C1503: undefined variable "noise_val"
+0(64) : error C1038: declaration of "scale" conflicts with previous declaration at 0(53)
+
