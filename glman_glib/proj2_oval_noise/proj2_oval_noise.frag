@@ -64,6 +64,7 @@ main( )
     float smstep = smoothstep(1. - uTol, 1. + uTol, r_to_center);
 
     vec3 rgb_prelight = mix( uOvalColor.rgb, uSphereColor.rgb, smstep );
+    // rgb_prelight = vec3(n+1, n+1, n+1) * 0.5; // for debugging noise
 
     // PER-FRAGMENT LIGHTING
 	vec3 Normal = normalize(vN);

@@ -1,5 +1,7 @@
 #version 330 compatibility
 
+uniform bool uLockPatternOnScreen;
+
 out vec3 vN; // normal vector
 out vec3 vL; // point to light vector
 out vec3 vE; // point to eye vector
@@ -15,6 +17,7 @@ main( )
 
     vST = gl_MultiTexCoord0.st;
 	vMCposition = gl_Vertex.xyz;
+	if (uLockPatternOnScreen) vMCposition = (gl_ModelViewMatrix * gl_Vertex).xyz;
 
   	vec3 ECposition = (gl_ModelViewMatrix * gl_Vertex).xyz;
 	vN = normalize( gl_NormalMatrix * gl_Normal );  // normal vector
