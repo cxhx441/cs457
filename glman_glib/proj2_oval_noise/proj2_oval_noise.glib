@@ -18,6 +18,7 @@ Program Proj1_Ovals         \
     uNoiseFreq <0. 1. 10.> \
     uUseXYZForNoise <false> \
     uLockPatternOnScreen <false> \
+    uDisplacement <false> \
     uKa    <0. 0.10 1.>\
     uKd    <0. 0.50 1.>\
     uKs    <0. 0.40 1.>\
