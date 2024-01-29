@@ -1,0 +1,43 @@
+##OpenGL GLIB
+
+#Perspective 90
+Ortho
+LookAt      0 0 2  0 0 0  0 1 0
+
+Background 0 0 0 0
+
+Texture2D 4 texMoonColor.bmp
+Texture2D 5 texMoonHeight.bmp
+
+Vertex       bumpMap_heightFieldTexture.vert
+Fragment     bumpMap_heightFieldTexture.frag
+
+Program bumpMap \
+    uUseTextureColor <true> \
+    uBaseColor {.5 .5 .5, 1.} \
+    uDoDisplacement <true> \
+    uDoLighting     <true> \
+    uSeaLevel    <0. .25 1.> \
+    uHeightScale <0. .5 1.5> \
+    uNormalScale <0. .1 1.1> \
+    uKa    <0. 0.5 1.> \
+    uKd    <0. 1.0 1.> \
+    uColorUnit 4 \
+    uDisplaceUnit 5 \
+
+
+scale 2 1 1
+QuadXY z 1 1000 500
+
+#Sphere      1.  200  200
+#Teapot      1.  200  200
+#Obj          cow.obj
+#Box          1. 1. 1.
+#Cylinder     1. 1.
+#Cone         1. 1.
+#DiskXY
+#JitterCloud 25 25 25
+#QuadBox      6
+#Soccerball   1.
+#Torus        0.5 0.25 200 200
+
