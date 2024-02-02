@@ -31,16 +31,16 @@ main( )
 	float r = sqrt(x * x + y * y);
 	//float r = length(vMC.xy - vec2(uOffsetS, uOffsetT));
 	float theta = uPhase + uFreq * F_2_PI * r;
-	float dzdr = -uAmp * exp(-uDecay * r) * (uDecay * cos(theta) + uFreq * F_2_PI * sin(theta));
-	//float dzdr = uAmp * ( -sin(F_2_PI*uFreq*r+uPhase) * F_2_PI*uFreq * exp(-uDecay*r) + cos(F_2_PI*uFreq*r+uPhase) * -uDecay * exp(-uDecay*r));
+	//float dzdr = -uAmp * exp(-uDecay * r) * (uDecay * cos(theta) + uFreq * F_2_PI * sin(theta));
+	float dzdr = uAmp * ( -sin(F_2_PI*uFreq*r+uPhase) * F_2_PI*uFreq * exp(-uDecay*r) + cos(F_2_PI*uFreq*r+uPhase) * -uDecay * exp(-uDecay*r));
 	float drdx = x / r; // cos(of horizontal?)
 	float drdy = y / r; // sin(of horizontal?)
 	float dzdx = dzdr * drdx;
 	float dzdy = dzdr * drdy;
 	vec3 xtangent = vec3(1, 0, dzdx);
 	vec3 ytangent = vec3(0, 1, dzdy);
-	Normal = normalize(cross(xtangent, ytangent));
-	Normal = normalize(vN);
+	Normal = normalize(gl_NormalMatrix * cross(xtangent, ytangent)) ;
+	//Normal = normalize(vN);
 
     // PER-FRAGMENT LIGHTING
 	vec3 Light  = normalize(vL);
