@@ -1,0 +1,15 @@
+
+Parse error at prl_glsl_parse:269 ->>
+(32,19): error: `vMC' undeclared
+(32,19): error: type mismatch
+(32,19): error: operands to arithmetic operators must be numeric
+(32,12): error: no matching function for call to `length(error)'; candidates are:
+(32,12): error:    float length(float)
+(32,12): error:    float length(vec2)
+(32,12): error:    float length(vec3)
+(32,12): error:    float length(vec4)
+(33,42): warning: `r' used uninitialized
+(34,37): warning: `r' used uninitialized
+(36,19): warning: `r' used uninitialized
+(37,19): warning: `r' used uninitialized
+

@@ -10,17 +10,24 @@ Vertex       bumpMap_heightFieldEquation.vert
 Fragment     bumpMap_heightFieldEquation.frag
 
 Program bumpMap \
-    uBaseColor {.5 .5 .5, 1.} \
+    uBaseColor {.5 .8 .8, 1.} \
     uKa    <0. 0.5 1.> \
     uKd    <0. 1.0 1.> \
     uKs    <0. 0. 1.> \
     uShininess    <0. 0.1 1.> \
+    uPhase <0. 0. 6.28> \
+    uFreq <1. 3. 10.> \
+    uAmp <0. 0.25 0.5> \
+    uDecay <0. 1. 10.> \
+    uOffsetS <-1. 0. 1.> \
+    uOffsetT <-1. 0. 1.> \
 
 
-#scale 2 1 1
-#QuadXY z 1 1000 500
 
-Sphere      1.  200  200
+#scale 1 1 1
+QuadXY -.1 1
+
+#Sphere      1.  200  200
 #Teapot      1.  200  200
 #Obj          cow.obj
 #Box          1. 1. 1.
