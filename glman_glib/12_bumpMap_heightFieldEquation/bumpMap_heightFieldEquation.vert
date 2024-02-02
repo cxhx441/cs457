@@ -8,7 +8,7 @@ out vec2 vST;
 
 //vec3 LIGHTPOS = (gl_ModelViewMatrix * vec4( 10., 10., 10., 1.)).xyz; // light position
 const float F_2_PI = 2.0 * 3.1415926535897932384626433832795;
-const vec3 LIGHTPOS = vec4( 0., 0., 10.); // light position
+const vec3 LIGHTPOS = vec3( 0., 0., 10.); // light position
 
 void
 main( )
