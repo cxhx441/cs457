@@ -1,0 +1,4 @@
+
+0(76) : error C1503: undefined variable "dR"
+0(76) : error C1503: undefined variable "dR"
+
