@@ -6,8 +6,10 @@ LookAt 0 0 8  0 0 0  0 1 0
 Vertex          perlin_noise.vert
 Fragment        perlin_noise.frag
 Program    perlin_noise             \
-    uNoiseAmp <0. 0. 5.>            \
-    uNoiseFreq <1 4 20>         \
+    uNoiseAmp <0. 1. 5.>            \
+    uNoiseFreq <1 4 50>         \
+    uNoiseOctaves <1 4 9>         \
+    uTimeMultiplier <1 25 50> \
     uKa <0. 0.1 1.0>                \
     uKd <0. 0.6 1.0>                \
     uKs <0. 0.3 1.0>                \
@@ -15,7 +17,7 @@ Program    perlin_noise             \
     uLightX <-20. 5. 20.>           \
     uLightY <-20. 10. 20.>          \
     uLightZ <-20. 20. 20.>          \
-    uColor {1. .7 0. 1.}            \
+    uColor {0. 0. 0. 1.}            \
 
 QuadXY  0  1.
 

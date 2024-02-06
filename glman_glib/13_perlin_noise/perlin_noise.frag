@@ -5,6 +5,8 @@ uniform float uShininess;
 uniform vec4 uColor;
 uniform sampler3D u3DNoiseUnit;
 uniform float uNoiseFreq, uNoiseAmp;
+uniform int uNoiseOctaves;
+uniform float uTimeMultiplier;
 uniform float Timer;
 
 in vec3  vN; // normal vector
@@ -22,11 +24,11 @@ vec2 randVec2( vec2 gridCorner )
 	vec2 gradient = vec2( x, y );
 	gradient = sin(gradient);
 	gradient *= 143758.f ;
-	gradient = sin(gradient + Timer*5.);
+	gradient = sin(gradient + Timer*uTimeMultiplier);
 	return gradient;
 }
 
-vec2 cubic(vec2 p0, vec2 p1, vec2 p2, vec2 p3, float t)
+vec2 cubic(vec2 p0, vec2 p1, vec2 p2, vec2 p3, vec2 t)
 {
 	vec2 a = p3 - p2 - p0 + p1;
 	vec2 b = p0 - p1 - a;
@@ -36,19 +38,9 @@ vec2 cubic(vec2 p0, vec2 p1, vec2 p2, vec2 p3, float t)
 	return a*t*t*t + b*t*t + c*t + d;
 }
 
-vec3
-perlin_noise(uv, freq, amp){
-	return
-
-}
-
-
-void
-main( )
-{
-	vec3 color = uColor.rgb;
-
-	vec2 uv = vST * uNoiseFreq;
+float
+perlin_noise(vec2 uv, float freq, float amp){
+	uv = uv * freq;
 	vec2 gridId = floor(uv);
 	vec2 gridUv = fract(uv);
 
@@ -80,8 +72,8 @@ main( )
 	float dotTR = dot(randTR, distTR);
 
 	// smooth out gridUv
-	gridUv = smoothstep(0., 1., gridUv);
-	//gridUv = cubic(distTL, distTR, distBL, distBR, 0.1);
+	//gridUv = smoothstep(0., 1., gridUv);
+	//gridUv = cubic(vec2(0, 0), vec2(1, 0), vec2(0, 1), vec2(1, 1), gridUv);
 	// gridUv = quintic(gridUv);
 
 	// bilinear interpolation
@@ -89,8 +81,23 @@ main( )
 	float top = mix(dotTL, dotTR, gridUv.x);
 	float perlin = mix(bottom, top, gridUv.y);
 
-	// set color
-	color = vec3(perlin);
+	return perlin * amp;
+
+}
+
+
+void
+main( )
+{
+	vec3 color = uColor.rgb;
+
+	for (int i = 0; i < uNoiseOctaves; i++)
+	{
+		vec2 uv = vST;
+		float freq = uNoiseFreq * pow(2., float(i));
+		float amp = uNoiseAmp / pow(2., float(i));
+		color += perlin_noise(uv, freq, amp);
+	}
 
     // PER-FRAGMENT LIGHTING
 	vec3 Normal = normalize(vN);
