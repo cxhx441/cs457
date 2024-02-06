@@ -1,3 +1,4 @@
 
-0(76) : error C7623: implicit narrowing of type from "vec2" to "float"
+0(29) : error C7505: OpenGL does not allow swizzles on scalar expressions
+0(29) : error C1048: invalid character 'f' in swizzle "f"
 

@@ -8,6 +8,7 @@ uniform float uNoiseFreq, uNoiseAmp;
 uniform int uNoiseOctaves;
 uniform float uTimeMultiplier;
 uniform float Timer;
+uniform bool uTurbulence;
 
 in vec3  vN; // normal vector
 in vec3  vL; // point to light vector
@@ -72,7 +73,7 @@ perlin_noise(vec2 uv, float freq, float amp){
 	float dotTR = dot(randTR, distTR);
 
 	// smooth out gridUv
-	//gridUv = smoothstep(0., 1., gridUv);
+	gridUv = smoothstep(0., 1., gridUv);
 	//gridUv = cubic(vec2(0, 0), vec2(1, 0), vec2(0, 1), vec2(1, 1), gridUv);
 	// gridUv = quintic(gridUv);
 
@@ -98,6 +99,8 @@ main( )
 		float amp = uNoiseAmp / pow(2., float(i));
 		color += perlin_noise(uv, freq, amp);
 	}
+
+	if (uTurbulence) color = abs(color);
 
     // PER-FRAGMENT LIGHTING
 	vec3 Normal = normalize(vN);
