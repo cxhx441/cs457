@@ -17,11 +17,15 @@ in vec2  vST;
 
 const vec4 WHITE = vec4 (1.);
 
-float whiteNoise( vec2 point )
+float whiteNoise( vec2 uv )
 {
-	float random = dot( point, vec2(123.4, 234.5) );
+	// irrationals for pseudo randomness (e^pi, 2^sqrt(2)) <- gelfonds constant, glefond-schneider constant
+	// https://thebookofshaders.com/10/
+	const vec2 k = vec2(23.1406926327792690,2.6651441426902251);
+	float random = dot( uv, k );
 	random = sin(random);
-	random *= 143758.f ;
+	// random *= 143758.f ;
+	random *= 43758.5453123;
 	random = sin(random + Timer*uTimeMultiplier);
 	random = fract(random);
 	return random;

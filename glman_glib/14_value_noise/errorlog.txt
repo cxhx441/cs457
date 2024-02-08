@@ -1,4 +1,3 @@
 
-0(80) : error C1503: undefined variable "perlin_noise"
-0(83) : error C1503: undefined variable "perlin_noise"
+0(34) : error C1503: undefined variable "k"
 
