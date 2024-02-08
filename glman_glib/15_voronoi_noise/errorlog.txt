@@ -1,0 +1,4 @@
+
+0(13) : error C0000: syntax error, unexpected reserved word "in", expecting ',' or ';' at token "in"
+0(97) : error C1503: undefined variable "vN"
+
