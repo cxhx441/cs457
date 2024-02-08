@@ -9,6 +9,8 @@ uniform int uNoiseOctaves;
 uniform float uTimeMultiplier;
 uniform float Timer;
 uniform bool uTurbulence;
+uniform bool uOctaveTurbulence;
+uniform bool uRidged;
 
 in vec3  vN; // normal vector
 in vec3  vL; // point to light vector
@@ -97,10 +99,21 @@ main( )
 		vec2 uv = vST;
 		float freq = uNoiseFreq * pow(2., float(i));
 		float amp = uNoiseAmp / pow(2., float(i));
-		color += perlin_noise(uv, freq, amp);
+
+		if (uOctaveTurbulence) {
+			color += abs(perlin_noise(uv, freq, amp));
+		}
+		else {
+			color += perlin_noise(uv, freq, amp);
+		}
 	}
 
 	if (uTurbulence) color = abs(color);
+	if (uRidged) {
+		vec3 ridged = 1 - abs(color);
+		color = ridged * ridged;
+		color = ridged;
+	}
 
     // PER-FRAGMENT LIGHTING
 	vec3 Normal = normalize(vN);

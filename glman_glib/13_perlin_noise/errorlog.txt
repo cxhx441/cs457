@@ -1,4 +1,7 @@
 
-0(29) : error C7505: OpenGL does not allow swizzles on scalar expressions
-0(29) : error C1048: invalid character 'f' in swizzle "f"
+0(101) : error C1503: undefined variable "perlin"
+0(103) : error C1503: undefined variable "perlin"
+0(103) : error C1503: undefined variable "perlin"
+0(105) : error C1503: undefined variable "perlin"
+0(109) : error C1503: undefined variable "perlin"
 
