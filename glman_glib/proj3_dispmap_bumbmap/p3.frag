@@ -42,7 +42,7 @@ main( )
 	vec4 nvx = texture3D(u3DNoiseUnit, uNoiseFreq * vMC.xyz);
 	float angx = nvx.r + nvx.g + nvx.b + nvx.a - 2.; // -1 to 1
 	angx *= uNoiseAmp;
-	vec4 nvy = texture3D(u3DNoiseUnit, uNoiseAmp * vec3(vMC.xy, vMC.z + 0.5));
+	vec4 nvy = texture3D(u3DNoiseUnit, uNoiseFreq * vec3(vMC.xy, vMC.z + 0.5));
 	float angy = nvy.r + nvy.g + nvy.b + nvy.a - 2.; // -1 to 1
 	angy *= uNoiseAmp;
 
