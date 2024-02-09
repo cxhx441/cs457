@@ -1,0 +1,15 @@
+##OpenGL GLIB
+
+Perspective 70
+LookAt 0 0 4  0 0 0  0 1 0
+
+Vertex          disco.vert
+Fragment        disco.frag
+Program    disco                    \
+    uNumFacets <5 15 50>            \
+    uPower <1000. 5000. 50000.>     \
+
+Color 1. 0.5 0.
+QuadXY  0  1.
+Teapot
+
