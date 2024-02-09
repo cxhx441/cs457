@@ -1,0 +1,17 @@
+##OpenGL GLIB
+
+Ortho -.5 .5 -.5 .5
+LookAt 0 0 .5  0 0 0  0 1 0
+
+Vertex          hyperbolic.vert
+Fragment        hyperbolic.frag
+Program    hyperbolic             \
+    uPolar <true> \
+    uK <0 2 10> \
+    uTransX <-10 0 10> \
+    uTransY <-10 0 10> \
+
+Color 1 1.5 0
+#QuadXY  0  1.
+WireTeapot
+
