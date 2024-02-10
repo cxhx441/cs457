@@ -1,0 +1,4 @@
+
+0(9) : error C0000: syntax error, unexpected ',', expecting "::" at token ","
+0(10) : error C1066: invalid type in type constructor
+

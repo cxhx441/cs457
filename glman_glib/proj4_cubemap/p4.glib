@@ -1,0 +1,51 @@
+##OpenGL GLIB
+
+Perspective 70
+LookAt 0 0 3  0 0 0  0 1 0
+
+Texture3D 3 noise3d.064.tex
+
+CubeMap 6 nvposx.bmp nvnegx.bmp  nvposy.bmp nvnegy.bmp   nvposz.bmp nvnegz.bmp
+CubeMap 7 nvposx.bmp nvnegx.bmp  nvposy.bmp nvnegy.bmp   nvposz.bmp nvnegz.bmp
+
+Vertex          p4.vert
+Fragment        p4.frag
+Program    p4                       \
+    uReflectUnit 6                  \
+    uRefractUnit 7                  \
+    u3DNoiseUnit 3                  \
+    uAmp <0.0 .0 1.0>             \
+    uPeriod <0.1 1.5 3.0>           \
+    uPhase <0. 0. 6.28>             \
+    uDecay <0. 1. 2.>               \
+    uNoiseAmp <0. 0. 5.>            \
+    uNoiseFreq <0.1 1. 20.>         \
+    uIndexOfRefraction <0.1 1 2.5>  \
+    uMix <0. 1. 1.>                 \
+    uWhiteMix <0 0. 1>
+
+PushMatrix
+Rotate -15 1 0 0
+QuadXY  -0.2  2. 256 256
+PopMatrix
+
+Vertex texture.vert
+Fragment texture.frag
+Program TextureP4                         \
+    uTexUnit 6
+
+Texture2D 6 nvposx.bmp
+QuadYZ 5. 5. 10 10
+Texture2D 6 nvnegx.bmp
+QuadYZ -5. 5. 10 10
+Texture2D 6 nvposy.bmp
+QuadXZ 5. 5. 10 10
+Texture2D 6 nvnegy.bmp
+QuadXZ -5. 5. 10 10
+Texture2D 6 nvposz.bmp
+QuadXY 5. 5. 10 10
+Texture2D 6 nvnegz.bmp
+QuadXY -5. 5. 10 10
+
+
+
