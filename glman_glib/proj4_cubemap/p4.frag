@@ -2,7 +2,7 @@
 
 uniform sampler3D u3DNoiseUnit;
 uniform float uNoiseFreq, uNoiseAmp;
-uniform float uIndexOfRefraction, uMix, uWhiteMix;
+uniform float uIndexOfRefraction, uReflect_VS_Refract, uWhiteMix;
 uniform samplerCube uReflectUnit, uRefractUnit;
 
 in vec3 vN; // normal vector
@@ -43,22 +43,24 @@ main( )
 	angx *= uNoiseAmp;
 	angy *= uNoiseAmp;
 
-    // PER-FRAGMENT LIGHTING
 	vec3 Normal = rotateNormal(angx, angy, normalize(vN));
 	vec3 Eye    = normalize(vE);
 
 	vec3 reflectVector = reflect(Eye, Normal);
 	vec4 reflectColor = textureCube(uReflectUnit, reflectVector);
 
-	vec3 refractVector = refract(Eye, Normal, uIndexOfRefraction);
+	float eta = 1. / uIndexOfRefraction;
+	vec3 refractVector = refract(Eye, Normal, eta);
 	vec4 refractColor;
-	if ( all( equal( refractVector, vec3(0.) ) ) ){
-		refractColor = reflectColor; // infinite reflection?
+	if ( all( equal( refractVector, vec3(0.) ) ) )
+	{
+		refractColor = reflectColor; // total internal reflection
 	}
-	else{
+	else
+	{
 	    refractColor = textureCube(uRefractUnit, refractVector);
 		refractColor = mix( refractColor, WHITE, uWhiteMix );
 	}
 
-	gl_FragColor = mix(reflectColor, refractColor, uMix);
+	gl_FragColor = mix(reflectColor, refractColor, uReflect_VS_Refract);
 }

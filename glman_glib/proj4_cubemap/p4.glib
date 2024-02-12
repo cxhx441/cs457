@@ -1,7 +1,7 @@
 ##OpenGL GLIB
 
 Perspective 70
-LookAt 0 0 3  0 0 0  0 1 0
+LookAt 0 0 4  0 0 0  0 1 0
 
 Texture3D 3 noise3d.064.tex
 
@@ -21,7 +21,7 @@ Program    p4                       \
     uNoiseAmp <0. 0. 5.>            \
     uNoiseFreq <0.1 1. 20.>         \
     uIndexOfRefraction <0.1 1 2.5>  \
-    uMix <0. 1. 1.>                 \
+    uReflect_VS_Refract <0. 1. 1.>  \
     uWhiteMix <0 0. 1>
 
 PushMatrix

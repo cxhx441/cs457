@@ -34,7 +34,7 @@ main( )
 	//vMC = vert.xyz;
 	//vST = gl_MultiTexCoord0.st;
 	vN = normalize( gl_NormalMatrix * newNormal );
-	vE = CCposition.xyz - vec3( 0., 0., 0. );
+	vE = CCposition.xyz - vec3( 0., 0., 4. );
 
     gl_Position = gl_ModelViewProjectionMatrix * newVert;
 }

@@ -1,4 +1,10 @@
 
-0(9) : error C0000: syntax error, unexpected ',', expecting "::" at token ","
-0(10) : error C1066: invalid type in type constructor
+0(22) : error C1503: undefined variable "newVert"
+0(25) : error C1503: undefined variable "r"
+0(25) : error C1503: undefined variable "theta"
+0(25) : error C1503: undefined variable "theta"
+0(26) : error C1503: undefined variable "newVert"
+0(26) : error C1503: undefined variable "r"
+0(27) : error C1503: undefined variable "newVert"
+0(27) : error C1503: undefined variable "r"
 
