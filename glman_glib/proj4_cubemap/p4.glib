@@ -20,7 +20,7 @@ Program    p4                       \
     uDecay <0. 1. 2.>               \
     uNoiseAmp <0. 0. 5.>            \
     uNoiseFreq <0.1 1. 20.>         \
-    uIndexOfRefraction <0.1 1 2.5>  \
+    uIndexOfRefraction <.1 1 2.5>  \
     uReflect_VS_Refract <0. 1. 1.>  \
     uWhiteMix <0 0. 1>
 

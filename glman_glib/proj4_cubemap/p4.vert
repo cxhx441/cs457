@@ -31,9 +31,7 @@ main( )
 	vec3 ytangent = vec3(0, 1, dzdy);
 	vec3 newNormal = normalize(cross(xtangent, ytangent)) ;
 
-	//vMC = vert.xyz;
-	//vST = gl_MultiTexCoord0.st;
-	vN = normalize( gl_NormalMatrix * newNormal );
+	vN = newNormal;
 	vE = CCposition.xyz - vec3( 0., 0., 4. );
 
     gl_Position = gl_ModelViewProjectionMatrix * newVert;

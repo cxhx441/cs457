@@ -43,8 +43,11 @@ main( )
 	angx *= uNoiseAmp;
 	angy *= uNoiseAmp;
 
-	vec3 Normal = rotateNormal(angx, angy, normalize(vN));
-	vec3 Eye    = normalize(vE);
+	vec3 Normal = normalize(vN);
+	vec3 Eye = normalize(vE);
+	Normal = normalize(gl_NormalMatrix * Normal);
+	Normal = mix(Normal, -Normal, step(0, dot(Eye, Normal))); // make sure normal always points towards the eye
+	Normal = rotateNormal(angx, angy, Normal);
 
 	vec3 reflectVector = reflect(Eye, Normal);
 	vec4 reflectColor = textureCube(uReflectUnit, reflectVector);
