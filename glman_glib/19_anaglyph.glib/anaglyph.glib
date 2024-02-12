@@ -1,0 +1,22 @@
+##OpenGL GLIB
+
+Ortho -.5 .5 -.5 .5
+LookAt 0 0 1  0 0 0  0 1 0
+
+Texture2D 5 mars_left.bmp
+Texture2D 6 mars_right.bmp
+
+Vertex          anaglyph.vert
+Fragment        anaglyph.frag
+Program    anaglyph             \
+    uOffsetS <-.25 0.0000 .25>  \
+    uOffsetT <-.25 0.0000 .25>  \
+    uRed <0. 1. 5.>  \
+    uGreen <0. 1. 5.>  \
+    uBlue <0. 1. 5.>  \
+    uLeftUnit 5 uRightUnit 6
+
+
+QuadXY  .2 5.
+
+
