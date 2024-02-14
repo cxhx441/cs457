@@ -13,6 +13,7 @@ Program    p5                       \
     uImg2Unit  5                  \
     uPower <0.1 1. 10.>            \
     uRtheta <0. 0. 50.>            \
+    uPostMosaic <false>          \
     uMosaic <0.0000001 0.0000001 0.06>            \
     uBlend <0. 0. 1.>            \
 

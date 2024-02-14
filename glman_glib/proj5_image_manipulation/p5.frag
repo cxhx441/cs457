@@ -4,6 +4,7 @@ uniform float uPower;
 uniform float uRtheta;
 uniform float uMosaic;
 uniform float uBlend;
+uniform bool uPostMosaic;
 uniform sampler2D uImg1Unit;
 uniform sampler2D uImg2Unit;
 
@@ -27,6 +28,10 @@ void main()
 {
     vec2 st = vST;
 
+    if (uPostMosaic){
+        ivec2 NumIntST = ivec2(st / uMosaic);
+        st = NumIntST*uMosaic + vec2(uMosaic/2., uMosaic/2.);
+    }
     // fisheye
     st -= vec2(0.5, 0.5); // set st range to +- 0.5
     float r = sqrt(dot(st, st));
@@ -42,8 +47,10 @@ void main()
     st /= 2.; // st 0-1
 
     // mosaic
-    ivec2 NumIntST = ivec2(st / uMosaic);
-    st = NumIntST*uMosaic + vec2(uMosaic/2., uMosaic/2.);
+    if (!uPostMosaic){
+        ivec2 NumIntST = ivec2(st / uMosaic);
+        st = NumIntST*uMosaic + vec2(uMosaic/2., uMosaic/2.);
+    }
 
     vec3 color_img1 = texture(uImg1Unit, st).rgb;
     vec3 color_img2 = texture(uImg2Unit, st).rgb;
