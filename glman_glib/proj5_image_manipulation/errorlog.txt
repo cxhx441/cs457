@@ -1,0 +1,10 @@
+
+0(51) : error C1038: declaration of "rgb" conflicts with previous declaration at 0(50)
+0(51) : error C0000: syntax error, unexpected "*=", expecting ',' or ';' at token "*="
+0(52) : error C1038: declaration of "rgb" conflicts with previous declaration at 0(50)
+0(52) : error C0000: syntax error, unexpected "*=", expecting ',' or ';' at token "*="
+0(53) : error C1038: declaration of "rgb" conflicts with previous declaration at 0(50)
+0(53) : error C0000: syntax error, unexpected "*=", expecting ',' or ';' at token "*="
+0(54) : error C1038: declaration of "rgb" conflicts with previous declaration at 0(50)
+0(54) : error C0000: syntax error, unexpected "*=", expecting ',' or ';' at token "*="
+
