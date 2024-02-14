@@ -15,7 +15,10 @@ Program    p5                       \
     uRtheta <0. 0. 50.>            \
     uPostMosaic <false>          \
     uMosaic <0.0000001 0.0000001 0.06>            \
+    uBrightnessMix <0. 1. 2.>    \
+    uContrastMix <0. 1. 2.>    \
     uBlend <0. 0. 1.>            \
+    uNegative <false>            \
 
 QuadXY  0.1 1
 

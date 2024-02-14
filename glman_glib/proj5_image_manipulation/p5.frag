@@ -4,7 +4,10 @@ uniform float uPower;
 uniform float uRtheta;
 uniform float uMosaic;
 uniform float uBlend;
+uniform float uBrightnessMix;
+uniform float uContrastMix;
 uniform bool uPostMosaic;
+uniform bool uNegative;
 uniform sampler2D uImg1Unit;
 uniform sampler2D uImg2Unit;
 
@@ -61,6 +64,18 @@ void main()
     rgb *= 1 - step(1, st.t); // if t > than 1, rgb *= 0
     rgb *= step(0, st.s); // if s < than 0, rgb *= 0
     rgb *= step(0, st.t); // if t < than 0, rgb *= 0
+
+    // brightness
+    rgb = mix(vec3(0., 0., 0.), rgb, uBrightnessMix);
+
+    // luminance / contrast
+    vec3 luminance = vec3(0.2125, 0.7154, 0.0721);
+    luminance = vec3(dot(luminance, rgb));
+    rgb = mix(luminance, rgb, uContrastMix);
+
+    if (uNegative){
+        rgb = vec3(1.) - rgb;
+    }
 
     gl_FragColor = vec4(rgb, 1.);
 }
