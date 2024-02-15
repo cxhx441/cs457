@@ -1,0 +1,16 @@
+##OpenGL GLIB
+
+Ortho -1. 1. -1. 1.
+LookAt 0. 0. 1.  0. 0. 0.  0. 1. 0.
+
+Texture2D 4 spongebob.bmp
+
+Vertex          blur.vert
+Fragment        blur.frag
+Program    blur                       \
+    uImg1Unit  4                  \
+    uBlurMix <0 0. 1>
+
+
+QuadXY  0.1 1
+

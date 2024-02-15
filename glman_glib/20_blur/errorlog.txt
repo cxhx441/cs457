@@ -1,0 +1,4 @@
+
+0(34) : error C0000: syntax error, unexpected integer constant, expecting reserved word or reserved word "precise" at token "<int-const>"
+0(50) : error C1503: undefined variable "up_left"
+
