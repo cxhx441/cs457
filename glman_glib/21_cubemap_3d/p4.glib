@@ -16,8 +16,8 @@ Program    p4                       \
     u3DNoiseUnit 3                  \
     uNoiseAmp <0. 0. 5.>            \
     uNoiseFreq <0.1 1. 20.>         \
-    uIndexOfRefraction <.1 1 2.5>  \
-    uReflect_VS_Refract <0. 1 1.>  \
+    uIndexOfRefraction <.1 1.25 2.5>  \
+    uReflect_VS_Refract <0. .8 1.>  \
     uColorMix <0 0.25 1>
 
 Color [0 1 1 1]
@@ -25,8 +25,8 @@ Color [0 1 1 1]
 #Rotate -15 1 0 0
 #QuadXY  -0.2  2. 256 256
 #PopMatrix
-Teapot
-#Box
+#Teapot
+Box
 #Sphere
 
 Vertex texture.vert
