@@ -64,8 +64,8 @@ main( )
 	else
 	{
 	    refractColor = textureCube(uRefractUnit, refractVector);
-		refractColor = mix( refractColor, vColor, uColorMix );
 	}
+	refractColor = mix( refractColor, vColor, uColorMix );
 
 	gl_FragColor = mix(reflectColor, refractColor, uReflect_VS_Refract);
 	//gl_FragColor = vec4(1, 1, 1, 1);

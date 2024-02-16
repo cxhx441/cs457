@@ -26,8 +26,8 @@ Color [0 1 1 1]
 #QuadXY  -0.2  2. 256 256
 #PopMatrix
 #Teapot
-Box
-#Sphere
+#Box
+Sphere
 
 Vertex texture.vert
 Fragment texture.frag

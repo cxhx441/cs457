@@ -9,8 +9,10 @@ void
 main( )
 {
 	vColor = gl_Color;
+
 	vec4 newVertex = gl_Vertex;
 	vMC = newVertex.xyz;
+
   	vec3 CCposition = (gl_ModelViewMatrix * newVertex).xyz; // camera coords
 	vE = CCposition - vec3( 0., 0., 0. );
 	vN = normalize(gl_NormalMatrix * gl_Normal);
