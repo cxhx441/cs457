@@ -46,13 +46,12 @@ main( )
 
 	vec3 Normal = normalize(vN);
 	vec3 Eye = normalize(vE);
-	Normal = normalize(gl_NormalMatrix * Normal);
 	//Normal = mix(Normal, -Normal, step(0, dot(Eye, Normal))); // make sure normal always points towards the eye
 	Normal = rotateNormal(angx, angy, Normal);
 
 	vec3 reflectVector = reflect(Eye, Normal);
 	vec4 reflectColor = textureCube(uReflectUnit, reflectVector);
-	reflectColor = mix(reflectColor, vColor, uColorMix);
+	reflectColor = mix(reflectColor, vec4(1, 0, 0, 1), uColorMix);
 
 	float eta = 1. / uIndexOfRefraction;
 	vec3 refractVector = refract(Eye, Normal, eta);
@@ -60,12 +59,13 @@ main( )
 	if ( all( equal( refractVector, vec3(0.) ) ) )
 	{
 		refractColor = reflectColor; // total internal reflection
+		refractColor = mix( refractColor, vColor, uColorMix );
 	}
 	else
 	{
 	    refractColor = textureCube(uRefractUnit, refractVector);
+		refractColor = mix( refractColor, vColor, uColorMix );
 	}
-	refractColor = mix( refractColor, vColor, uColorMix );
 
 	gl_FragColor = mix(reflectColor, refractColor, uReflect_VS_Refract);
 	//gl_FragColor = vec4(1, 1, 1, 1);

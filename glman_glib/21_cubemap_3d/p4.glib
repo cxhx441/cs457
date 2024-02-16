@@ -27,7 +27,11 @@ Color [0 1 1 1]
 #PopMatrix
 #Teapot
 #Box
-Sphere
+#Sphere
+PushMatrix
+Rotate -90 1 0 0
+Torus
+PopMatrix
 
 Vertex texture.vert
 Fragment texture.frag
