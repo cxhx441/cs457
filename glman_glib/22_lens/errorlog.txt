@@ -1,0 +1,10 @@
+
+0(13) : error C1503: undefined variable "r1"
+0(14) : error C1503: undefined variable "r2"
+0(15) : error C1503: undefined variable "r2"
+0(15) : error C1503: undefined variable "r1"
+0(20) : error C1503: undefined variable "r1"
+0(22) : error C1503: undefined variable "r1"
+0(25) : error C1503: undefined variable "r2"
+0(27) : error C1503: undefined variable "r2"
+
