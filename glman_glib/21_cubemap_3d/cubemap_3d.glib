@@ -8,9 +8,9 @@ Texture3D 3 noise3d.064.tex
 CubeMap 6 nvposx.bmp nvnegx.bmp  nvposy.bmp nvnegy.bmp   nvposz.bmp nvnegz.bmp
 CubeMap 7 nvposx.bmp nvnegx.bmp  nvposy.bmp nvnegy.bmp   nvposz.bmp nvnegz.bmp
 
-Vertex          p4.vert
-Fragment        p4.frag
-Program    p4                       \
+Vertex          cubemap_3d.vert
+Fragment        cubemap_3d.frag
+Program    cubemap_3d               \
     uReflectUnit 6                  \
     uRefractUnit 7                  \
     u3DNoiseUnit 3                  \
@@ -33,23 +33,23 @@ Rotate -90 1 0 0
 Torus
 PopMatrix
 
-Vertex texture.vert
-Fragment texture.frag
-Program TextureP4                         \
-    uTexUnit 6
+#Vertex texture.vert
+#Fragment texture.frag
+#Program TextureP4                         \
+    #uTexUnit 6
 
-Texture2D 6 nvposx.bmp
-QuadYZ 5. 5. 10 10
-Texture2D 6 nvnegx.bmp
-QuadYZ -5. 5. 10 10
-Texture2D 6 nvposy.bmp
-QuadXZ 5. 5. 10 10
-Texture2D 6 nvnegy.bmp
-QuadXZ -5. 5. 10 10
-Texture2D 6 nvposz.bmp
-QuadXY 5. 5. 10 10
-Texture2D 6 nvnegz.bmp
-QuadXY -5. 5. 10 10
+#Texture2D 6 nvposx.bmp
+#QuadYZ 5. 5. 10 10
+#Texture2D 6 nvnegx.bmp
+#QuadYZ -5. 5. 10 10
+#Texture2D 6 nvposy.bmp
+#QuadXZ 5. 5. 10 10
+#Texture2D 6 nvnegy.bmp
+#QuadXZ -5. 5. 10 10
+#Texture2D 6 nvposz.bmp
+#QuadXY 5. 5. 10 10
+#Texture2D 6 nvnegz.bmp
+#QuadXY -5. 5. 10 10
 
 
 
