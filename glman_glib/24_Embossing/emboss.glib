@@ -1,0 +1,15 @@
+##OpenGL GLIB
+
+Ortho -1. 1. -1. 1.
+LookAt 0. 0. 1.  0. 0. 0.  0. 1. 0.
+
+Texture2D 4 spongebob.bmp
+
+Vertex          emboss.vert
+Fragment        emboss.frag
+Program    emboss                       \
+    uImgUnit  4                  \
+    uBlend <0. 0. 1.>            \
+
+QuadXY  0.1 1
+

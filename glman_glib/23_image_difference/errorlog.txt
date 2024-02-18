@@ -1,0 +1,7 @@
+
+0(12) : warning C7022: unrecognized profile specifier "vST"
+0(12) : error C0000: syntax error, unexpected identifier, expecting '(' at token "color0"
+0(13) : error C1503: undefined variable "st"
+0(15) : error C1503: undefined variable "color0"
+0(16) : error C1503: undefined variable "color0"
+

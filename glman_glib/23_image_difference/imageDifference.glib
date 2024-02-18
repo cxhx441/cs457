@@ -1,0 +1,19 @@
+##OpenGL GLIB
+
+Ortho -1. 1. -1. 1.
+LookAt 0. 0. 1.  0. 0. 0.  0. 1. 0.
+
+Texture2D 4 img.bmp
+Texture2D 5 img_edit.bmp
+
+Vertex          imageDifference.vert
+Fragment        imageDifference.frag
+Program    imageDifference        \
+    uImgUnit  4                  \
+    uImgEditUnit  5                  \
+    uBlend <-1, 1, 2>\
+    uOffsetS <-.001, 0, .001>\
+    uOffsetT <-.001, 0, .001>
+
+QuadXY  0.1 1
+
