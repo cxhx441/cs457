@@ -5,6 +5,11 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #ifndef F_PI
 #define F_PI		((float)(M_PI))
 #define F_2_PI		((float)(2.f*F_PI))
@@ -17,7 +22,9 @@
 #pragma warning(disable:4996)
 #endif
 
+
 #include "glew.h"
+
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
@@ -25,8 +32,10 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 #endif
+
 #include "glut.h"
 
+const float D2R = M_PI / 180.f;
 
 //	This is a sample OpenGL / GLUT program
 //
@@ -48,7 +57,7 @@
 
 // title of these windows:
 
-const char *WINDOWTITLE = "OpenGL / GLUT Project 1 -- Craig Harris";
+const char *WINDOWTITLE = "OpenGL / GLUT Sample -- Craig Harris";
 const char *GLUITITLE   = "User Interface Window";
 
 // what the glui package defines as true and false:
@@ -63,6 +72,10 @@ const int ESCAPE = 0x1b;
 // initial window size:
 
 const int INIT_WINDOW_SIZE = 600;
+
+// size of the 3d box to be drawn:
+
+const float BOXSIZE = 2.f;
 
 // multiplication factors for input interaction:
 //  (these are known from previous experience)
@@ -140,7 +153,7 @@ char * ColorNames[ ] =
 // the color definitions:
 // this order must match the menu order
 
-const GLfloat Colors[ ][3] = 
+const GLfloat Colors[ ][3] =
 {
 	{ 1., 0., 0. },		// red
 	{ 1., 1., 0. },		// yellow
@@ -150,59 +163,50 @@ const GLfloat Colors[ ][3] =
 	{ 1., 0., 1. },		// magenta
 };
 
+// fog parameters:
+
+const GLfloat FOGCOLOR[4] = { .0f, .0f, .0f, 1.f };
+const GLenum  FOGMODE     = GL_LINEAR;
+const GLfloat FOGDENSITY  = 0.30f;
+const GLfloat FOGSTART    = 1.5f;
+const GLfloat FOGEND      = 4.f;
+
 // for lighting:
 
 const float	WHITE[ ] = { 1.,1.,1.,1. };
 
 // for animation:
 
-const int MS_PER_CYCLE = 20000;		// 10000 milliseconds = 10 seconds
+const int MS_PER_CYCLE = 10000;		// 10000 milliseconds = 10 seconds
 
+
+// what options should we compile-in?
+// in general, you don't need to worry about these
+// i compile these in to show class examples of things going wrong
+//#define DEMO_Z_FIGHTING
+//#define DEMO_DEPTH_BUFFER
+
+#include "vertexbufferobject.cpp"
 // non-constant global variables:
 
 int		ActiveButton;			// current button that is down
 GLuint	AxesList;				// list to hold the axes
 int		AxesOn;					// != 0 means to draw the axes
+//GLuint	BoxList;				// object display list  // USING VBO
+VertexBufferObject VBO_BoxList;         
 int		DebugOn;				// != 0 means to print debugging info
-bool	Freeze;
+int		DepthCueOn;				// != 0 means to use intensity depth cueing
+int		DepthBufferOn;			// != 0 means to use the z-buffer
+int		DepthFightingOn;		// != 0 means to force the creation of z-fighting
 int		MainWindow;				// window id for main graphics window
 int		NowColor;				// index into Colors[ ]
-int		NowProjection;			// ORTHO or PERSP
+int		NowProjection;		// ORTHO or PERSP
 float	Scale;					// scaling factor
+int		ShadowsOn;				// != 0 means to turn shadows on
 float	Time;					// used for animation, this has a value between 0. and 1.
-float	AnimationCycleTime;		// used for Keytime class animation
 int		Xmouse, Ymouse;			// mouse values
 float	Xrot, Yrot;				// rotation angles in degrees
-
-int		SphereList;
-int		TorusList;
-int		BoxList;
-int		PosXList;
-int		PosYList;
-int		PosZList;
-int		NegXList;
-int		NegYList;
-int		NegZList;
-GLuint	TexPosXList;
-GLuint	TexPosYList;
-GLuint	TexPosZList;
-GLuint	TexNegXList;
-GLuint	TexNegYList;
-GLuint	TexNegZList;
-GLuint  CubeMapReflectTex;
-GLuint  CubeMapRefractTex;
-int  CubeMapReflectUnit = 5;
-int  CubeMapRefractUnit = 6;
-char* CubeFaceFiles[6]
-{
-	"..\\..\\turned_in\\proj4_reflect_refract\\nvposx.bmp",
-	"..\\..\\turned_in\\proj4_reflect_refract\\nvnegx.bmp",
-	"..\\..\\turned_in\\proj4_reflect_refract\\nvposy.bmp",
-	"..\\..\\turned_in\\proj4_reflect_refract\\nvnegy.bmp",
-	"..\\..\\turned_in\\proj4_reflect_refract\\nvposz.bmp",
-	"..\\..\\turned_in\\proj4_reflect_refract\\nvnegz.bmp"
-};
-
+bool    Frozen;					// whether the animation is frozen or not
 
 
 // function prototypes:
@@ -211,6 +215,9 @@ void	Animate( );
 void	Display( );
 void	DoAxesMenu( int );
 void	DoColorMenu( int );
+void	DoDepthBufferMenu( int );
+void	DoDepthFightingMenu( int );
+void	DoDepthMenu( int );
 void	DoDebugMenu( int );
 void	DoMainMenu( int );
 void	DoProjectMenu( int );
@@ -227,13 +234,12 @@ void	Reset( );
 void	Resize( int, int );
 void	Visibility( int );
 
-void	Axes( float );
-void	HsvRgb( float[3], float [3] );
-void	Cross(float[3], float[3], float[3]);
-float	Dot(float [3], float [3]);
-float	Unit(float [3], float [3]);
-float	Unit(float [3]);
-void LoadAndSetTexture(char*, GLuint*);
+void			Axes( float );
+void			HsvRgb( float[3], float [3] );
+void			Cross(float[3], float[3], float[3]);
+float			Dot(float [3], float [3]);
+float			Unit(float [3], float [3]);
+float			Unit(float [3]);
 
 
 // utility to create an array from 3 separate values:
@@ -282,16 +288,13 @@ MulArray3(float factor, float a, float b, float c )
 
 //#include "setmaterial.cpp"
 //#include "setlight.cpp"
-#include "osusphere.cpp"
+//#include "osusphere.cpp"
 //#include "osucone.cpp"
-#include "osutorus.cpp"
-#include "bmptotexture.cpp"
+//#include "osutorus.cpp"
+//#include "bmptotexture.cpp"
 //#include "loadobjfile.cpp"
 //#include "keytime.cpp"
-#include "glslprogram.cpp"
-
-GLSLProgram CubeMapShader;
-GLSLProgram TextureShader;
+//#include "glslprogram.cpp"
 
 
 // main program:
@@ -303,8 +306,7 @@ main( int argc, char *argv[ ] )
 	// (do this before checking argc and argv since glutInit might
 	// pull some command line arguments out)
 
-	fprintf(stderr, "Starting.\n");
-	glutInit(&argc, argv);
+	glutInit( &argc, argv );
 
 	// setup all the graphics stuff:
 
@@ -350,7 +352,6 @@ Animate( )
 
 	int ms = glutGet(GLUT_ELAPSED_TIME);
 	ms %= MS_PER_CYCLE;							// makes the value of ms between 0 and MS_PER_CYCLE-1
-	AnimationCycleTime = ms / (float)1000.f;
 	Time = (float)ms / (float)MS_PER_CYCLE;		// makes the value of Time between 0. and slightly less than 1.
 
 	// for example, if you wanted to spin an object in Display( ), you might call: glRotatef( 360.f*Time,   0., 1., 0. );
@@ -378,6 +379,11 @@ Display( )
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 	glEnable( GL_DEPTH_TEST );
+#ifdef DEMO_DEPTH_BUFFER
+	if( DepthBufferOn == 0 )
+		glDisable( GL_DEPTH_TEST );
+#endif
+
 
 	// specify shading to be flat:
 
@@ -392,38 +398,74 @@ Display( )
 	GLint yb = ( vy - v ) / 2;
 	glViewport( xl, yb,  v, v );
 
-	// set the viewing volume:
+
+	/* 
+	SET THE VIEWING VOLUME
+	*/
 	// remember that the Z clipping  values are given as DISTANCES IN FRONT OF THE EYE
 	// USE gluOrtho2D( ) IF YOU ARE DOING 2D !
 
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity( );
-	if( NowProjection == ORTHO )
-		glOrtho( -2.f, 2.f,     -2.f, 2.f,     0.1f, 1000.f );
+	glm::mat4 projection;
+	if (NowProjection == ORTHO)
+	{
+		//glOrtho(-2.f, 2.f, -2.f, 2.f, 0.1f, 1000.f); // OLD MOVING TO GLM SETUP
+		projection = glm::ortho(-2., 2., -2., 2., 0.1, 1000.);
+	}
 	else
-		gluPerspective( 70.f, 1.f,	0.1f, 1000.f );
+	{
+		//gluPerspective( 70.f, 1.f,	0.1f, 1000.f ); // OLD MOVING TO GLM SETUP
+		projection = glm::perspective(D2R * 90., 1., 0.1, 1000.);
+	}
+	// apply projection matrix to opengl matrix
+	glMultMatrixf(glm::value_ptr(projection));
 
+	
 	// place the objects into the scene:
-
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity( );
 
 	// set the eye position, look-at position, and up-vector:
-
-	gluLookAt( 0.f, 0.f, 3.f,     0.f, 0.f, 0.f,     0.f, 1.f, 0.f );
+	//gluLookAt( 0.f, 0.f, 3.f,     0.f, 0.f, 0.f,     0.f, 1.f, 0.f ); // OLD MOVING TO GLM SETUP
+	glm::vec3 eye(0., 0., 3.);
+	glm::vec3 look(0., 0., 0.);
+	glm::vec3 up(0., 1., 0.);
+	glm::mat4 modelview = glm::lookAt(eye, look, up);
 
 	// rotate the scene:
-
-	glRotatef( (GLfloat)Yrot, 0.f, 1.f, 0.f );
-	glRotatef( (GLfloat)Xrot, 1.f, 0.f, 0.f );
+	//glRotatef( (GLfloat)Yrot, 0.f, 1.f, 0.f ); // OLD MOVING TO GLM SETUP
+	//glRotatef( (GLfloat)Xrot, 1.f, 0.f, 0.f ); // OLD MOVING TO GLM SETUP
+	// note glm::rotate takes in radians
+	modelview = glm::rotate(modelview, D2R*Yrot, glm::vec3(0., 1., 0.)); 
+	modelview = glm::rotate(modelview, D2R*Xrot, glm::vec3(1., 0., 0.));
 
 	// uniformly scale the scene:
+	if( Scale < MINSCALE )
+		Scale = MINSCALE;
+	//glScalef( (GLfloat)Scale, (GLfloat)Scale, (GLfloat)Scale ); // OLD MOVING TO GLM SETUP
+	modelview = glm::scale(modelview, glm::vec3(Scale, Scale, Scale));
 
-	if( Scale < MINSCALE ) Scale = MINSCALE;
-	glScalef( (GLfloat)Scale, (GLfloat)Scale, (GLfloat)Scale );
+	// apply modelview matrix to opengl matrix
+	glMultMatrixf(glm::value_ptr(modelview)); 
+
+
+	// set the fog parameters:
+	if( DepthCueOn != 0 )
+	{
+		glFogi( GL_FOG_MODE, FOGMODE );
+		glFogfv( GL_FOG_COLOR, FOGCOLOR );
+		glFogf( GL_FOG_DENSITY, FOGDENSITY );
+		glFogf( GL_FOG_START, FOGSTART );
+		glFogf( GL_FOG_END, FOGEND );
+		glEnable( GL_FOG );
+	}
+	else
+	{
+		glDisable( GL_FOG );
+	}
 
 	// possibly draw the axes:
-
 	if( AxesOn != 0 )
 	{
 		glColor3fv( &Colors[NowColor][0] );
@@ -431,43 +473,25 @@ Display( )
 	}
 
 	// since we are using glScalef( ), be sure the normals get unitized:
-
 	glEnable( GL_NORMALIZE );
+
 
 	// draw the box object by calling up its display list:
 
-	CubeMapShader.Use( );
-	//glActiveTexture( GL_TEXTURE0 + CubeMapReflectUnit );
-	//glBindTexture( GL_TEXTURE_CUBE_MAP, CubeMapReflectTex );
-	//glActiveTexture( GL_TEXTURE0 + CubeMapRefractUnit );
-	//glBindTexture( GL_TEXTURE_CUBE_MAP, CubeMapRefractTex );
+	//glCallList( BoxList ); // USING VBO
+	VBO_BoxList.Draw();
 
-	//CubeMapShader.SetUniformVariable( "uReflect_VS_Refract", 1.f );
-	CubeMapShader.SetUniformVariable( "uXrot", F_PI/180 * Xrot);
-	CubeMapShader.SetUniformVariable( "uYrot", F_PI/180 * Yrot);
 
-	glColor3f(0, 1, 1);
-	//glCallList( SphereList );
-	//glCallList( TorusList );
-	glCallList( BoxList );
+#ifdef DEMO_Z_FIGHTING
+	if( DepthFightingOn != 0 )
+	{
+		glPushMatrix( );
+			glRotatef( 90.f,   0.f, 1.f, 0.f );
+			glCallList( BoxList );
+		glPopMatrix( );
+	}
+#endif
 
-	CubeMapShader.UnUse( );       // OvalShader.Use(0);  also works
-
-	//glBindTexture(GL_TEXTURE_2D, TexPosXList);
-	TextureShader.Use();
-	glBindTexture(GL_TEXTURE_2D, TexPosXList);
-	glCallList(PosXList);
-	glBindTexture(GL_TEXTURE_2D, TexPosYList);
-	glCallList(PosYList);
-	glBindTexture(GL_TEXTURE_2D, TexPosZList);
-	glCallList(PosZList);
-	glBindTexture(GL_TEXTURE_2D, TexNegXList);
-	glCallList(NegXList);
-	glBindTexture(GL_TEXTURE_2D, TexNegYList);
-	glCallList(NegYList);
-	glBindTexture(GL_TEXTURE_2D, TexNegZList);
-	glCallList(NegZList);
-	TextureShader.UnUse();
 
 	// draw some gratuitous text that just rotates on top of the scene:
 	// i commented out the actual text-drawing calls -- put them back in if you have a use for them
@@ -475,19 +499,19 @@ Display( )
 	// a good use for the second one might be to have vertex numbers on the screen alongside each vertex
 
 	//glDisable( GL_DEPTH_TEST );
-	//glColor3f( 0.f, 1.f, 1.f );
-	//DoRasterString( 0.f, 1.f, 0.f, (char *)"Text That Moves" );
+	////glColor3f( 0.f, 1.f, 1.f );
+	////DoRasterString( 0.f, 1.f, 0.f, (char *)"Text That Moves" );
 
 
-	// draw some gratuitous text that is fixed on the screen:
-	//
-	// the projection matrix is reset to define a scene whose
-	// world coordinate system goes from 0-100 in each axis
-	//
-	// this is called "percent units", and is just a convenience
-	//
-	// the modelview matrix is reset to identity as we don't
-	// want to transform these coordinates
+	//// draw some gratuitous text that is fixed on the screen:
+	////
+	//// the projection matrix is reset to define a scene whose
+	//// world coordinate system goes from 0-100 in each axis
+	////
+	//// this is called "percent units", and is just a convenience
+	////
+	//// the modelview matrix is reset to identity as we don't
+	//// want to transform these coordinates
 
 	//glDisable( GL_DEPTH_TEST );
 	//glMatrixMode( GL_PROJECTION );
@@ -496,7 +520,7 @@ Display( )
 	//glMatrixMode( GL_MODELVIEW );
 	//glLoadIdentity( );
 	//glColor3f( 1.f, 1.f, 1.f );
-	//DoRasterString( 5.f, 5.f, 0.f, (char *)"Text That Doesn't" );
+	////DoRasterString( 5.f, 5.f, 0.f, (char *)"Text That Doesn't" );
 
 	// swap the double-buffered framebuffers:
 
@@ -533,6 +557,36 @@ void
 DoDebugMenu( int id )
 {
 	DebugOn = id;
+
+	glutSetWindow( MainWindow );
+	glutPostRedisplay( );
+}
+
+
+void
+DoDepthBufferMenu( int id )
+{
+	DepthBufferOn = id;
+
+	glutSetWindow( MainWindow );
+	glutPostRedisplay( );
+}
+
+
+void
+DoDepthFightingMenu( int id )
+{
+	DepthFightingOn = id;
+
+	glutSetWindow( MainWindow );
+	glutPostRedisplay( );
+}
+
+
+void
+DoDepthMenu( int id )
+{
+	DepthCueOn = id;
 
 	glutSetWindow( MainWindow );
 	glutPostRedisplay( );
@@ -648,6 +702,18 @@ InitMenus( )
 	glutAddMenuEntry( "Off",  0 );
 	glutAddMenuEntry( "On",   1 );
 
+	int depthcuemenu = glutCreateMenu( DoDepthMenu );
+	glutAddMenuEntry( "Off",  0 );
+	glutAddMenuEntry( "On",   1 );
+
+	int depthbuffermenu = glutCreateMenu( DoDepthBufferMenu );
+	glutAddMenuEntry( "Off",  0 );
+	glutAddMenuEntry( "On",   1 );
+
+	int depthfightingmenu = glutCreateMenu( DoDepthFightingMenu );
+	glutAddMenuEntry( "Off",  0 );
+	glutAddMenuEntry( "On",   1 );
+
 	int debugmenu = glutCreateMenu( DoDebugMenu );
 	glutAddMenuEntry( "Off",  0 );
 	glutAddMenuEntry( "On",   1 );
@@ -660,6 +726,15 @@ InitMenus( )
 	glutAddSubMenu(   "Axes",          axesmenu);
 	glutAddSubMenu(   "Axis Colors",   colormenu);
 
+#ifdef DEMO_DEPTH_BUFFER
+	glutAddSubMenu(   "Depth Buffer",  depthbuffermenu);
+#endif
+
+#ifdef DEMO_Z_FIGHTING
+	glutAddSubMenu(   "Depth Fighting",depthfightingmenu);
+#endif
+
+	glutAddSubMenu(   "Depth Cue",     depthcuemenu);
 	glutAddSubMenu(   "Projection",    projmenu );
 	glutAddMenuEntry( "Reset",         RESET );
 	glutAddSubMenu(   "Debug",         debugmenu);
@@ -764,103 +839,6 @@ InitGraphics( )
 
 	// all other setups go here, such as GLSLProgram and KeyTime setups:
 
-	// SHADERS
-	CubeMapShader.Init( );
-	bool valid = CubeMapShader.Create( "cubemap_3d.vert", "cubemap_3d.frag" );
-	if( !valid )
-		fprintf( stderr, "Could not create the CubeMap shader!\n" );
-	else
-		fprintf( stderr, "CubeMap shader created!\n" );
-
-	// set the uniform variables that will not change:
-	
-	CubeMapShader.Use( );
-	CubeMapShader.SetUniformVariable( "uReflectUnit", CubeMapReflectUnit );
-	CubeMapShader.SetUniformVariable( "uRefractUnit", CubeMapRefractUnit );
-	CubeMapShader.SetUniformVariable( "uNoiseAmp", 0.0f );
-	CubeMapShader.SetUniformVariable( "uNoiseFreq", 1.0f );
-	CubeMapShader.SetUniformVariable( "uIndexOfRefraction", 1.00f );
-	CubeMapShader.SetUniformVariable( "uReflect_VS_Refract", 0.f );
-	CubeMapShader.SetUniformVariable( "uColorMix", 0.1f );
-	CubeMapShader.SetUniformVariable( "uXrot", 0.f);
-	CubeMapShader.SetUniformVariable( "uYrot", 0.f );
-	CubeMapShader.UnUse( );
-
-	TextureShader.Init( );
-	valid = TextureShader.Create( "texture.vert", "texture.frag" );
-	if( !valid )
-		fprintf( stderr, "Could not create the texture shader!\n" );
-	else
-		fprintf( stderr, "texture shader created!\n" );
-
-	// KEYTIMES
-	//uAd_kt.Init();
-	//uBd_kt.Init();
-	//uTol_kt.Init();
-
-	//uAd_kt.AddTimeValue(0.f, 0.1f); // set start and end
-	//uBd_kt.AddTimeValue(0.f, 0.1f);
-	//uAd_kt.AddTimeValue(19.99f, 0.1f);
-	//uBd_kt.AddTimeValue(19.99f, 0.1f);
-
-	//uAd_kt.AddTimeValue(5.f, 0.5fo
-	//uBd_kt.AddTimeValue(5.f, 0.1f);
-
-	//uAd_kt.AddTimeValue(10.f, 0.1f);
-	//uBd_kt.AddTimeValue(10.f, 0.5f);
-
-	//uAd_kt.AddTimeValue(15.f, 0.5f);
-	//uBd_kt.AddTimeValue(15.f, 0.5f);
-
-	//uAd_kt.AddTimeValue(18.f, 0.05f);
-	//uBd_kt.AddTimeValue(18.f, 0.05f);
-	
-	// SKY BOX
-	LoadAndSetTexture(CubeFaceFiles[0], &TexPosXList);
-	LoadAndSetTexture(CubeFaceFiles[1], &TexNegXList);
-	LoadAndSetTexture(CubeFaceFiles[2], &TexPosYList);
-	LoadAndSetTexture(CubeFaceFiles[3], &TexNegYList);
-	LoadAndSetTexture(CubeFaceFiles[4], &TexPosZList);
-	LoadAndSetTexture(CubeFaceFiles[5], &TexNegZList);
-
-	// REFLECT CUBE MAP
-	glGenTextures(1, &CubeMapReflectTex);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, CubeMapReflectTex);
-	for (int file = 0; file < 6; file++) 
-	{
-		int nums, numt;
-		unsigned char* texture2d = BmpToTexture(CubeFaceFiles[file], &nums, &numt);
-		if (texture2d == NULL) fprintf(stderr, "Could not open BMP 2D texture '%s'\n", CubeFaceFiles[file]);
-		else fprintf(stderr, "BMP 2D texture '%s' read -- nums = %d, numt = %d\n", CubeFaceFiles[file], nums, numt);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + file, 0, 3, nums, numt, 0, GL_RGB, GL_UNSIGNED_BYTE, texture2d);
-		delete[] texture2d;
-	}
-	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	// REFRACT CUBE MAP
-	glGenTextures(1, &CubeMapReflectTex);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, CubeMapRefractTex);
-	for (int file = 0; file < 6; file++) 
-	{
-		int nums, numt;
-		unsigned char* texture2d = BmpToTexture(CubeFaceFiles[file], &nums, &numt);
-		if (texture2d == NULL) fprintf(stderr, "Could not open BMP 2D texture '%s'\n", CubeFaceFiles[file]);
-		else fprintf(stderr, "BMP 2D texture '%s' read -- nums = %d, numt = %d\n", CubeFaceFiles[file], nums, numt);
-		
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + file, 0, 3, nums, numt, 0, GL_RGB, GL_UNSIGNED_BYTE, texture2d);
-		delete[] texture2d;
-	}
-	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-
 }
 
 
@@ -877,28 +855,83 @@ InitLists( )
 
 	glutSetWindow( MainWindow );
 
+	float dx = BOXSIZE / 2.f;
+	float dy = BOXSIZE / 2.f;
+	float dz = BOXSIZE / 2.f;
+	const int vertex_count = 24;
+	const int normal_count = 6;
+	const int color_count = 3;
+	//vertices
+	static GLfloat BoxVertices[vertex_count][3] =
+	{
+		{ dx, -dy,  dz},
+		{ dx, -dy, -dz},
+		{ dx,  dy, -dz},
+		{ dx,  dy,  dz},
+
+		{-dx, -dy,  dz},
+		{-dx,  dy,  dz},
+		{-dx,  dy, -dz},
+		{-dx, -dy, -dz},
+
+		{-dx,  dy,  dz},
+		{ dx,  dy,  dz},
+		{ dx,  dy, -dz},
+		{-dx,  dy, -dz},
+
+		{-dx, -dy,  dz},
+		{-dx, -dy, -dz},
+		{ dx, -dy, -dz},
+		{ dx, -dy,  dz},
+
+		{-dx, -dy, dz},
+		{ dx, -dy, dz},
+		{ dx,  dy, dz},
+		{-dx,  dy, dz},
+
+		{-dx, -dy, -dz},
+		{-dx,  dy, -dz},
+		{ dx,  dy, -dz},
+		{ dx, -dy, -dz},
+	};
+	//normals
+	static GLfloat BoxNormals[normal_count][3] =
+	{
+		{ 1.,  0.,  0.},
+		{-1.,  0.,  0.},
+		{ 0.,  1.,  0.},
+		{ 0., -1.,  0.},
+		{ 0.,  0.,  1.},
+		{ 0.,  0., -1.},
+	};
+	//colors
+	static GLfloat BoxColors[color_count][3] =
+	{
+		{1., 0., 0.},
+		{0., 1., 0.},
+		{0., 0., 1.},
+	};
+
+
+	VBO_BoxList.Init();
+	VBO_BoxList.glBegin(GL_QUADS);
+	int c_i;
+	int n_i;
+	for (int v_i = 0; v_i < vertex_count; v_i++)
+	{
+		c_i = v_i / 8;
+		n_i = v_i / 4;
+		VBO_BoxList.glColor3fv(BoxColors[c_i]);
+		VBO_BoxList.glNormal3fv(BoxNormals[n_i]);
+		VBO_BoxList.glVertex3fv(BoxVertices[v_i]);
+	};
+	VBO_BoxList.glEnd(); 
+
 	// create the object:
-
-	SphereList = glGenLists( 1 );
-	glNewList( SphereList, GL_COMPILE );
-		OsuSphere( 1., 64, 64 );
-	glEndList( );
-
-	TorusList = glGenLists( 1 );
-	glNewList( TorusList, GL_COMPILE );
-		glPushMatrix;
-			glRotatef(90, 1, 0, 0);
-			OsuTorus(0.5, 1, 64, 64);
-		glPopMatrix;
-	glEndList( );
-
-	// create the object:
-	//float dx = 0.5;
-	//float dy = 0.5;
-	//float dz = 0.5;
 	//BoxList = glGenLists( 1 );
 	//glNewList( BoxList, GL_COMPILE );
 	//	glBegin( GL_QUADS );
+	//		glColor3f( 1., 0., 0. );
 	//			glNormal3f( 1., 0., 0. );
 	//				glVertex3f(  dx, -dy,  dz );
 	//				glVertex3f(  dx, -dy, -dz );
@@ -909,6 +942,7 @@ InitLists( )
 	//				glVertex3f( -dx,  dy,  dz );
 	//				glVertex3f( -dx,  dy, -dz );
 	//				glVertex3f( -dx, -dy, -dz );
+	//		glColor3f( 0., 1., 0. );
 	//			glNormal3f(0., 1., 0.);
 	//				glVertex3f( -dx,  dy,  dz );
 	//				glVertex3f(  dx,  dy,  dz );
@@ -919,6 +953,7 @@ InitLists( )
 	//				glVertex3f( -dx, -dy, -dz );
 	//				glVertex3f(  dx, -dy, -dz );
 	//				glVertex3f(  dx, -dy,  dz );
+	//		glColor3f(0., 0., 1.);
 	//			glNormal3f(0., 0., 1.);
 	//				glVertex3f(-dx, -dy, dz);
 	//				glVertex3f( dx, -dy, dz);
@@ -930,126 +965,10 @@ InitLists( )
 	//				glVertex3f( dx,  dy, -dz);
 	//				glVertex3f( dx, -dy, -dz);
 	//	glEnd( );
+
 	//glEndList( );
 
-	float dx = 5;
-	float dy = 5;
-	float dz = 5;
-	PosXList = glGenLists( 1 );
-	glNewList( PosXList, GL_COMPILE );
-		glBegin( GL_QUADS );
-			//glBindTexture(GL_TEXTURE_2D, TexPosXList);
-				glNormal3f( 1., 0., 0. );
-					glTexCoord2f(0.f, 0.f);
-					glVertex3f(  dx, -dy,  dz );
-					glTexCoord2f(1.f, 0.f);
-					glVertex3f(  dx, -dy, -dz );
-					glTexCoord2f(1.f, 1.f);
-					glVertex3f(  dx,  dy, -dz );
-					glTexCoord2f(0.f, 1.f);
-					glVertex3f(  dx,  dy,  dz );
-		glEnd( );
-	glEndList( );
-
-	NegXList = glGenLists( 1 );
-	glNewList( NegXList, GL_COMPILE );
-		glBegin( GL_QUADS );
-			//glBindTexture(GL_TEXTURE_2D, TexNegXList);
-				glNormal3f(-1., 0., 0.); 
-					glTexCoord2f(0.f, 0.f);
-					glVertex3f( -dx, -dy,  -dz);
-					glTexCoord2f(0.f, 1.f);
-					glVertex3f( -dx,  dy,  -dz );
-					glTexCoord2f(1.f, 1.f);
-					glVertex3f( -dx,  dy, dz );
-					glTexCoord2f(1.f, 0.f);
-					glVertex3f( -dx, -dy, dz );
-		glEnd( );
-	glEndList( );
-
-	PosYList = glGenLists( 1 );
-	glNewList( PosYList, GL_COMPILE );
-		glBegin( GL_QUADS );
-			//glBindTexture(GL_TEXTURE_2D, TexPosYList);
-				glNormal3f(0., 1., 0.); 
-					glTexCoord2f(0.f, 0.f);
-					glVertex3f( -dx, dy,  dz);
-					glTexCoord2f(0.f, 1.f);
-					glVertex3f( -dx, dy,  -dz );
-					glTexCoord2f(1.f, 1.f);
-					glVertex3f(  dx, dy,  -dz );
-					glTexCoord2f(1.f, 0.f);
-					glVertex3f(  dx, dy,  dz );
-		glEnd( );
-	glEndList( );
-
-	NegYList = glGenLists( 1 );
-	glNewList( NegYList, GL_COMPILE );
-		glBegin( GL_QUADS );
-			//glBindTexture(GL_TEXTURE_2D, TexNegYList);
-				glNormal3f(0., -1., 0.);
-					glTexCoord2f(0.f, 0.f);
-					glVertex3f( -dx, -dy,  -dz);
-					glTexCoord2f(0.f, 1.f);
-					glVertex3f( -dx, -dy,  dz );
-					glTexCoord2f(1.f, 1.f);
-					glVertex3f(  dx, -dy,  dz );
-					glTexCoord2f(1.f, 0.f);
-					glVertex3f(  dx, -dy,  -dz );
-		glEnd( );
-	glEndList( );
-
-	PosZList = glGenLists( 1 );
-	glNewList( PosZList, GL_COMPILE );
-		glBegin( GL_QUADS );
-			//glBindTexture(GL_TEXTURE_2D, TexPosZList);
-				glNormal3f(0., 0., 1.);
-					glTexCoord2f(0.f, 0.f);
-					glVertex3f(-dx, -dy, dz);
-					glTexCoord2f(0.f, 1.f);
-					glVertex3f(-dx,  dy, dz);
-					glTexCoord2f(1.f, 1.f);
-					glVertex3f(dx,  dy, dz);
-					glTexCoord2f(1.f, 0.f);
-					glVertex3f(dx, -dy, dz);
-		glEnd( );
-	glEndList( );
-
-	NegZList = glGenLists( 1 );
-	glNewList( NegZList, GL_COMPILE );
-		glBegin( GL_QUADS );
-			//glBindTexture(GL_TEXTURE_2D, TexNegZList);
-				glNormal3f(0., 0., -1.);
-					glTexCoord2f(0.f, 0.f);
-					glVertex3f(dx, -dy, -dz);
-					glTexCoord2f(0.f, 1.f);
-					glVertex3f(dx,  dy, -dz);
-					glTexCoord2f(1.f, 1.f);
-					glVertex3f(-dx,  dy, -dz);
-					glTexCoord2f(1.f, 0.f);
-					glVertex3f(-dx, -dy, -dz);
-		glEnd( );
-	glEndList( );
-
-	BoxList = glGenLists(1);
-	glNewList(BoxList, GL_COMPILE);
-		glPushMatrix();
-			glScalef(.1, .1, .1);
-			glBegin(GL_QUADS);
-				glCallList(PosXList);
-				glCallList(NegXList);
-				glCallList(PosYList);
-				glCallList(NegYList);
-				glCallList(PosZList);
-				glCallList(NegZList);
-			glEnd();
-		glPopMatrix();
-	glEndList();
-
-
-
 	// create the axes:
-
 	AxesList = glGenLists( 1 );
 	glNewList( AxesList, GL_COMPILE );
 		glLineWidth( AXES_WIDTH );
@@ -1069,14 +988,14 @@ Keyboard( unsigned char c, int x, int y )
 
 	switch( c )
 	{
-	case 'f':
-	case 'F':
-		Freeze = !Freeze;
-		if (Freeze)
-			glutIdleFunc(NULL);
-		else
-			glutIdleFunc(Animate);
-		break;
+		case 'f':
+		case 'F':
+			Frozen = !Frozen;
+			if ( Frozen )
+				glutIdleFunc( NULL );
+			else
+				glutIdleFunc( Animate );
+			break;
 
 		case 'o':
 		case 'O':
@@ -1115,7 +1034,7 @@ MouseButton( int button, int state, int x, int y )
 	if( DebugOn != 0 )
 		fprintf( stderr, "MouseButton: %d, %d, %d, %d\n", button, state, x, y );
 
-	
+
 	// get the proper button bit mask:
 
 	switch( button )
@@ -1209,8 +1128,12 @@ Reset( )
 	ActiveButton = 0;
 	AxesOn = 1;
 	DebugOn = 0;
-	Freeze = false;
+	DepthBufferOn = 1;
+	DepthFightingOn = 0;
+	DepthCueOn = 0;
+	Frozen = false;
 	Scale  = 1.0;
+	ShadowsOn = 0;
 	NowColor = YELLOW;
 	NowProjection = PERSP;
 	Xrot = Yrot = 0.;
@@ -1307,7 +1230,7 @@ Axes( float length )
 			int j = xorder[i];
 			if( j < 0 )
 			{
-				
+
 				glEnd( );
 				glBegin( GL_LINE_STRIP );
 				j = -j;
@@ -1323,7 +1246,7 @@ Axes( float length )
 			int j = yorder[i];
 			if( j < 0 )
 			{
-				
+
 				glEnd( );
 				glBegin( GL_LINE_STRIP );
 				j = -j;
@@ -1339,7 +1262,7 @@ Axes( float length )
 			int j = zorder[i];
 			if( j < 0 )
 			{
-				
+
 				glEnd( );
 				glBegin( GL_LINE_STRIP );
 				j = -j;
@@ -1388,7 +1311,7 @@ HsvRgb( float hsv[3], float rgb[3] )
 	}
 
 	// get an rgb from the hue itself:
-	
+
 	float i = (float)floor( h );
 	float f = h - i;
 	float p = v * ( 1.f - s );
@@ -1401,23 +1324,23 @@ HsvRgb( float hsv[3], float rgb[3] )
 		case 0:
 			r = v;	g = t;	b = p;
 			break;
-	
+
 		case 1:
 			r = q;	g = v;	b = p;
 			break;
-	
+
 		case 2:
 			r = p;	g = v;	b = t;
 			break;
-	
+
 		case 3:
 			r = p;	g = q;	b = v;
 			break;
-	
+
 		case 4:
 			r = t;	g = p;	b = v;
 			break;
-	
+
 		case 5:
 			r = v;	g = p;	b = q;
 			break;
@@ -1482,24 +1405,3 @@ Unit( float v[3] )
 	}
 	return dist;
 }
-
-void LoadAndSetTexture(char* filePath, GLuint* textureID) {
-    int width, height;
-    unsigned char* texture = BmpToTexture(filePath, &width, &height);
-
-    if (texture == NULL) {
-        fprintf(stderr, "Cannot open texture '%s'\n", filePath);
-    } else {
-        fprintf(stderr, "Opened '%s': width = %d ; height = %d\n", filePath, width, height);
-
-        glGenTextures(1, textureID);
-        glBindTexture(GL_TEXTURE_2D, *textureID);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
-    }
-}
-

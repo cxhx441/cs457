@@ -17,8 +17,8 @@ Program    cubemap_3d               \
     uNoiseAmp <0. 0. 5.>            \
     uNoiseFreq <0.1 1. 20.>         \
     uIndexOfRefraction <.1 1.25 2.5>  \
-    uReflect_VS_Refract <0. .8 1.>  \
-    uColorMix <0 0.25 1>
+    uReflect_VS_Refract <0. 0. 1.>  \
+    uColorMix <0 0.1 1>
 
 Color [0 1 1 1]
 #PushMatrix
@@ -26,12 +26,12 @@ Color [0 1 1 1]
 #QuadXY  -0.2  2. 256 256
 #PopMatrix
 #Teapot
-#Box
+Box
 #Sphere
-PushMatrix
-Rotate -90 1 0 0
-Torus
-PopMatrix
+#PushMatrix
+#Rotate -90 1 0 0
+#Torus
+#PopMatrix
 
 #Vertex texture.vert
 #Fragment texture.frag

@@ -72,11 +72,13 @@ main( )
 
 	vec3 reflectVector = reflect(Eye, Normal);
 	reflectVector = rotateVector(uXrot, uYrot, reflectVector);
+	reflectVector = reflectVector * vec3(1., -1., 1.);
 	vec4 reflectColor = textureCube(uReflectUnit, reflectVector);
 	reflectColor = mix(reflectColor, vec4(1, 0, 0, 1), uColorMix);
 
 	float eta = 1. / uIndexOfRefraction;
 	vec3 refractVector = refract(Eye, Normal, eta);
+	refractVector = refractVector * vec3(1., -1., 1.);
 	refractVector = rotateVector(uXrot, uYrot, refractVector);
 	vec4 refractColor;
 	if ( all( equal( refractVector, vec3(0.) ) ) )
