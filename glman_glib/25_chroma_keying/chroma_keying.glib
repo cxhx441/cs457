@@ -1,0 +1,18 @@
+##OpenGL GLIB
+
+Ortho -1. 1. -1. 1.
+LookAt 0. 0. 1.  0. 0. 0.  0. 1. 0.
+
+Texture2D 6 green.bmp
+Texture2D 7 replace.bmp
+
+Vertex          chroma_keying.vert
+Fragment        chroma_keying.frag
+Program    chroma_keying        \
+    uGreenUnit  6                  \
+    uReplaceUnit  7                  \
+    uBlend <0. 0. 1.>\
+    uGreenThreshold <0. 0.8 1.>
+
+QuadXY  0.1 1
+
