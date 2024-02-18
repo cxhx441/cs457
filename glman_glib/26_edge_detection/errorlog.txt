@@ -1,0 +1,4 @@
+
+0(52) : error C7503: OpenGL does not allow C-style casts
+0(53) : error C7503: OpenGL does not allow C-style casts
+

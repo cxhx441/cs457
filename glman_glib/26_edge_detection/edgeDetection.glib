@@ -1,0 +1,17 @@
+##OpenGL GLIB
+
+Ortho -1. 1. -1. 1.
+LookAt 0. 0. 1.  0. 0. 0.  0. 1. 0.
+
+Texture2D 4 spongebob.bmp
+
+Vertex          edgeDetection.vert
+Fragment        edgeDetection.frag
+Program    edgeDetection                       \
+    uImageUnit  4                  \
+    uVertBool <true>\
+    uHorzBool <true>\
+    uBlend <0. 0. 1.>
+
+QuadXY  0.1 1
+
