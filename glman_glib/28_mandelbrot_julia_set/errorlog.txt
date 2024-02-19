@@ -1,0 +1,4 @@
+
+0(87) : error C1035: assignment of incompatible types
+0(88) : error C1035: assignment of incompatible types
+

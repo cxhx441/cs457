@@ -1,0 +1,25 @@
+##OpenGL GLIB
+
+Ortho -1. 1. -1. 1.
+LookAt 0. 0. 1.  0. 0. 0.  0. 1. 0.
+
+Vertex          mandelbrot_julia_set.vert
+Fragment        mandelbrot_julia_set.frag
+Program    mandelbrot_julia_set                       \
+    uMandelbrotVSJulia <0 0 1>                        \
+    uMaxIterations <1 10 1000>                        \
+    uScale <0, .2, 10>                               \
+    uOffsetS <-1., 0, 1>                            \
+    uOffsetT <-1., 0, 1>                             \
+    uJuliaConstantX <-1., 0, 1>                      \
+    uJuliaConstantY <-1., 0, 1>                       \
+    uSameJuliaXY <false>                              \
+    uTrapDist <0, 0, 1>                              \
+    #uMaxIterations <0 1000 1000>                     \
+    #uFreq <0.001, 0.001, 1>                           \
+    #uOffsetS <0., .282, 1>                            \
+    #uOffsetT <0., .012, 1>
+
+
+QuadXY  0.1 1
+
