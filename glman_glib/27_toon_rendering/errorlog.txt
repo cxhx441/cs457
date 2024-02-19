@@ -1,0 +1,5 @@
+
+0(73) : error C0000: syntax error, unexpected reserved word "if", expecting "::" at token "if"
+0(79) : error C1503: undefined variable "rgb"
+0(80) : error C0000: syntax error, unexpected '=', expecting "::" at token "="
+

@@ -1,0 +1,22 @@
+##OpenGL GLIB
+
+Ortho -1. 1. -1. 1.
+LookAt 0. 0. 1.  0. 0. 0.  0. 1. 0.
+
+#Texture2D 4 spiderman.bmp
+Texture2D 4 land.bmp
+#Texture2D 4 spongebob.bmp
+
+Vertex          toonRendering.vert
+Fragment        toonRendering.frag
+Program    toonRendering                       \
+    uImageUnit  4                  \
+    uBlend <0. 0. 1.>\
+    uHorzBool <true> \
+    uVertBool <true> \
+    uMagTol <0, 1, 3>\
+    uQuantize <0, 1, 10>\
+    uOG <false>
+
+QuadXY  0.1 1
+
