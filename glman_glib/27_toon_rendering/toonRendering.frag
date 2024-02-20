@@ -39,6 +39,7 @@ void main()
     vec4 rgb_og = texture(uImageUnit, vST);
     vec3 rgb = texture(uImageUnit, vST).xyz;
 
+    // EDGE DETECTION
     // horiz and vert sobel convulutions
     //[-1 -2 -1]
     //[ 0  0  0]

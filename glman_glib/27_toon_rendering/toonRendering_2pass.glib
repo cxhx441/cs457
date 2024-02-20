@@ -1,0 +1,50 @@
+##OpenGL GLIB
+
+Perspective 90
+
+Texture2D 6 1024 1024  # set render to texture size
+
+RenderToTexture 6   # set render to texture unit
+Background 0. 0. 0.
+Clear
+
+
+
+
+Vertex          stripes.vert
+Fragment        stripes.frag
+Program    stripes                       \
+    uA      <0 3.47 10>   \
+    uP      <0. .366 1.> \
+    uTol    <0. 0.369 .5>  \
+    uAmp    <-5. -0.305 5.> \
+    uFreq   <0. 16.22 20.>
+
+Color       1.0  0.5   0.0
+Sphere      1.  200  200
+
+
+
+
+# SECOND PASS
+
+RenderToTexture # this clears the render to texture
+Ortho 0 0 0 0
+
+Background .2 0 0
+Clear
+
+Vertex          toonRendering.vert
+Fragment        toonRendering.frag
+Program    toonRendering                       \
+    uImageUnit  6                  \
+    uBlend <0. 0.354 1.>\
+    uHorzEdgeBool <true> \
+    uVertEdgeBool <false> \
+    uEdgeMagTol <0, 3, 3>\
+    uQuantize <0, 1.1, 10>\
+    uOG <false>
+
+translate 0 0 0
+QuadXY  0.1 1
+

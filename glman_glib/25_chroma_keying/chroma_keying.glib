@@ -12,6 +12,7 @@ Program    chroma_keying        \
     uGreenUnit  6                  \
     uReplaceUnit  7                  \
     uBlend <0. 0. 1.>\
+    uLum <false>\
     uGreenThreshold <0. 0.8 1.>
 
 QuadXY  0.1 1
