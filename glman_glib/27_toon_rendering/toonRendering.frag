@@ -2,8 +2,8 @@
 
 uniform sampler2D uImageUnit;
 uniform float uBlend;
-uniform bool uHorzBool, uVertBool;
-uniform float uMagTol;
+uniform bool uHorzEdgeBool, uVertEdgeBool;
+uniform float uEdgeMagTol;
 uniform float uQuantize;
 uniform bool uOG;
 
@@ -65,15 +65,15 @@ void main()
     float i0p1   =  dot( texture( uImageUnit, vST+st0p ).rgb,  LUMINANCE_COEFFS );
     float h = -1.*im1p1 - 2.*i0p1 - 1.*ip1p1 + 1.*im1m1 + 2.*i0m1 + 1.*ip1m1;
     float v = -1.*im1m1 - 2.*im10 - 1.*im1p1 + 1.*ip1m1 + 2.*ip10 + 1.*ip1p1;
-    if (!uHorzBool) h = 0;
-    if (!uVertBool) v = 0;
+    if (!uHorzEdgeBool) h = 0;
+    if (!uVertEdgeBool) v = 0;
     float mag = sqrt( h*h + v*v );
     float ang = atan2(v, h); // useful for something??
     vec3 target = vec3( mag,mag,mag );
     rgb = mix( rgb, target, uBlend );
 
     //from pdf
-    if( mag > uMagTol ) {
+    if( mag > uEdgeMagTol ) {
         gl_FragColor= vec4( 0., 0., 0., 1. );
     }
     else {
