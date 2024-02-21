@@ -1,0 +1,19 @@
+##OpenGL GLIB
+
+windowsize 1200 1200
+Ortho -1. 1. -1. 1.
+LookAt 0. 0. 1.  0. 0. 0.  0. 1. 0.
+
+Vertex          chladniPlate.vert
+Fragment        chladniPlate.frag
+Program    chladniPlate                       \
+    uN <0 1 50>                        \
+    uM <0 2 50>                        \
+    uN_F <0 1 1000>                        \
+    uTol <0 0.1 2>                        \
+    uScale <0, .2, 10>                               \
+    uOffsetS <-1., 0, 1>                            \
+    uOffsetT <-1., 0, 1>
+
+QuadXY  0.1 1
+

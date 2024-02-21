@@ -1,0 +1,4 @@
+
+0(4) : error C0000: syntax error, unexpected identifier, expecting ',' or ';' at token "uN_F"
+0(25) : error C1503: undefined variable "uN_F"
+
