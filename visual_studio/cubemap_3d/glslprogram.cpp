@@ -1,5 +1,9 @@
 #include "glslprogram.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 
 struct GLshadertype
 {
@@ -453,7 +457,7 @@ GLSLProgram::SetAttributeVariable( char* name, float vals[3] )
 		this->Use();
 		glVertexAttrib3fv( loc, vals );
 	}
-};
+}
 
 
 int
@@ -533,6 +537,51 @@ GLSLProgram::SetUniformVariable( char* name, float vals[3] )
 		glUniform3fv( loc, 1, vals );
 	}
 };
+
+void
+GLSLProgram::SetUniformVariable( char* name, glm::mat4& val)
+{
+	int loc;
+
+	if( ( loc = GetUniformLocation( name ) )  >= 0 )
+	{
+		fprintf( stderr, "Found a glm::mat4\n" );
+		this->Use();
+		glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(val));
+	}
+	else {
+		fprintf( stderr, "can't find glm::mat4 : %s\n", name );
+	}
+};
+
+void
+GLSLProgram::SetUniformVariable( char* name, glm::mat3& val)
+{
+	int loc;
+
+	if( ( loc = GetUniformLocation( name ) )  >= 0 )
+	{
+		fprintf( stderr, "Found a glm::mat3\n" );
+		this->Use();
+		glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(val));
+	}
+	else {
+		fprintf( stderr, "can't find glm::mat3 : %s\n", name );
+	}
+};
+
+	//// Get uniform locations
+	//int modelLoc = glGetUniformLocation(CubeMapShader, "model");
+	//int viewLoc = glGetUniformLocation(CubeMapShader, "view");
+	//int projectionLoc = glGetUniformLocation(CubeMapShader, "projection");
+	//int normalMatrixLoc = glGetUniformLocation(CubeMapShader, "normalMatrix");
+
+	//// Set matrix uniforms
+	//glUseProgram(CubeMapShader);
+	//glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+	//glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+	//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+	//glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normal));
 
 
 bool

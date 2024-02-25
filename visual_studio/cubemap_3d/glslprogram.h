@@ -27,6 +27,10 @@
 #include <map>
 #include <stdarg.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 inline int GetOSU( int flag )
 {
 	int i;
@@ -84,6 +88,8 @@ class GLSLProgram
 	void	SetUniformVariable( char *, float );
 	void	SetUniformVariable( char *, float, float, float );
 	void	SetUniformVariable( char *, float[3] );
+	void	SetUniformVariable( char *, glm::mat4& );
+	void	SetUniformVariable( char *, glm::mat3& );
 	void	SetVerbose( bool );
 	void	UnUse( );
 	void	Use( );

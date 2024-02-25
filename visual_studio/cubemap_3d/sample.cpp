@@ -11,7 +11,6 @@
 #define F_PI_2		((float)(F_PI/2.f))
 #endif
 
-
 #ifdef WIN32
 #include <windows.h>
 #pragma warning(disable:4996)
@@ -27,6 +26,10 @@
 #endif
 #include "glut.h"
 
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 //	This is a sample OpenGL / GLUT program
 //
@@ -398,11 +401,13 @@ Display( )
 
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity( );
+	glm::mat4 projection;
 	if( NowProjection == ORTHO )
-		glOrtho( -2.f, 2.f,     -2.f, 2.f,     0.1f, 1000.f );
+		//glOrtho( -2.f, 2.f,     -2.f, 2.f,     0.1f, 1000.f );
+		projection = glm::ortho( -2.f, 2.f,     -2.f, 2.f,     0.1f, 1000.f );
 	else
-		gluPerspective( 70.f, 1.f,	0.1f, 1000.f );
-
+		//gluPerspective( 70.f, 1.f,	0.1f, 1000.f );
+		projection = glm::perspective( glm::radians(70.f), 1.f,	0.1f, 1000.f );
 	// place the objects into the scene:
 
 	glMatrixMode( GL_MODELVIEW );
@@ -410,17 +415,33 @@ Display( )
 
 	// set the eye position, look-at position, and up-vector:
 
-	gluLookAt( 0.f, 0.f, 3.f,     0.f, 0.f, 0.f,     0.f, 1.f, 0.f );
+	//gluLookAt( 0.f, 0.f, 3.f,     0.f, 0.f, 0.f,     0.f, 1.f, 0.f );
+	//glRotatef( (GLfloat)Yrot, 0.f, 1.f, 0.f );
+	//glRotatef( (GLfloat)Xrot, 1.f, 0.f, 0.f );
+	//if( Scale < MINSCALE ) Scale = MINSCALE;
+	//glScalef( (GLfloat)Scale, (GLfloat)Scale, (GLfloat)Scale );
+	glm::vec3 eye(0., 0., 3.);
+	glm::vec3 look(0., 0., 0.);
+	glm::vec3 up(0., 1., 3.);
+	glm::mat4 view = glm::lookAt(eye, look, up);
 
-	// rotate the scene:
-
-	glRotatef( (GLfloat)Yrot, 0.f, 1.f, 0.f );
-	glRotatef( (GLfloat)Xrot, 1.f, 0.f, 0.f );
-
-	// uniformly scale the scene:
-
+	glm::mat4 model(1.); // identity matrix
+	// ROTATE THE SCENE
+	model = glm::rotate(model, glm::radians(Yrot), glm::vec3(0, 1, 0));
+	model = glm::rotate(model, glm::radians(Xrot), glm::vec3(1, 0, 0));
+	// UNIFORMLY SCALE THE SCENE
 	if( Scale < MINSCALE ) Scale = MINSCALE;
-	glScalef( (GLfloat)Scale, (GLfloat)Scale, (GLfloat)Scale );
+	model = glm::scale(model, glm::vec3(Scale, Scale, Scale));
+
+
+	glMultMatrixf(glm::value_ptr(projection));
+	glMultMatrixf(glm::value_ptr(view)); // send matrix to opengl
+	glMultMatrixf(glm::value_ptr(model)); // send matrix to opengl
+
+	// NORMAL MATRIX
+	//glm::mat3 normal = glm::transpose(glm::inverse(glm::mat3(model)));
+	glm::mat3 normal = glm::transpose(glm::inverse(glm::mat3(model)));
+
 
 	// possibly draw the axes:
 
@@ -437,12 +458,25 @@ Display( )
 	// draw the box object by calling up its display list:
 
 	CubeMapShader.Use( );
-	//glActiveTexture( GL_TEXTURE0 + CubeMapReflectUnit );
-	//glBindTexture( GL_TEXTURE_CUBE_MAP, CubeMapReflectTex );
-	//glActiveTexture( GL_TEXTURE0 + CubeMapRefractUnit );
-	//glBindTexture( GL_TEXTURE_CUBE_MAP, CubeMapRefractTex );
+	CubeMapShader.SetUniformVariable( (char*)"uModelMat", model);
+	CubeMapShader.SetUniformVariable( (char*)"uViewMat", view);
+	CubeMapShader.SetUniformVariable( (char*)"uProjectionMat", projection);
+	CubeMapShader.SetUniformVariable( (char*)"uNormalMat", normal);
 
-	//CubeMapShader.SetUniformVariable( "uReflect_VS_Refract", 1.f );
+	//// Get uniform locations
+	//int modelLoc = glGetUniformLocation(CubeMapShader, "model");
+	//int viewLoc = glGetUniformLocation(CubeMapShader, "view");
+	//int projectionLoc = glGetUniformLocation(CubeMapShader, "projection");
+	//int normalMatrixLoc = glGetUniformLocation(CubeMapShader, "normalMatrix");
+
+	//// Set matrix uniforms
+	//glUseProgram(CubeMapShader);
+	//glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+	//glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+	//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+	//glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normal));
+
+	CubeMapShader.SetUniformVariable( "uXrot", F_PI/180 * Xrot);
 	CubeMapShader.SetUniformVariable( "uXrot", F_PI/180 * Xrot);
 	CubeMapShader.SetUniformVariable( "uYrot", F_PI/180 * Yrot);
 
@@ -454,20 +488,23 @@ Display( )
 	CubeMapShader.UnUse( );       // OvalShader.Use(0);  also works
 
 	//glBindTexture(GL_TEXTURE_2D, TexPosXList);
-	TextureShader.Use();
-	glBindTexture(GL_TEXTURE_2D, TexPosXList);
-	glCallList(PosXList);
-	glBindTexture(GL_TEXTURE_2D, TexPosYList);
-	glCallList(PosYList);
-	glBindTexture(GL_TEXTURE_2D, TexPosZList);
-	glCallList(PosZList);
-	glBindTexture(GL_TEXTURE_2D, TexNegXList);
-	glCallList(NegXList);
-	glBindTexture(GL_TEXTURE_2D, TexNegYList);
-	glCallList(NegYList);
-	glBindTexture(GL_TEXTURE_2D, TexNegZList);
-	glCallList(NegZList);
-	TextureShader.UnUse();
+	//TextureShader.Use();
+	//TextureShader.SetUniformVariable( "uModelMat", model);
+	//TextureShader.SetUniformVariable( "uViewMat", view);
+	//TextureShader.SetUniformVariable( "uProjectionMat", projection);
+	//glBindTexture(GL_TEXTURE_2D, TexPosXList);
+	//glCallList(PosXList);
+	//glBindTexture(GL_TEXTURE_2D, TexPosYList);
+	//glCallList(PosYList);
+	//glBindTexture(GL_TEXTURE_2D, TexPosZList);
+	//glCallList(PosZList);
+	//glBindTexture(GL_TEXTURE_2D, TexNegXList);
+	//glCallList(NegXList);
+	//glBindTexture(GL_TEXTURE_2D, TexNegYList);
+	//glCallList(NegYList);
+	//glBindTexture(GL_TEXTURE_2D, TexNegZList);
+	//glCallList(NegZList);
+	//TextureShader.UnUse();
 
 	// draw some gratuitous text that just rotates on top of the scene:
 	// i commented out the actual text-drawing calls -- put them back in if you have a use for them
