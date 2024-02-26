@@ -856,7 +856,7 @@ InitGraphics( )
 
 	PatternShaderProgram = glCreateProgram( );
 	read_compile_link_validate_shader(PatternShaderProgram, "dots.vert", "vertex");
-    read_compile_link_validate_shader(PatternShaderProgram, "dots.geom", "geometry");
+    //read_compile_link_validate_shader(PatternShaderProgram, "dots.geom", "geometry");
 	read_compile_link_validate_shader(PatternShaderProgram, "dots.frag", "fragment");
 	glUseProgram(PatternShaderProgram);
 	set_uniform_variable(PatternShaderProgram, "uColorMix", 0.1f);
