@@ -1,0 +1,3 @@
+
+0(27) : error C0000: syntax error, unexpected identifier, expecting ',' or ';' at token "t"
+

@@ -1,0 +1,14 @@
+##OpenGL GLIB
+
+windowsize 1200 1200
+Ortho -1. 1. -1. 1.
+LookAt 0. 0. 1.  0. 0. 0.  0. 1. 0.
+
+Vertex       beziercurve.vert
+Geometry beziercurve.geom
+Fragment beziercurve.frag
+Program BezierCurve uNum <2 4 50>
+
+LineWidth 3.
+LinesAdjacency [0. 0. 0.] [1. 1. 1.] [2. 1. 2.] [3. -1. 0.]
+
