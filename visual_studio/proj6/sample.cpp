@@ -856,10 +856,10 @@ InitGraphics( )
 
 	PatternShaderProgram = glCreateProgram( );
 	read_compile_link_validate_shader(PatternShaderProgram, "dots.vert", "vertex");
-    //read_compile_link_validate_shader(PatternShaderProgram, "dots.geom", "geometry");
+    read_compile_link_validate_shader(PatternShaderProgram, "dots.geom", "geometry");
 	read_compile_link_validate_shader(PatternShaderProgram, "dots.frag", "fragment");
 	glUseProgram(PatternShaderProgram);
-	set_uniform_variable(PatternShaderProgram, "uColorMix", 0.1f);
+	//set_uniform_variable(PatternShaderProgram, "uColorMix", 0.1f);
 	glUseProgram(0);
 }
 
@@ -936,7 +936,7 @@ InitLists( )
 
 
 	VBO_BoxList.Init();
-	VBO_BoxList.glBegin(GL_QUADS);
+	VBO_BoxList.glBegin(GL_POINTS);
 	int c_i;
 	int n_i;
 	for (int v_i = 0; v_i < vertex_count; v_i++)
@@ -952,7 +952,7 @@ InitLists( )
 	// create the object:
 	BoxList = glGenLists( 1 );
 	glNewList( BoxList, GL_COMPILE );
-		glBegin( GL_QUADS );
+		glBegin( GL_POINTS );
 			glColor3f( 1., 0., 0. );
 				glNormal3f( 1., 0., 0. );
 					glVertex3f(  dx, -dy,  dz );
