@@ -1,0 +1,3 @@
+
+0(11) : error C1031: swizzle mask element not present in operand "rgb"
+
