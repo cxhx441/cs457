@@ -5,7 +5,8 @@ layout( points ) in;
 layout( triangle_strip, max_vertices=256 ) out;
 
 out vec3 gNormal;
-out float gLightIntensity;
+out vec3 gLightDir;
+out vec3 gEyeDir;
 
 vec3 LIGHTPOS = vec3(10., 10., 10.);
 //vec3 LIGHTPOS = (gl_ModelViewMatrix * vec4(10., 10., 10., 1)).xyz;
@@ -29,21 +30,29 @@ make_face(vec4 c1, vec4 c2, vec4 c3, vec4 c4){
 
 
 	gl_Position = c1_out;
-	gLightIntensity = max(dot(normalize(LIGHTPOS - c1_light), gNormal), 0.0);
+	//gLightIntensity = max(dot(normalize(LIGHTPOS - c1_light), gNormal), 0.0);
+	gLightDir = normalize(LIGHTPOS - c1_light);
+	gEyeDir = normalize(vec3(0, 0, 0) - c1_light);
 	EmitVertex();
 	gl_Position = c2_out;
-	gLightIntensity = max(dot(normalize(LIGHTPOS - c2_light), gNormal), 0.0);
+	//gLightIntensity = max(dot(normalize(LIGHTPOS - c2_light), gNormal), 0.0);
+	gLightDir = normalize(LIGHTPOS - c2_light);
+	gEyeDir = normalize(vec3(0, 0, 0) - c2_light);
 	EmitVertex();
 	gl_Position = c3_out;
-	gLightIntensity = max(dot(normalize(LIGHTPOS - c3_light), gNormal), 0.0);
+	//gLightIntensity = max(dot(normalize(LIGHTPOS - c3_light), gNormal), 0.0);
+	gLightDir = normalize(LIGHTPOS - c3_light);
+	gEyeDir = normalize(vec3(0, 0, 0) - c3_light);
 	EmitVertex();
 	gl_Position = c4_out;
-	gLightIntensity = max(dot(normalize(LIGHTPOS - c4_light), gNormal), 0.0);
+	//gLightIntensity = max(dot(normalize(LIGHTPOS - c4_light), gNormal), 0.0);
+	gLightDir = normalize(LIGHTPOS - c4_light);
+	gEyeDir = normalize(vec3(0, 0, 0) - c4_light);
 	EmitVertex();
 	EndPrimitive();
 }
 void main(){
-	float cube_size = 0.25;
+	float cube_size = 1;
 	float dt = cube_size / 2.f;
 	vec3 v = gl_PositionIn[0].xyz;
 	vec4 c1 = vec4(v, 0) + vec4(-dt,  dt,  dt, 1);
