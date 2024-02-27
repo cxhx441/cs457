@@ -1,0 +1,5 @@
+
+0(13) : error C1503: undefined variable "vEye"
+0(14) : error C1503: undefined variable "vLight"
+0(15) : error C1503: undefined variable "vNormal"
+

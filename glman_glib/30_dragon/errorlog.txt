@@ -1,3 +1,0 @@
-
-0(23) : error C0000: syntax error, unexpected '=', expecting ',' or ';' at token "="
-
