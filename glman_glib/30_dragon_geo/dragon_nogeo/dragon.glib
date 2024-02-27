@@ -1,8 +1,9 @@
 ##OpenGL GLIB
 
-windowsize 1200 1200
+#windowsize 1200 1200
 Persp 70
 LookAt 50. 50. 50.  0. 0. 0.  0. 1. 0.
+Background 0 0 0 0
 
 
 #Obj ..\\dragon010.obj
@@ -11,14 +12,17 @@ LookAt 50. 50. 50.  0. 0. 0.  0. 1. 0.
 
 Vertex   dragon.vert
 Fragment dragon.frag
-Program dragon uNum <2 4 50>
+Program dragon \
+    uKa <0. 0.2 1.> \
+    uKd <0. 0.4 1.> \
+    uKs <0. 0.4 1.> \
 
 #scale 0.025
 #WireObj ..\\dragon010.obj
 #WireObj ..\\dragon037.obj
 #WireObj ..\\dragon138.obj
 ObjAdj ..\\dragon010.obj
-#ObjAdj ..\\dragon138.obj
+#ObjAdj ..\\dragon037.obj
 #Sphere
 
 
