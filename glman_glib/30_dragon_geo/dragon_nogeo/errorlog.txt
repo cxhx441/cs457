@@ -1,3 +1,5 @@
 
-0(30) : error C1014: "" is not a function
+0(79) : error C0000: syntax error, unexpected '{', expecting ')' at token "{"
+0(85) : error C1503: undefined variable "rgb"
+0(86) : error C0000: syntax error, unexpected '=', expecting "::" at token "="
 
