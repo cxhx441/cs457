@@ -1,5 +1,4 @@
 
-0(79) : error C0000: syntax error, unexpected '{', expecting ')' at token "{"
-0(85) : error C1503: undefined variable "rgb"
-0(86) : error C0000: syntax error, unexpected '=', expecting "::" at token "="
+0(7) : error C0000: syntax error, unexpected ';', expecting '{' at token ";"
+0(39) : error C1503: undefined variable "vST"
 

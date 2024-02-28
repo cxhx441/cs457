@@ -1,9 +1,14 @@
 #version 330 compatibility
 
 uniform float uKa, uKd, uKs;
+uniform float uFreq;
+uniform sampler2D uCaveWallUnit;
+
 flat in vec3 vLight;
 flat in vec3 vEye;
 flat in vec3 vNormal;
+in vec2 vST;
+
 
 int shininess = 128;
 
@@ -33,5 +38,8 @@ void main()
 
 	vec3 color = ambient + diffuse + specular;
 
+	cave_color = texture(uCaveWallUnit, vec2(vST.s* uFreq, vST.t * uFreq)).rgb;
+
+	color *= cave_color;
     gl_FragColor = vec4(color, 1.);
 }

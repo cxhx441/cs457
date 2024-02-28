@@ -1,93 +1,91 @@
 #version 330 compatibility
 
 uniform sampler2D uImageUnit;
-uniform float uBlend;
-uniform bool uHorzEdgeBool, uVertEdgeBool;
-uniform float uEdgeMagTol;
-uniform float uQuantize;
+uniform float uNoiseFreq, uNoiseAmp;
+uniform int uNoiseOctaves;
+uniform float uTimeMultiplier, uRiseTimeMultiplier;
+uniform float Timer;
+uniform float uStrength;
+uniform bool uSmooth, uAnimate, uClouds;
+uniform vec3 uColor;
 uniform bool uOG;
-uniform float uPow;
-uniform float uMax;
 
 in vec2 vST;
 
 const vec3 LUMINANCE_COEFFS = vec3( 0.2125,0.7154,0.0721 );
 const float PI = 3.14159265359;
 
-float
-atan2(float y, float x)
-{
-    if ( x == 0. )
-    {
-        if ( y >= 0. ) return PI/2.;
-        else return -PI/2.;
-    }
-    return atan(y, x);
-}
+//vec2 randVec2( vec2 );
+//float voronoi_noise(vec2, float, float);
+float octave_voronoi_noise(vec2, float, float, int);
 
-vec3
-quantize( vec3 rgb, float q )
-{
-    rgb *= q; // scale up
-    rgb += vec3( .5, .5, .5 ); // round
-    ivec3 irgb = ivec3( rgb ); // cast to all integers
-    rgb = vec3( irgb ); // cast back to floats
-    rgb /= q; // scale down
-    return rgb;
-}
 
 void main()
 {
     vec4 rgb_og = texture(uImageUnit, vST);
     vec3 rgb = texture(uImageUnit, vST).xyz;
+    vec2 uv = vST + vec2(0, -Timer * uRiseTimeMultiplier);
+    float noise = octave_voronoi_noise(uv, uNoiseFreq, uNoiseAmp, uNoiseOctaves);
 
-    // EDGE DETECTION
-    // horiz and vert sobel convulutions
-    //[-1 -2 -1]
-    //[ 0  0  0]
-    //[ 1  2  1] horz
-    //
-    //[-1  0  1]
-    //[-2  0  2]
-    //[-1  0  1] // vert
-    int ResS = textureSize(uImageUnit, 0).x;
-    int ResT = textureSize(uImageUnit, 0).y;
-    vec2 stp0 = vec2(1./ResS,  0. );
-    vec2 st0p = vec2(0.     ,  1./ResT);
-    vec2 stpp = vec2(1./ResS, 1./ResT);
-    vec2 stpm = vec2(1./ResS, -1./ResT);
-
-    float i00 = dot( texture( uImageUnit, vST ).rgb , LUMINANCE_COEFFS );
-    float im1m1 = dot( texture( uImageUnit, vST-stpp ).rgb, LUMINANCE_COEFFS );
-    float ip1p1 = dot( texture( uImageUnit, vST+stpp ).rgb, LUMINANCE_COEFFS );
-    float im1p1 = dot( texture( uImageUnit, vST-stpm ).rgb, LUMINANCE_COEFFS );
-    float ip1m1 = dot( texture( uImageUnit, vST+stpm ).rgb, LUMINANCE_COEFFS );
-    float im10  =  dot( texture( uImageUnit, vST-stp0 ).rgb,   LUMINANCE_COEFFS );
-    float ip10   =  dot( texture( uImageUnit, vST+stp0 ).rgb,  LUMINANCE_COEFFS );
-    float i0m1  =  dot( texture( uImageUnit, vST-st0p ).rgb,   LUMINANCE_COEFFS );
-    float i0p1   =  dot( texture( uImageUnit, vST+st0p ).rgb,  LUMINANCE_COEFFS );
-    float h = -1.*im1p1 - 2.*i0p1 - 1.*ip1p1 + 1.*im1m1 + 2.*i0m1 + 1.*ip1m1;
-    float v = -1.*im1m1 - 2.*im10 - 1.*im1p1 + 1.*ip1m1 + 2.*ip10 + 1.*ip1p1;
-    if (!uHorzEdgeBool) h = 0;
-    if (!uVertEdgeBool) v = 0;
-    float mag = sqrt( h*h + v*v );
-    float ang = atan2(v, h); // useful for something??
-    vec3 target = vec3( mag,mag,mag );
-    rgb = mix( rgb, target, uBlend );
-
-    //from pdf
-    //float t = mix( .05, .7, vST.t / 0.6);
-    if( mag > max(uMax, uEdgeMagTol * pow(vST.t, 1/uPow))) {
-        gl_FragColor= vec4( 0., 0., 0., 1. );
-    }
-    else {
-        rgb *= uQuantize; // scale up
-        rgb += vec3( .5, .5, .5 ); // round
-        ivec3 irgb = ivec3( rgb ); // cast to all integers
-        rgb = vec3( irgb ); // cast back to floats
-        rgb /= uQuantize; // scale down
-        gl_FragColor= vec4( rgb, 1. );
-    }
-
+    rgb = texture(uImageUnit, vST + noise * uStrength).xyz;
+    gl_FragColor = vec4(rgb, 1);
     if (uOG) gl_FragColor = rgb_og;
+}
+
+
+
+
+
+vec2 randVec2( vec2 gridCorner )
+{
+	float x = dot( gridCorner, vec2(123.4, 234.5) );
+	float y = dot( gridCorner, vec2(234.5, 345.6) );
+	vec2 gradient = vec2( x, y );
+	gradient = sin(gradient);
+	gradient *= 143758.f ;
+	gradient = sin(gradient + Timer*uTimeMultiplier);
+	return gradient;
+}
+
+
+float voronoi_noise(vec2 uv, float freq, float amp){
+	uv = uv * freq;
+	vec2 gridId = floor(uv);
+	vec2 gridUv = fract(uv);
+
+	gridUv -= 0.5; // center gridUv
+
+	// get adj grid ids and min dist:
+	float minDist = 1000.;
+	for (float i = -1; i <= 1; i++) {
+		for (float j = -1; j <= 1; j++) {
+			vec2 adjGridId = vec2(i, j);
+			vec2 noise = randVec2(gridId + adjGridId);
+			if (uAnimate) adjGridId += noise * 0.5;
+			float dist = length(gridUv - adjGridId);
+			minDist = min(minDist, dist);
+		}
+	}
+
+	// // smooth out gridUv
+	if (uClouds) minDist = 1. - minDist;
+	if (uSmooth) minDist = smoothstep(0., 1., minDist);
+	// //gridUv = cubic(vec2(0, 0), vec2(1, 0), vec2(0, 1), vec2(1, 1), gridUv);
+	// // gridUv = quintic(gridUv);
+
+	return minDist * amp;
+
+}
+
+
+float octave_voronoi_noise(vec2 uv, float freq, float amp, int octaves){
+    float noise = 0.;
+	for (int i = 0; i < uNoiseOctaves; i++)
+	{
+		float freq = uNoiseFreq * pow(2., float(i));
+		float amp = uNoiseAmp / pow(2., float(i));
+
+		noise += voronoi_noise(uv, freq, amp);
+	}
+    return noise;
 }
