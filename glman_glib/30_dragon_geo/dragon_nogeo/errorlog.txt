@@ -1,4 +1,5 @@
 
-0(7) : error C0000: syntax error, unexpected ';', expecting '{' at token ";"
-0(39) : error C1503: undefined variable "vST"
+0(4) : error C0000: syntax error, unexpected identifier, expecting "::" at token "uShininess"
+0(33) : error C1503: undefined variable "uShininess"
+0(49) : error C1503: undefined variable "uShininess"
 

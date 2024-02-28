@@ -1,13 +1,12 @@
 #version 330 compatibility
 
 uniform float uKa, uKd, uKs;
+uniform int uShininess;
 in vec3 vLight1;
 in vec3 vLight2;
 in vec3 vEye;
 in vec3 vNormal;
 in vec2 vST;
-
-int shininess = 128;
 
 
 vec3 lava_color = vec3(1.0, 0.37, 0.0);
@@ -31,7 +30,7 @@ void main()
 	if( dot(N, L) > 0. )
 	{
 		vec3 ref = normalize(  reflect( -L, N )  );
-		ss = pow( max( dot(E,ref),0. ), shininess );
+		ss = pow( max( dot(E,ref),0. ), uShininess );
 	}
 	vec3 specular = uKs * ss * lava_color;
 
@@ -47,7 +46,7 @@ void main()
 	if( dot(N, L) > 0. )	      // only do specular if the light can see the point
 	{
 		vec3 ref = normalize(  reflect( -L, N )  );
-		ss = pow( max( dot(E,ref),0. ), shininess );
+		ss = pow( max( dot(E,ref),0. ), uShininess );
 	}
 	specular = uKs * ss * lava_color;
 

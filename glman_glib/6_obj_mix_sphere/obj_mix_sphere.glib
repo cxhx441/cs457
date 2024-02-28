@@ -31,7 +31,8 @@ Color 1. 0.5 0. 1.
 #JitterCloud 25 25 25
 #Obj           dragon037_med.obj
 #Obj           cat.obj
-Obj           cow.obj
+#Obj           cow.obj
+Obj dragon010.obj
 #QuadBox      6
 #Soccerball   1.
 #Torus        0.5 0.25 200 200

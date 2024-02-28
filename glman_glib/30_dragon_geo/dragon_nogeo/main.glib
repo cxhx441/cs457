@@ -27,12 +27,14 @@ Sphere 800 10 10
 
 
 #DRAGON
+Smooth
 Vertex   dragon.vert
 Fragment dragon.frag
 Program dragon \
     uKa <0. 0.05 1.> \
     uKd <0. 0.85 1.> \
     uKs <0. 0.5 1.> \
+    uShininess <1. 128 128.> \
 
 #PushMatrix
 #scale 1.01
@@ -44,6 +46,9 @@ Program dragon \
 #ObjAdj ..\\dragon037.obj
 #ObjAdj ..\\dragon138.obj
 ObjAdj ..\\dragon010.obj
+#Obj ..\\dragon010.obj
+#Obj ..\\dragon138.obj
+#Sphere 30 4 4
 
 
 
