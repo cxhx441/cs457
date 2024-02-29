@@ -1,0 +1,90 @@
+##OpenGL GLIB
+
+#windowsize 1200 1200
+
+Perspective 70
+LookAt 0. 0. 60.  0. 0. 0.  0. 1. 0.
+
+Texture2D 7 caveWall.bmp
+Texture2D 6 4096 4096 # set render to texture size
+RenderToTexture 6 # set rendertotexture unit
+Background 0 0 0 0
+Clear
+
+
+
+
+#CAVE
+Vertex   cave.vert
+Fragment cave.frag
+Program  cave \
+    uCaveWallUnit 7 \
+    uKa <0. 0.2 1.> \
+    uKd <0. 0.8 1.> \
+    uKs <0. 0. 1.> \
+    uFreq <0. 4.8. 10> \
+
+PushMatrix
+rotate 15 1 0 0
+rotate -30 0 1 0
+Sphere 800 10 10
+
+
+
+
+
+#DRAGON
+Vertex   dragon.vert
+Fragment dragon.frag
+Program dragon \
+    uKa <0. 0.165 1.> \
+    uKd <0. 1. 1.> \
+    uKs <0. 0.5 1.> \
+    uShininess <1. 28 128.> \
+
+Obj dragon138.obj
+
+
+
+
+#LAVA
+Vertex   lava_voronoi.vert
+Fragment lava_voronoi.frag
+Program  lava             \
+    uNoiseAmp <0. 1.65 5.>            \
+    uNoiseFreq <1 100 1000>         \
+    uNoiseOctaves <1 4 9>         \
+    uTimeMultiplier <1 7.9 50> \
+    uSmooth <true> \
+    uAnimate <true> \
+    uClouds <false> \
+
+QuadXZ 0 500
+
+
+
+
+# HEAT PASS
+RenderToTexture # clear the render to texture, set output back to screen
+Background .2 0 0
+Clear
+
+Vertex          heat.vert
+Fragment        heat.frag
+Program    heat                       \
+    uImageUnit  6                  \
+    uNoiseAmp <0. .7 5.>            \
+    uNoiseFreq <1 6 100>         \
+    uNoiseOctaves <1 3 9>         \
+    uTimeMultiplier <1 7.8 50> \
+    uSmooth <true> \
+    uAnimate <true> \
+    uClouds <false> \
+    uOG <false>\
+    uStrength <0 0.0068 .1>\
+    uRiseTimeMultiplier <0 4.1 25> \
+
+PopMatrix
+QuadXY  0 45
+
+

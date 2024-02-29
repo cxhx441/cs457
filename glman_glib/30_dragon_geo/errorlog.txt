@@ -1,3 +1,4 @@
 
-0(15) : error C1503: undefined variable "gl_ModelViewProjection"
+0(64) : error C0000: syntax error, unexpected ')', expecting identifier or template identifier or type identifier at token ")"
+0(65) : error C1503: undefined variable "HeadX"
 
