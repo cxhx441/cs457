@@ -8,6 +8,7 @@
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #ifndef F_PI
@@ -406,9 +407,16 @@ Display( )
 	// remember that the Z clipping  values are given as DISTANCES IN FRONT OF THE EYE
 	// USE gluOrtho2D( ) IF YOU ARE DOING 2D !
 
+	glm::mat4 model;
+	glm::mat4 view;
+	glm::mat4 projection;
+	glm::mat4 modelview;
+	glm::mat4 modelviewprojection;
+	glm::mat3 normal;
+
+
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity( );
-	glm::mat4 projection;
 	if (NowProjection == ORTHO)
 	{
 		//glOrtho(-2.f, 2.f, -2.f, 2.f, 0.1f, 1000.f); // OLD MOVING TO GLM SETUP
@@ -431,19 +439,18 @@ Display( )
 	glm::vec3 eye(0., 0., 3.);
 	glm::vec3 look(0., 0., 0.);
 	glm::vec3 up(0., 1., 0.);
-	glm::mat4 modelview = glm::lookAt(eye, look, up);
+	view = glm::lookAt(eye, look, up);
 
-	modelview = glm::rotate(modelview, D2R*Yrot, glm::vec3(0., 1., 0.));
-	modelview = glm::rotate(modelview, D2R*Xrot, glm::vec3(1., 0., 0.));
+	view = glm::rotate(view, D2R*Yrot, glm::vec3(0., 1., 0.));
+	view = glm::rotate(view, D2R*Xrot, glm::vec3(1., 0., 0.));
 
 	// uniformly scale the scene:
 	if( Scale < MINSCALE )
 		Scale = MINSCALE;
-	modelview = glm::scale(modelview, glm::vec3(Scale, Scale, Scale));
+	view = glm::scale(view, glm::vec3(Scale));
 
-	// apply modelview matrix to opengl matrix
-	glMultMatrixf(glm::value_ptr(modelview));
-
+	// apply view matrix to opengl matrix
+	glMultMatrixf(glm::value_ptr(view));
 
 	// set the fog parameters:
 	if( DepthCueOn != 0 )
@@ -475,10 +482,18 @@ Display( )
 
 	PatternShader.Use( );
 	//glCallList( BoxList ); // USING VBO
-	//PatternShader.SetUniformVariable( (char*)"uModel", model);
-	//PatternShader.SetUniformVariable( (char*)"uModelView", modelview);
-	//PatternShader.SetUniformVariable( (char*)"uProjection", projection);
-	//PatternShader.SetUniformVariable( (char*)"uNormal", normal);
+	//model = glm::translate(model, glm::vec3(1, 0, 0));
+	model = glm::mat4(1);
+	modelview = view * model;
+	modelviewprojection = projection * view * model;
+	normal = glm::mat3(glm::transpose(glm::inverse(modelview)));
+	//normal = glm::mat3(glm::inverseTranspose(modelview));
+	//PatternShader.SetUniformVariable( (char*)"uM", model);
+	//PatternShader.SetUniformVariable( (char*)"uV", view);
+	//PatternShader.SetUniformVariable( (char*)"uP", projection);
+	PatternShader.SetUniformVariable( (char*)"uN", normal);
+	PatternShader.SetUniformVariable( (char*)"uMV", modelview);
+	PatternShader.SetUniformVariable( (char*)"uMVP", modelviewprojection);
 	VBO_BoxList.Draw();
 	PatternShader.UnUse( );
 
@@ -840,6 +855,7 @@ InitGraphics( )
 
 	// all other setups go here, such as GLSLProgram and KeyTime setups:
 	PatternShader.Init( );
+	//bool valid = PatternShader.Create( "pattern.vert", "pattern.geom", "pattern.frag" );
 	bool valid = PatternShader.Create( "pattern.vert", "pattern.frag" );
 	if( !valid )
 		fprintf( stderr, "Could not create the PatternShader shader!\n" );
@@ -847,7 +863,11 @@ InitGraphics( )
 		fprintf( stderr, "PatternShader shader created!\n" );
 
 	PatternShader.Use( );
-	PatternShader.SetUniformVariable( "uColorMix", 0.1f );
+	//PatternShader.SetUniformVariable( "uColorMix", 0.1f );
+	PatternShader.SetUniformVariable( "uKa", 0.1f );
+	PatternShader.SetUniformVariable( "uKd", 0.4f );
+	PatternShader.SetUniformVariable( "uKs", 0.4f );
+	PatternShader.SetUniformVariable( "uShine", 128 );
 	PatternShader.UnUse( );
 
 }

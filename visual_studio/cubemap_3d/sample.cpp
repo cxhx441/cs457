@@ -398,10 +398,15 @@ Display( )
 	// set the viewing volume:
 	// remember that the Z clipping  values are given as DISTANCES IN FRONT OF THE EYE
 	// USE gluOrtho2D( ) IF YOU ARE DOING 2D !
+	glm::mat4 model;
+	glm::mat4 view;
+	glm::mat4 projection;
+	glm::mat3 normal;
+	glm::mat4 modelview;
+	glm::mat4 modelviewprojection;
 
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity( );
-	glm::mat4 projection;
 	if( NowProjection == ORTHO )
 		//glOrtho( -2.f, 2.f,     -2.f, 2.f,     0.1f, 1000.f );
 		projection = glm::ortho( -2.f, 2.f,     -2.f, 2.f,     0.1f, 1000.f );
@@ -422,26 +427,24 @@ Display( )
 	//glScalef( (GLfloat)Scale, (GLfloat)Scale, (GLfloat)Scale );
 	glm::vec3 eye(0., 0., 3.);
 	glm::vec3 look(0., 0., 0.);
-	glm::vec3 up(0., 1., 3.);
-	glm::mat4 view = glm::lookAt(eye, look, up);
+	glm::vec3 up(0., 1., 0.);
+	view = glm::lookAt(eye, look, up);
 
-	glm::mat4 model(1.); // identity matrix
 	// ROTATE THE SCENE
-	model = glm::rotate(model, glm::radians(Yrot), glm::vec3(0, 1, 0));
-	model = glm::rotate(model, glm::radians(Xrot), glm::vec3(1, 0, 0));
+	view = glm::rotate(view, glm::radians(Yrot), glm::vec3(0, 1, 0));
+	view = glm::rotate(view, glm::radians(Xrot), glm::vec3(1, 0, 0));
 	// UNIFORMLY SCALE THE SCENE
 	if( Scale < MINSCALE ) Scale = MINSCALE;
-	model = glm::scale(model, glm::vec3(Scale, Scale, Scale));
+	view = glm::scale(view, glm::vec3(Scale, Scale, Scale));
 
 
-	glMultMatrixf(glm::value_ptr(projection));
-	glMultMatrixf(glm::value_ptr(view)); // send matrix to opengl
-	glMultMatrixf(glm::value_ptr(model)); // send matrix to opengl
-
-	// NORMAL MATRIX
-	//glm::mat3 normal = glm::transpose(glm::inverse(glm::mat3(model)));
-	glm::mat3 normal = glm::transpose(glm::inverse(glm::mat3(model)));
-
+	model = glm::mat4(1); // identity matrix
+	normal = glm::mat3(glm::transpose(glm::inverse(model)));
+	modelview = view * model;
+	modelviewprojection = projection * view * model;
+	//glMultMatrixf(glm::value_ptr(projection));
+	//glMultMatrixf(glm::value_ptr(view)); // send matrix to opengl
+	//glMultMatrixf(glm::value_ptr(model)); // send matrix to opengl
 
 	// possibly draw the axes:
 
@@ -458,23 +461,12 @@ Display( )
 	// draw the box object by calling up its display list:
 
 	CubeMapShader.Use( );
-	CubeMapShader.SetUniformVariable( (char*)"uModelMat", model);
-	CubeMapShader.SetUniformVariable( (char*)"uViewMat", view);
-	CubeMapShader.SetUniformVariable( (char*)"uProjectionMat", projection);
-	CubeMapShader.SetUniformVariable( (char*)"uNormalMat", normal);
-
-	//// Get uniform locations
-	//int modelLoc = glGetUniformLocation(CubeMapShader, "model");
-	//int viewLoc = glGetUniformLocation(CubeMapShader, "view");
-	//int projectionLoc = glGetUniformLocation(CubeMapShader, "projection");
-	//int normalMatrixLoc = glGetUniformLocation(CubeMapShader, "normalMatrix");
-
-	//// Set matrix uniforms
-	//glUseProgram(CubeMapShader);
-	//glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-	//glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-	//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-	//glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normal));
+	CubeMapShader.SetUniformVariable( (char*)"uM", model);
+	CubeMapShader.SetUniformVariable( (char*)"uV", view);
+	CubeMapShader.SetUniformVariable( (char*)"uP", projection);
+	CubeMapShader.SetUniformVariable( (char*)"uN", normal);
+	CubeMapShader.SetUniformVariable( (char*)"uMV", modelview);
+	CubeMapShader.SetUniformVariable( (char*)"uMVP", modelviewprojection);
 
 	CubeMapShader.SetUniformVariable( "uXrot", F_PI/180 * Xrot);
 	CubeMapShader.SetUniformVariable( "uXrot", F_PI/180 * Xrot);
