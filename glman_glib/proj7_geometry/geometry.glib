@@ -1,0 +1,36 @@
+##OpenGL GLIB
+
+windowsize 1200 1200
+Persp 70
+LookAt 10. 10. 10.  0. 0. 0.  0. 1. 0.
+
+
+#Obj dragon010.obj
+#Obj dragon037.obj
+#Obj dragon138.obj
+
+Vertex   geometry.vert
+Geometry geometry.geom
+Fragment geometry.frag
+Program geometry \
+    uSubdivisionLevel <0 3 5 > \
+    uDiam <0.01 0.5 1.0> \
+    uQuantize <0.5 2. 6.> \
+    uKa <0 0.1 1>\
+    uKd <0 0.4 1>\
+    uKs <0 0.4 1>\
+    uShine <0 12 1024>\
+    uLightX < 0 10 100 >\
+    uLightY < 0 10 100 >\
+    uLightZ < 0 10 100 >\
+    uRedDepth < -100 10 100 >\
+    uBlueDepth < -100 23 100 >\
+    uUseChroma <true>\
+
+#WireObj dragon138.obj
+#ObjAdj dragon010.obj
+Obj dragon010.obj
+#Obj ducky.obj
+#Sphere
+
+
