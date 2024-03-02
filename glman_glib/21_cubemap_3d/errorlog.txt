@@ -1,4 +1,0 @@
-
-Parse error at prl_glsl_parse:269 ->>
-(66,2): error: value of type vec3 cannot be assigned to variable of type vec4
-

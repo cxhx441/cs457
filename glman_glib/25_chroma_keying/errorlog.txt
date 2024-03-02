@@ -1,4 +1,0 @@
-
-0(18) : error C1503: undefined variable "rgbCmp"
-0(26) : error C1503: undefined variable "rgbCmp"
-

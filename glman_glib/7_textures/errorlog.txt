@@ -1,3 +1,0 @@
-
-0(26) : error C1503: undefined variable "lightingColor"
-

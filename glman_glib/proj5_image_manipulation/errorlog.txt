@@ -1,3 +1,0 @@
-
-0(66) : error C1503: undefined variable "down_want"
-

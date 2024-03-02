@@ -1,3 +1,0 @@
-
-0(12) : error C7011: implicit cast from "float" to "int"
-

@@ -1,3 +1,0 @@
-
-0(24) : error C1503: undefined variable "PI"
-

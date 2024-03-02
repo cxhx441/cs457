@@ -1,3 +1,0 @@
-
-0(12) : error C1068: too much data in type constructor
-

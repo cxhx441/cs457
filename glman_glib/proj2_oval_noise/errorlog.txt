@@ -1,3 +1,0 @@
-
-0(38) : error C0000: syntax error, unexpected '/' at token "/"
-

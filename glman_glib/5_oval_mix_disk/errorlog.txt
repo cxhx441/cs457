@@ -1,3 +1,0 @@
-
-0(21) : error C1020: invalid operands to ">"
-

@@ -1,8 +1,0 @@
-
-0(24) : error C0000: syntax error, unexpected $undefined, expecting "::" at token "<undefined>"
-0(30) : error C1503: undefined variable "BP"
-0(30) : error C1503: undefined variable "BP"
-0(31) : error C1503: undefined variable "BP"
-0(32) : error C1503: undefined variable "BP"
-0(32) : error C1503: undefined variable "BP"
-

@@ -1,7 +1,0 @@
-
-0(101) : error C1503: undefined variable "perlin"
-0(103) : error C1503: undefined variable "perlin"
-0(103) : error C1503: undefined variable "perlin"
-0(105) : error C1503: undefined variable "perlin"
-0(109) : error C1503: undefined variable "perlin"
-

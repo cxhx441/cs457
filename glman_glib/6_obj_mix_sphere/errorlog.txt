@@ -1,3 +1,0 @@
-
-0(25) : error C7011: implicit cast from "bool" to "int"
-
