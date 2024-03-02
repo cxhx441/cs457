@@ -1,0 +1,30 @@
+##OpenGL GLIB
+
+windowsize 1200 1200
+Persp 70
+LookAt 50. 50. 50.  0. 0. 0.  0. 1. 0.
+
+
+#Obj dragon010.obj
+#Obj dragon037.obj
+#Obj dragon138.obj
+
+Vertex   dragon.vert
+Geometry dragon.geom
+Fragment dragon.frag
+Program dragon \
+    uKa <0 0.1 1>\
+    uKd <0 0.4 1>\
+    uKs <0 0.4 1>\
+    uShine <0 12 1024>\
+    uNormalize <0 1 1>\
+
+#scale 0.025
+#WireObj dragon010.obj
+#WireObj dragon037.obj
+#WireObj dragon138.obj
+#ObjAdj dragon010.obj
+Obj dragon010.obj
+#Sphere
+
+
