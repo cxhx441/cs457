@@ -2,10 +2,10 @@
 #extension GL_EXT_gpu_shader4: enable
 #extension GL_EXT_geometry_shader4: enable
 layout( triangles ) in;
-layout( triangle_strip, max_vertices=64 )  out;
+layout( triangle_strip, max_vertices=73 )  out;
 
 out vec3 gE, gL, gN;
-out vec3 gMVC;
+out float gMVC_z;
 
 uniform int uSubdivisionLevel;
 uniform float uDiam, uQuantize;
@@ -46,7 +46,8 @@ main( )
     //*/
 
     ///*
-    int numLayers = uSubdivisionLevel;
+    //int numLayers = uSubdivisionLevel;
+    int numLayers = 1 << uSubdivisionLevel; // 2^uSubdivisionLevel
     float dt = 1. / float( numLayers );
     float t_top = 1.;
     for( int it = 0; it < numLayers; it++ ) {
@@ -106,7 +107,7 @@ void produceVertex(float s, float t){
     gE = vec3(0) - viewVertPosition;
     gL = LIGHTPOS - viewVertPosition;
     gN = normalize(gl_NormalMatrix * (v - CG));
-    gMVC = viewVertPosition;
+    gMVC_z = viewVertPosition.z;
 
     gl_Position = gl_ModelViewProjectionMatrix * vec4(v, 1);
     EmitVertex();

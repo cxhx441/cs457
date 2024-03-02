@@ -7,7 +7,7 @@ uniform bool uUseChroma;
 uniform int uRedDepth, uBlueDepth;
 
 in vec3 gE, gL, gN;
-in vec3 gMVC;
+in float gMVC_z;
 
 vec3 perFragLighting(vec3, vec3, vec3);
 vec3 rainbow( float  );
@@ -16,7 +16,7 @@ void main()
 {
 	vec3 color = vec3(1.);
 	if (uUseChroma){
-		float t = (2./3.) * ( abs(gMVC.z) - uRedDepth ) / ( uBlueDepth - uRedDepth );
+		float t = (2./3.) * ( abs(gMVC_z) - uRedDepth ) / ( uBlueDepth - uRedDepth );
 		t = clamp( t, 0., 2./3. );
 		color = rainbow( t );
 	}
