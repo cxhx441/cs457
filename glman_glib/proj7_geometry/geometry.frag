@@ -2,7 +2,6 @@
 
 uniform float uKa, uKd, uKs;
 uniform int uShine;
-uniform int uNormalize;
 uniform bool uUseChroma;
 uniform int uRedDepth, uBlueDepth;
 
@@ -30,12 +29,7 @@ void main()
 vec3 perFragLighting(vec3 ambientRGB, vec3 diffuseRGB, vec3 specularRGB){
 	vec3 L = normalize(gL);
 	vec3 E = normalize(gE);
-    vec3 N;
-    if (uNormalize == 1){
-        N = normalize(gN);
-    } else {
-        N = gN;
-    }
+    vec3 N = normalize(gN);
 
 	vec3 ambient = uKa * ambientRGB;
 

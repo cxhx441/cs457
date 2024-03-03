@@ -2,7 +2,7 @@
 #extension GL_EXT_gpu_shader4: enable
 #extension GL_EXT_geometry_shader4: enable
 layout( triangles ) in;
-layout( triangle_strip, max_vertices=73 )  out;
+layout( triangle_strip, max_vertices=50 )  out;
 
 out vec3 gE, gL, gN;
 out float gMVC_z;
@@ -23,29 +23,16 @@ void produceVertex(float, float);
 void
 main( )
 {
-    V0  =   gl_PositionIn[0].xyz;
-    V1  =   gl_PositionIn[1].xyz;
-    V2  =   gl_PositionIn[2].xyz;
+    V0  = gl_PositionIn[0].xyz;
+    V1  = gl_PositionIn[1].xyz;
+    V2  = gl_PositionIn[2].xyz;
 	V01 = V1 - V0;
 	V02 = V2 - V0;
 
     CG = (V0 + V1 + V2) / 3.0;
     CG = quantize(CG, uQuantize);
 
-    /*
-    for( int i = 0; i < 3; i++ )
-    {
-        vec4 vertex = gl_PositionIn[i];
-        vec4 viewVertPosition = (gl_ModelViewMatrix * vertex);
-        gE = vec3(0) - viewVertPosition.xyz;
-        gL = LIGHTPOS - viewVertPosition.xyz;
-        gN = normalize(gl_NormalMatrix * cross(gl_PositionIn[1].xyz - gl_PositionIn[0].xyz, gl_PositionIn[2].xyz - gl_PositionIn[0].xyz));
-        gl_Position = gl_ModelViewProjectionMatrix * vertex;
-        EmitVertex( );
-    }
-    //*/
 
-    ///*
     //int numLayers = uSubdivisionLevel;
     int numLayers = 1 << uSubdivisionLevel; // 2^uSubdivisionLevel
     float dt = 1. / float( numLayers );
@@ -70,7 +57,6 @@ main( )
         t_top = t_bot;
         t_bot -= dt;
     }
-    //*/
 }
 
 
@@ -92,15 +78,8 @@ vec3 quantize(vec3 v, float q){
 void produceVertex(float s, float t){
     vec3 v = V0 + s*V01 + t*V02;
     v = v - CG;
-    v *= uDiam/2.f / length(v);
+    v *= (uDiam/2.f) / length(v);
     v = v + CG;
-
-    /*
-    vec3 v = ?????		// do the vertex (s,t) interpolation
-	v = ?????		// make v's cordinates be with respect to the CG
-	v = v * ?????		// roughly same code as morphing the cow into a sphere of radius uDiam/2.
-	v = ?????		// put v back in the global space (ie, un-do the second line of code)
-    */
 
     // frag lighting
     vec3 viewVertPosition = (gl_ModelViewMatrix * vec4(v, 1)).xyz;

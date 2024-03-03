@@ -29,8 +29,9 @@ Program geometry \
 
 #WireObj dragon138.obj
 #ObjAdj dragon010.obj
-Obj dragon010.obj
+#Obj dragon010.obj
+#Obj dragon138.obj
 #Obj ducky.obj
-#Sphere
+Sphere 10 60 60
 
 
