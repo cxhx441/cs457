@@ -8,13 +8,6 @@ Vertex   sphere_subdivision.vert
 Geometry sphere_subdivision.geom
 Fragment sphere_subdivision.frag
 Program SphereSubd \
-    uKa <0 0.1 1>\
-    uKd <0 0.4 1>\
-    uKs <0 0.4 1>\
-    uShine <0 12 1024>\
-    uLightX <-10, -5, 10>\
-    uLightY <-10, 5, 10>\
-    uLightZ <-10, .7, 10>\
     uLevel <0 0 10> \
     uRadius <.5 1. 5.> \
     uColor { 1. .5 .15 1. }
