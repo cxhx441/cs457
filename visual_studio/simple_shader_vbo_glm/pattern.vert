@@ -29,8 +29,8 @@ void setFragLighting(vec4 vertex){
     vLight = LIGHTPOS - viewVertPosition.xyz;
 
 
-    //mat3 n = uN;
-    mat3 n = mat3(transpose(inverse(uMV)));
+    mat3 n = uN;
+    //mat3 n = mat3(transpose(inverse(uMV)));
     vNormal = normalize(n * gl_Normal);
 }
 //*/

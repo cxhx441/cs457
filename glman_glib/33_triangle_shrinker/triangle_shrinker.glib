@@ -1,0 +1,25 @@
+##OpenGL GLIB
+
+windowsize 1200 1200
+Persp 70
+LookAt 5. 5. 5.  0. 0. 0.  0. 1. 0.
+
+Vertex   triangle_shrinker.vert
+Geometry triangle_shrinker.geom
+Fragment triangle_shrinker.frag
+Program triangle_shrinker \
+    uKa <0 0.1 1>\
+    uKd <0 0.4 1>\
+    uKs <0 0.4 1>\
+    uShine <0 12 1024>\
+    uLightX <-10, -5, 10>\
+    uLightY <-10, 5, 10>\
+    uLightZ <-10, .7, 10>\
+    uTriPercent <0 1 1> \
+
+#scale 0.025
+#ObjAdj dragon010.obj
+Obj cat.obj
+#Sphere
+
+

@@ -486,8 +486,8 @@ Display( )
 	model = glm::mat4(1);
 	modelview = view * model;
 	modelviewprojection = projection * view * model;
-	normal = glm::mat3(glm::transpose(glm::inverse(modelview)));
-	//normal = glm::mat3(glm::inverseTranspose(modelview));
+	//normal = glm::mat3(glm::transpose(glm::inverse(modelview)));
+	normal = glm::mat3(glm::inverseTranspose(view * model));
 	//PatternShader.SetUniformVariable( (char*)"uM", model);
 	//PatternShader.SetUniformVariable( (char*)"uV", view);
 	//PatternShader.SetUniformVariable( (char*)"uP", projection);
