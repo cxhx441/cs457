@@ -1,0 +1,17 @@
+##OpenGL GLIB
+
+windowsize 1200 1200
+Persp 70
+LookAt 5. 5. 5.  0. 0. 0.  0. 1. 0.
+
+Vertex   hedgehogPlots.vert
+Geometry hedgehogPlots.geom
+Fragment hedgehogPlots.frag
+Program hedgehogPlots \
+    uColor { 0. 1. 0. 1. } \
+    uDetail <0 2 10> \
+    uDroop <0 .5 10> \
+    uLength <0 1 10> \
+    uStep <0 .1 2> \
+
+Obj cat.obj

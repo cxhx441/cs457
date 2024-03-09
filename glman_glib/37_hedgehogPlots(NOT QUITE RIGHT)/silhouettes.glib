@@ -1,0 +1,13 @@
+##OpenGL GLIB
+
+windowsize 1200 1200
+Persp 70
+LookAt 5. 5. 5.  0. 0. 0.  0. 1. 0.
+
+Vertex   silhouettes.vert
+Geometry silhouettes.geom
+Fragment silhouettes.frag
+Program silhouettes \
+    uColor { 0. 1. 0. 1. }
+
+ObjAdj cat.obj

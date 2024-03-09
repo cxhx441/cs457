@@ -1,0 +1,17 @@
+##OpenGL GLIB
+
+windowsize 1200 1200
+Persp 70
+LookAt 5. 5. 5.  0. 0. 0.  0. 1. 0.
+
+Vertex   explosion.vert
+Geometry explosion.geom
+Fragment explosion.frag
+Program explosion \
+    uLevel <0 0 10> \
+    uGravity <1 1 10> \
+    uTime <1 1 10> \
+    uVelScale <1 1 10> \
+    uColor { 1. .5 .15 1. }
+
+Obj cat.obj
