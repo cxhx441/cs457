@@ -7,7 +7,7 @@ out vec2 vST;
 out vec3 vMC;
 out vec3 vEye, vLight, vNormal;
 
-const vec3 LIGHTPOS = vec3(0, 0, 10);
+const vec3 LIGHTPOS = vec3(5, 5, 10);
 
 void setFragLighting(vec4);
 
@@ -29,8 +29,8 @@ void setFragLighting(vec4 vertex){
     vLight = LIGHTPOS - viewVertPosition.xyz;
 
 
-    mat3 n = uN;
-    //mat3 n = mat3(transpose(inverse(uMV)));
+    //mat3 n = uN;
+    mat3 n = mat3(transpose(inverse(uMV)));
     vNormal = normalize(n * gl_Normal);
 }
 //*/
