@@ -9,6 +9,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
 
 #ifndef F_PI
 #define F_PI		((float)(M_PI))
@@ -408,17 +409,21 @@ Display( )
 	// remember that the Z clipping  values are given as DISTANCES IN FRONT OF THE EYE
 	// USE gluOrtho2D( ) IF YOU ARE DOING 2D !
 
+	glm::mat4 model;
+	glm::mat4 view;
+	glm::mat4 projection;
+	glm::mat4 modelview;
+	glm::mat4 modelviewprojection;
+	glm::mat3 normal;
+
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity( );
-	glm::mat4 projection;
 	if (NowProjection == ORTHO)
 	{
-		//glOrtho(-2.f, 2.f, -2.f, 2.f, 0.1f, 1000.f); // OLD MOVING TO GLM SETUP
 		projection = glm::ortho(-2., 2., -2., 2., 0.1, 1000.);
 	}
 	else
 	{
-		//gluPerspective( 70.f, 1.f,	0.1f, 1000.f ); // OLD MOVING TO GLM SETUP
 		projection = glm::perspective(D2R * 90., 1., 0.1, 1000.);
 	}
 	// apply projection matrix to opengl matrix
@@ -433,15 +438,19 @@ Display( )
 	glm::vec3 eye(0., 0., 3.);
 	glm::vec3 look(0., 0., 0.);
 	glm::vec3 up(0., 1., 0.);
-	glm::mat4 modelview = glm::lookAt(eye, look, up);
+	view = glm::lookAt(eye, look, up);
 
-	modelview = glm::rotate(modelview, D2R*Yrot, glm::vec3(0., 1., 0.));
-	modelview = glm::rotate(modelview, D2R*Xrot, glm::vec3(1., 0., 0.));
+	view = glm::rotate(view, D2R*Yrot, glm::vec3(0., 1., 0.));
+	view = glm::rotate(view, D2R*Xrot, glm::vec3(1., 0., 0.));
 
 	// uniformly scale the scene:
 	if( Scale < MINSCALE )
 		Scale = MINSCALE;
-	modelview = glm::scale(modelview, glm::vec3(Scale, Scale, Scale));
+	view = glm::scale(view, glm::vec3(Scale, Scale, Scale));
+
+	// apply view matrix to opengl matrix
+	glMultMatrixf(glm::value_ptr(view));
+
 
 	// apply modelview matrix to opengl matrix
 	glMultMatrixf(glm::value_ptr(modelview));
@@ -472,16 +481,18 @@ Display( )
 	// since we are using glScalef( ), be sure the normals get unitized:
 	glEnable( GL_NORMALIZE );
 
-
+	model = glm::mat4(1);
+	modelview = view * model;
+	modelviewprojection = projection * view * model;
+	normal = glm::mat3(glm::inverseTranspose(model));
 	// draw the box object by calling up its display list:
 
 	//PatternShader.Use( );
 	glUseProgram(PatternShaderProgram);
 //	glCallList( BoxList ); // USING VBO
-	//PatternShader.SetUniformVariable( (char*)"uModel", model);
-	//PatternShader.SetUniformVariable( (char*)"uModelView", modelview);
-	//PatternShader.SetUniformVariable( (char*)"uProjection", projection);
-	//PatternShader.SetUniformVariable( (char*)"uNormal", normal);
+	set_uniform_variable( PatternShaderProgram, "uMV", modelview);
+	set_uniform_variable( PatternShaderProgram, "uMVP", modelviewprojection);
+	//set_uniform_variable( PatternShaderProgram, "uN", normal);
 	VBO_BoxList.Draw();
 	glUseProgram(0);
 	//PatternShader.UnUse( );

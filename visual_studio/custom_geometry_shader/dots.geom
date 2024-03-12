@@ -4,12 +4,14 @@
 layout( points ) in; 
 layout( triangle_strip, max_vertices=256 ) out;
 
+//uniform mat3 uN;
+uniform mat4 uMV, uMVP;
+
 out vec3 gNormal;
 out vec3 gLightDir;
 out vec3 gEyeDir;
 
 vec3 LIGHTPOS = vec3(10., 10., 10.);
-//vec3 LIGHTPOS = (gl_ModelViewMatrix * vec4(10., 10., 10., 1)).xyz;
 vec3 ECPosition;
 
 void
@@ -18,15 +20,15 @@ make_face(vec4 c1, vec4 c2, vec4 c3, vec4 c4){
 	if (dot(gNormal, c1.xyz - gl_PositionIn[0].xyz) < 0) gNormal *= -1;
 	gNormal = normalize(gl_NormalMatrix * gNormal);
 
-	vec3 c1_light = (gl_ModelViewMatrix * c1).xyz;
-	vec3 c2_light = (gl_ModelViewMatrix * c2).xyz;
-	vec3 c3_light = (gl_ModelViewMatrix * c4).xyz;
-	vec3 c4_light = (gl_ModelViewMatrix * c3).xyz;
+	vec3 c1_light = (uMV * c1).xyz;
+	vec3 c2_light = (uMV * c2).xyz;
+	vec3 c3_light = (uMV * c4).xyz;
+	vec3 c4_light = (uMV * c3).xyz;
 
-	vec4 c1_out = gl_ModelViewProjectionMatrix * c1;
-	vec4 c2_out = gl_ModelViewProjectionMatrix * c2;
-	vec4 c3_out = gl_ModelViewProjectionMatrix * c4;
-	vec4 c4_out = gl_ModelViewProjectionMatrix * c3;
+	vec4 c1_out = uMVP * c1;
+	vec4 c2_out = uMVP * c2;
+	vec4 c3_out = uMVP * c4;
+	vec4 c4_out = uMVP * c3;
 
 
 	gl_Position = c1_out;

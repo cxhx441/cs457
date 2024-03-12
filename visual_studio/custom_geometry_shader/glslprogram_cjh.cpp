@@ -184,3 +184,18 @@ set_uniform_variable(GLuint program, char* name, float val[3])
 	glUniform3fv(loc, 1, val);
 };
 
+void
+set_uniform_variable( GLuint program, char* name, glm::mat3& val)
+{
+	GLint loc = glGetUniformLocation(program, name);
+	if (loc < 0) fprintf(stderr, "cannot find uniform variable %s\n", name);
+	glUniformMatrix3fv(loc, 1, GL_FALSE, glm::value_ptr(val));
+};
+
+void
+set_uniform_variable( GLuint program, char* name, glm::mat4& val)
+{
+	GLint loc = glGetUniformLocation(program, name);
+	if (loc < 0) fprintf(stderr, "cannot find uniform variable %s\n", name);
+	glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(val));
+};
