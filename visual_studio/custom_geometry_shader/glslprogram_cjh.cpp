@@ -31,6 +31,7 @@
 #endif
 #include "glut.h"
 
+
 void 
 check_gl_errors( const char* caller)
 {

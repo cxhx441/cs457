@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <cstdlib>
+#include <iostream>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -37,6 +39,21 @@
 #include "glut.h"
 
 const float D2R = M_PI / 180.f;
+
+// FOR COMPUTE SHADER
+int num_parts_dim = 16;
+int NUM_PARTICLES = num_parts_dim * num_parts_dim * num_parts_dim;   // total number of particles to move
+#define WORK_GROUP_SIZE 128 // # work-items per work-group
+struct position { float x,  y,  z,  w; };
+struct velocity { float vx, vy, vz, vw; };
+struct rotation { float rx, ry, rz, rw; };
+struct rotationSpeed { float s; };
+struct color    { float r,  g,  b,  a; };
+GLuint posSSbo;
+GLuint velSSbo;
+GLuint rotSSbo;
+GLuint rotSpeedSSbo;
+GLuint colSSbo;
 
 //	This is a sample OpenGL / GLUT program
 //
@@ -298,8 +315,8 @@ MulArray3(float factor, float a, float b, float c )
 //#include "glslprogram.cpp"
 #include "glslprogram_cjh.cpp"
 
-//GLSLProgram PatternShader;
 GLuint PatternShaderProgram;
+GLuint ComputeShaderProgram;
 
 // main program:
 
@@ -488,12 +505,24 @@ Display( )
 	// draw the box object by calling up its display list:
 
 	//PatternShader.Use( );
+	glUseProgram( ComputeShaderProgram );
+	glDispatchCompute( NUM_PARTICLES  / WORK_GROUP_SIZE, 1,  1 );
+	glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
+
 	glUseProgram(PatternShaderProgram);
 //	glCallList( BoxList ); // USING VBO
 	set_uniform_variable( PatternShaderProgram, "uMV", modelview);
 	set_uniform_variable( PatternShaderProgram, "uMVP", modelviewprojection);
+
+	// draw from he positions array
+	glBindBuffer( GL_ARRAY_BUFFER, posSSbo );
+	glVertexPointer( 4, GL_FLOAT, 0, (void *)0 );
+	glEnableClientState( GL_VERTEX_ARRAY );
+	glDrawArrays( GL_POINTS, 0, NUM_PARTICLES );
+	glDisableClientState( GL_VERTEX_ARRAY );
+	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 	//set_uniform_variable( PatternShaderProgram, "uN", normal);
-	VBO_BoxList.Draw();
+	//VBO_BoxList.Draw();
 	glUseProgram(0);
 	//PatternShader.UnUse( );
 
@@ -866,12 +895,79 @@ InitGraphics( )
 	//PatternShader.UnUse( );
 
 	PatternShaderProgram = glCreateProgram( );
-	read_compile_link_validate_shader(PatternShaderProgram, "dots.vert", "vertex");
-    read_compile_link_validate_shader(PatternShaderProgram, "dots.geom", "geometry");
-	read_compile_link_validate_shader(PatternShaderProgram, "dots.frag", "fragment");
-	glUseProgram(PatternShaderProgram);
-	//set_uniform_variable(PatternShaderProgram, "uColorMix", 0.1f);
-	glUseProgram(0);
+	read_compile_link_validate_shader(PatternShaderProgram, "dots2.vert", "vertex");
+    read_compile_link_validate_shader(PatternShaderProgram, "dots2.geom", "geometry");
+	read_compile_link_validate_shader(PatternShaderProgram, "dots2.frag", "fragment");
+	
+	ComputeShaderProgram = glCreateProgram( );
+	read_compile_link_validate_shader(ComputeShaderProgram, "dots2.comp", "compute");
+
+	//SETUP SHADER STORAGE BUFFERS OBJECTS FOR COMPUTE SHADER (ssbo)
+	glGenBuffers(1, &posSSbo);
+	glBindBuffer( GL_SHADER_STORAGE_BUFFER, posSSbo );
+	glBufferData( GL_SHADER_STORAGE_BUFFER, NUM_PARTICLES * sizeof(struct position), NULL, GL_STATIC_DRAW );
+	GLint bufMask = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT ; // the invalidate makes a big difference when re-writing
+	struct position *points = (struct position *) glMapBufferRange( GL_SHADER_STORAGE_BUFFER, 0, NUM_PARTICLES * sizeof(struct position), bufMask );
+	for (int i = 0; i < NUM_PARTICLES; i++) {
+		points[i].x = ((rand() % 10000) / 5000.f - 1.) / 4;
+		points[i].y = ((rand() % 10000) / 5000.f - 1.) / 4 + 1;
+		points[i].z = ((rand() % 10000) / 5000.f - 1.) / 4;
+	}
+	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
+
+	glGenBuffers( 1, &velSSbo);
+	glBindBuffer( GL_SHADER_STORAGE_BUFFER, velSSbo );
+	glBufferData( GL_SHADER_STORAGE_BUFFER, NUM_PARTICLES * sizeof(struct velocity), NULL, GL_STATIC_DRAW );
+	struct velocity *velocities = (struct velocity *) glMapBufferRange( GL_SHADER_STORAGE_BUFFER, 0, NUM_PARTICLES * sizeof(struct velocity), bufMask );
+	for( int i = 0; i < NUM_PARTICLES; i++ ) {
+		velocities[i].vx = ((rand() % 100) / 50.f - 1.) / 50.f;
+		velocities[i].vy = ((rand() % 100) / 50.f - 1.) / 100.f;
+		velocities[i].vz = ((rand() % 100) / 50.f - 1.) / 50.f;
+		velocities[i].vw = 1.;
+	}
+	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
+
+	glGenBuffers( 1, &rotSSbo);
+	glBindBuffer( GL_SHADER_STORAGE_BUFFER, rotSSbo );
+	glBufferData( GL_SHADER_STORAGE_BUFFER, NUM_PARTICLES * sizeof(struct rotation), NULL, GL_STATIC_DRAW );
+	struct rotation *rotations = (struct rotation *) glMapBufferRange( GL_SHADER_STORAGE_BUFFER, 0, NUM_PARTICLES * sizeof(struct rotation), bufMask );
+	for( int i = 0; i < NUM_PARTICLES; i++ ) {
+		rotations[ i ].rx = ((rand() % 100) / 100.f); // xyz is vector of rotations
+		rotations[ i ].ry = ((rand() % 100) / 100.f);
+		rotations[ i ].rz = ((rand() % 100) / 100.f);
+		rotations[ i ].rw = (((rand() % 100) / 50.f) - 1) * 6.28;
+	}
+	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
+
+	glGenBuffers( 1, &rotSpeedSSbo);
+	glBindBuffer( GL_SHADER_STORAGE_BUFFER, rotSpeedSSbo );
+	glBufferData( GL_SHADER_STORAGE_BUFFER, NUM_PARTICLES * sizeof(struct rotationSpeed), NULL, GL_STATIC_DRAW );
+	struct rotationSpeed *rotationSpeeds = (struct rotationSpeed *) glMapBufferRange( GL_SHADER_STORAGE_BUFFER, 0, NUM_PARTICLES * sizeof(struct rotationSpeed), bufMask );
+	for( int i = 0; i < NUM_PARTICLES; i++ ) {
+		rotationSpeeds[ i ].s = ((rand() % 100) / 50.f) - 1; 
+		std::cout << rotationSpeeds[i].s << "\n";
+	}
+	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
+
+
+	glGenBuffers( 1, &colSSbo);
+	glBindBuffer( GL_SHADER_STORAGE_BUFFER, colSSbo );
+	glBufferData( GL_SHADER_STORAGE_BUFFER, NUM_PARTICLES * sizeof(struct color), NULL, GL_STATIC_DRAW );
+	struct color *colors = (struct color *) glMapBufferRange( GL_SHADER_STORAGE_BUFFER, 0, NUM_PARTICLES * sizeof(struct color), bufMask );
+	for( int i = 0; i < NUM_PARTICLES; i++ ) {
+		colors[ i ].r = ((rand() % 100)) / 100.f;
+		colors[ i ].g = ((rand() % 100)) / 100.f;
+		colors[ i ].b = ((rand() % 100)) / 100.f;
+		colors[ i ].a = 1.;
+	}
+	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
+
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, posSSbo);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, velSSbo);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, rotSSbo);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, rotSpeedSSbo);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, colSSbo);
+	
 }
 
 
