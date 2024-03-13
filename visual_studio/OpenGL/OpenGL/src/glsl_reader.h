@@ -1,20 +1,22 @@
 #pragma once
 #include <GL/glew.h>
+#include <string>
+#define GLM_FORCE_RADIANS
 #include <glm/matrix.hpp>
 #include <glm/gtc/type_ptr.hpp>
 struct ShaderProgramSource;
-static ShaderProgramSource ParseShader_Cherno(const std::string&);
-void check_gl_errors(const char* );
-std::string readShaderFile(const char* );
-GLuint compileShader(GLenum , const char* ) ;
-GLuint create_program_from_one_file(const std::string&);
-void read_compile_link_validate_shader(GLuint , const char* , const char* );
-void set_uniform_variable(GLuint, char*, int);
-void set_uniform_variable(GLuint, char*, float);
-void set_uniform_variable(GLuint, char*, float, float, float);
-void set_uniform_variable(GLuint, char*, float, float, float, float);
-void set_uniform_variable(GLuint, char*, int, float[]);
-void set_uniform_variable(GLuint, char*, glm::mat3);
-void set_uniform_variable(GLuint, char*, glm::mat4);
-void set_uniform_variable(GLuint, char*, glm::vec3);
-void set_uniform_variable(GLuint, char*, glm::vec4);
+static ShaderProgramSource ParseShader_Cherno(const std::string& filepath);
+void check_gl_errors(const char* caller);
+std::string readShaderFile(const char* filePath);
+GLuint compileShader(GLenum shaderType, const char* source);
+GLuint create_program_from_one_file(const std::string& filepath);
+void read_compile_link_validate_shader(GLuint program, const char* filename, const char* shader_type);
+void set_uniform_variable(GLuint program, char* name, int val);
+void set_uniform_variable(GLuint program, char* name, float val);
+void set_uniform_variable(GLuint program, char* name, float val0, float val1, float val2);
+void set_uniform_variable(GLuint program, char* name, float val0, float val1, float val2, float val3);
+void set_uniform_variable(GLuint program, char* name, int count, float val[]);
+void set_uniform_variable(GLuint program, char* name, glm::mat3 val);
+void set_uniform_variable(GLuint program, char* name, glm::mat4 val);
+void set_uniform_variable(GLuint program, char* name, glm::vec3 val);
+void set_uniform_variable(GLuint program, char* name, glm::vec4 val);

@@ -10,51 +10,8 @@
 #include <iostream>
 
 #include "glsl_reader.h"
+#include "Renderer.h"
 
-// for error checking
-#define ASSERT(x) if (!(x)) __debugbreak();
-#define GLCall(x) GLClearError();\
-    x;\
-    ASSERT(GLLogCall(#x, __FILE__, __LINE__));
-
-// Function to convert GLenum error code to string
-std::string getGLErrorString(GLenum error) {
-    switch (error) {
-        case GL_NO_ERROR:
-            return "No error";
-        case GL_INVALID_ENUM:
-            return "Invalid enum";
-        case GL_INVALID_VALUE:
-            return "Invalid value";
-        case GL_INVALID_OPERATION:
-            return "Invalid operation";
-        case GL_STACK_OVERFLOW:
-            return "Stack overflow";
-        case GL_STACK_UNDERFLOW:
-            return "Stack underflow";
-        case GL_OUT_OF_MEMORY:
-            return "Out of memory";
-        case GL_TABLE_TOO_LARGE:
-            return "Table too large";
-        default:
-            return "Unknown error";
-    }
-}
-
-static void GLClearError()
-{
-    while (glGetError() != GL_NO_ERROR);
-}
-
-static bool GLLogCall(const char* function, const char* file, int line)
-{
-    while (GLenum error = glGetError()) {
-        std::cout << "[OpenGL Error] (" << error << " : " << getGLErrorString(error) <<"): " << function <<
-            " " << file << ":" << line << std::endl;
-        return false;
-    }
-    return true;
-}
 
 int main(void)
 {
@@ -101,11 +58,11 @@ int main(void)
     };
 
     // generate vao
-    unsigned int vao;
+    unsigned int vao; // vertex array object
     GLCall(glGenVertexArrays(1, &vao));
     GLCall(glBindVertexArray(vao));
 
-    unsigned int vbo;
+    unsigned int vbo; // vertex buffer object
 	GLCall(glGenBuffers(1, &vbo));
     GLCall(glBindBuffer(GL_ARRAY_BUFFER, vbo));
     GLCall(glBufferData(GL_ARRAY_BUFFER, 2 * 4 * sizeof(float), positions, GL_STATIC_DRAW));
