@@ -41,7 +41,7 @@
 const float D2R = M_PI / 180.f;
 
 // FOR COMPUTE SHADER
-int num_parts_dim = 16;
+int num_parts_dim = 128;
 int NUM_PARTICLES = num_parts_dim * num_parts_dim * num_parts_dim;   // total number of particles to move
 #define WORK_GROUP_SIZE 128 // # work-items per work-group
 struct position { float x,  y,  z,  w; };
@@ -950,7 +950,7 @@ InitGraphics( )
 		else
 			amp += .5;
 		rotationSpeeds[i].s = amp;
-		std::cout << rotationSpeeds[i].s << "\n";
+		//std::cout << rotationSpeeds[i].s << "\n";
 	}
 	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
 

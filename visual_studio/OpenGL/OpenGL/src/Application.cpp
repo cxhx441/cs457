@@ -106,12 +106,21 @@ int main(void)
 	glGenBuffers(1, &ibo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, 2 * 3 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	
 	//GLuint triShader = glCreateProgram();
 	//read_compile_link_validate_shader(triShader, "res/shaders/Basic.vert", "vertex");
 	//read_compile_link_validate_shader(triShader, "res/shaders/Basic.frag", "fragment");
     GLuint triShader = create_program_from_one_file("res/shaders/Basic.shader");
+    glUseProgram(triShader);
+	set_uniform_variable(triShader, (char*)"uColor", glm::vec4(0.8f, 0.3f, 0.8f, 1.0f));
+    glUseProgram(0);
+
+
+    // clear 
+    glUseProgram(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     // for animate
 	float r = 0.0f;
@@ -124,6 +133,10 @@ int main(void)
 
 		glUseProgram(triShader);
         set_uniform_variable(triShader, (char*)"uColor", glm::vec4(r, 0.3f, 0.8f, 1.0f));
+
+        glBindBuffer(GL_ARRAY_BUFFER, buffer);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
         GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0)); // works with nullptr in last argument...because the index buffer is bound?
         if (r > 1.0f) increment = -0.05f;

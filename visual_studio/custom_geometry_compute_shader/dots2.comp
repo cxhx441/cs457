@@ -28,7 +28,7 @@ float deltaTime = .01;
 float RotMult = .5f; 
 
 void main() {
-	gravity *= 0.1;
+	gravity *= 0.5;
 	uint index = gl_GlobalInvocationID.x;	
 	Positions[index] += Velocities[index];
 	//float rot_sign = sign(Rotations[index].w);
