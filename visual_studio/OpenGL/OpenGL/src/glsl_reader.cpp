@@ -278,18 +278,31 @@ set_uniform_variable(GLuint program, char* name, float val0, float val1, float v
 };
 
 void
-set_uniform_variable(GLuint program, char* name, float val[3])
+set_uniform_variable(GLuint program, char* name, float val0, float val1, float val2, float val3 )
 {
 	GLint loc = glGetUniformLocation(program, name);
 	if (loc < 0)
 	{
 		fprintf(stderr, "cannot find uniform variable %s\n", name);
 	}
-	glUniform3fv(loc, 1, val);
+	glUniform4f( loc, val0, val1, val2, val3 );
 };
 
 void
-set_uniform_variable( GLuint program, char* name, glm::mat3& val)
+set_uniform_variable(GLuint program, char* name, int count, float val[])
+{
+	GLint loc = glGetUniformLocation(program, name);
+	if (loc < 0)
+	{
+		fprintf(stderr, "cannot find uniform variable %s\n", name);
+	}
+	if (count == 2)      glUniform2fv(loc, 1, val);
+	else if (count == 3) glUniform3fv(loc, 1, val);
+	else if (count == 4) glUniform4fv(loc, 1, val);
+};
+
+void
+set_uniform_variable( GLuint program, char* name, glm::mat3 val)
 {
 	GLint loc = glGetUniformLocation(program, name);
 	if (loc < 0) fprintf(stderr, "cannot find uniform variable %s\n", name);
@@ -297,9 +310,25 @@ set_uniform_variable( GLuint program, char* name, glm::mat3& val)
 };
 
 void
-set_uniform_variable( GLuint program, char* name, glm::mat4& val)
+set_uniform_variable( GLuint program, char* name, glm::mat4 val)
 {
 	GLint loc = glGetUniformLocation(program, name);
 	if (loc < 0) fprintf(stderr, "cannot find uniform variable %s\n", name);
 	glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(val));
+};
+
+void
+set_uniform_variable( GLuint program, char* name, glm::vec3 val)
+{
+	GLint loc = glGetUniformLocation(program, name);
+	if (loc < 0) fprintf(stderr, "cannot find uniform variable %s\n", name);
+	glUniform3fv(loc, 1, glm::value_ptr(val));
+};
+
+void
+set_uniform_variable( GLuint program, char* name, glm::vec4 val)
+{
+	GLint loc = glGetUniformLocation(program, name);
+	if (loc < 0) fprintf(stderr, "cannot find uniform variable %s\n", name);
+	glUniform4fv(loc, 1, glm::value_ptr(val));
 };

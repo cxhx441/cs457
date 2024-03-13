@@ -17,6 +17,30 @@
     x;\
     ASSERT(GLLogCall(#x, __FILE__, __LINE__));
 
+// Function to convert GLenum error code to string
+std::string getGLErrorString(GLenum error) {
+    switch (error) {
+        case GL_NO_ERROR:
+            return "No error";
+        case GL_INVALID_ENUM:
+            return "Invalid enum";
+        case GL_INVALID_VALUE:
+            return "Invalid value";
+        case GL_INVALID_OPERATION:
+            return "Invalid operation";
+        case GL_STACK_OVERFLOW:
+            return "Stack overflow";
+        case GL_STACK_UNDERFLOW:
+            return "Stack underflow";
+        case GL_OUT_OF_MEMORY:
+            return "Out of memory";
+        case GL_TABLE_TOO_LARGE:
+            return "Table too large";
+        default:
+            return "Unknown error";
+    }
+}
+
 static void GLClearError()
 {
     while (glGetError() != GL_NO_ERROR);
@@ -25,7 +49,7 @@ static void GLClearError()
 static bool GLLogCall(const char* function, const char* file, int line)
 {
     while (GLenum error = glGetError()) {
-        std::cout << "[OpenGL Error] (" << error << "): " << function <<
+        std::cout << "[OpenGL Error] (" << error << " : " << getGLErrorString(error) <<"): " << function <<
             " " << file << ":" << line << std::endl;
         return false;
     }
@@ -47,6 +71,7 @@ int main(void)
         glfwTerminate();
         return -1;
     }
+    glfwSwapInterval(1); // synchronize framerate to vsync/framerate
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
@@ -88,6 +113,9 @@ int main(void)
 	//read_compile_link_validate_shader(triShader, "res/shaders/Basic.frag", "fragment");
     GLuint triShader = create_program_from_one_file("res/shaders/Basic.shader");
 
+    // for animate
+	float r = 0.0f;
+	float increment = 0.05;
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
@@ -95,8 +123,12 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT);
 
 		glUseProgram(triShader);
+        set_uniform_variable(triShader, (char*)"uColor", glm::vec4(r, 0.3f, 0.8f, 1.0f));
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
         GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0)); // works with nullptr in last argument...because the index buffer is bound?
+        if (r > 1.0f) increment = -0.05f;
+        else if (r < 0.0f) increment = 0.05f;
+        r += increment;
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		glUseProgram(0);
 
