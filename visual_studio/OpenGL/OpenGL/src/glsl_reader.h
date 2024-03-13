@@ -7,7 +7,7 @@ static ShaderProgramSource ParseShader_Cherno(const std::string&);
 void check_gl_errors(const char* );
 std::string readShaderFile(const char* );
 GLuint compileShader(GLenum , const char* ) ;
-GLuint program_from_one_file(const std::string&);
+GLuint create_program_from_one_file(const std::string&);
 void read_compile_link_validate_shader(GLuint , const char* , const char* );
 void set_uniform_variable(GLuint, char*, int);
 void set_uniform_variable(GLuint, char*, float);

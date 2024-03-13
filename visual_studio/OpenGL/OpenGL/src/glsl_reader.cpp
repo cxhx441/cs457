@@ -130,7 +130,7 @@ GLuint compileShader(GLenum shaderType, const char* source) {
 	return shader;
 }
 
-GLuint program_from_one_file(const std::string& filepath)
+GLuint create_program_from_one_file(const std::string& filepath)
 {
 	GLuint program = glCreateProgram();
 	ShaderProgramSource shaderSource = ParseShader_Cherno(filepath);

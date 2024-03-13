@@ -19,7 +19,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
-
 int main(void)
 {
     GLFWwindow* window;
@@ -45,23 +44,36 @@ int main(void)
 	std::cout << "Status: Using GLEW " << glewGetString(GLEW_VERSION) << std::endl;
 	std::cout << "Status: Using OpenGL " << glGetString(GL_VERSION) << std::endl;
 
-    float positions[6] = {
+    // vertex positions
+    float positions[] = {
 		-0.5f, -0.5f,
-		 0.0f,  0.5f,
 		 0.5f, -0.5f,
+		 0.5f,  0.5f,
+        -0.5f,  0.5f,   
+    };
+    // indices of the vertices to be drawn
+    unsigned int indices[] = {
+        0, 1, 2,
+        2, 3, 0
     };
     unsigned int buffer;
 	glGenBuffers(1, &buffer);
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), positions, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 2 * 4 * sizeof(float), positions, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0); // position
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    unsigned int ibo; // index buffer object
+	glGenBuffers(1, &ibo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 2 * 3 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 	
 	//GLuint triShader = glCreateProgram();
 	//read_compile_link_validate_shader(triShader, "res/shaders/Basic.vert", "vertex");
 	//read_compile_link_validate_shader(triShader, "res/shaders/Basic.frag", "fragment");
-    GLuint triShader = program_from_one_file("res/shaders/Basic.shader");
+    GLuint triShader = create_program_from_one_file("res/shaders/Basic.shader");
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -70,9 +82,9 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT);
 
 		glUseProgram(triShader);
-		glBindBuffer(GL_ARRAY_BUFFER, buffer);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // works with nullptr in last argument...because the index buffer is bound?
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		glUseProgram(0);
 
         /* Swap front and back buffers */
