@@ -25,7 +25,7 @@ layout( std430, binding=7 )  buffer  RotSpeed {
 //uniform vec3 gravity;
 vec3 gravity = vec3(0, -.005, 0);
 float deltaTime = .01;
-float RotMult = 5.f; 
+float RotMult = .5f; 
 
 void main() {
 	gravity *= 0.1;
@@ -33,7 +33,8 @@ void main() {
 	Positions[index] += Velocities[index];
 	//float rot_sign = sign(Rotations[index].w);
 	//Rotations[index].w += rot_sign * RotationsSpeed[index].s*RotMult * deltaTime;
-	Rotations[index].w += RotationsSpeed[index].s*RotMult;
+	//Rotations[index].w = mod(Rotations[index].w + RotationsSpeed[index].s*RotMult, 6.28);
+	Rotations[index].w += 2.5 * deltaTime;
 	Velocities[index].xyz += gravity * deltaTime;
 	Velocities[index].x /= 1.01;
 	Velocities[index].z /= 1.01;

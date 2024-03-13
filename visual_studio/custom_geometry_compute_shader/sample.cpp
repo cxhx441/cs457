@@ -944,7 +944,12 @@ InitGraphics( )
 	glBufferData( GL_SHADER_STORAGE_BUFFER, NUM_PARTICLES * sizeof(struct rotationSpeed), NULL, GL_STATIC_DRAW );
 	struct rotationSpeed *rotationSpeeds = (struct rotationSpeed *) glMapBufferRange( GL_SHADER_STORAGE_BUFFER, 0, NUM_PARTICLES * sizeof(struct rotationSpeed), bufMask );
 	for( int i = 0; i < NUM_PARTICLES; i++ ) {
-		rotationSpeeds[ i ].s = ((rand() % 100) / 50.f) - 1; 
+		float amp = ((rand() % 100) / 100.f) - 0.5; 
+		if (amp < 0)
+			amp -= .5;
+		else
+			amp += .5;
+		rotationSpeeds[i].s = amp;
 		std::cout << rotationSpeeds[i].s << "\n";
 	}
 	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
