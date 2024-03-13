@@ -1,4 +1,7 @@
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
+
+#include <iostream>
 
 int main(void)
 {
@@ -19,6 +22,13 @@ int main(void)
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
+    GLenum err = glewInit();
+    if (err != GLEW_OK) 
+        std::cout << "Error: %s\n" << glewGetErrorString(err) << std::endl;
+	std::cout << "Status: Using GLEW " << glewGetString(GLEW_VERSION) << std::endl;
+	std::cout << "Status: Using OpenGL " << glGetString(GL_VERSION) << std::endl;
+
+
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
@@ -29,6 +39,7 @@ int main(void)
 			glVertex2f( 0.0f,  0.5f);
 			glVertex2f( 0.5f, -0.5f);
 		glEnd();
+
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
 
