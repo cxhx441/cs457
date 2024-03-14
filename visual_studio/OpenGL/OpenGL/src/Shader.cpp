@@ -119,15 +119,15 @@ std::string Shader::readShaderFile(const char* filePath) {
 // Function to compile a shader
 GLuint Shader::compileShader(GLenum shaderType, const char* source) {
 	GLuint shader = glCreateShader(shaderType);
-	glShaderSource(shader, 1, &source, NULL);
-	glCompileShader(shader);
+	GLCall(glShaderSource(shader, 1, &source, NULL));
+	GLCall(glCompileShader(shader));
 
 	// Check for compilation errors
 	GLint success;
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+	GLCall(glGetShaderiv(shader, GL_COMPILE_STATUS, &success));
 	if (!success) {
 		GLchar infoLog[512];
-		glGetShaderInfoLog(shader, sizeof(infoLog), NULL, infoLog);
+		GLCall(glGetShaderInfoLog(shader, sizeof(infoLog), NULL, infoLog));
 		std::cerr << "Shader compilation error:\n" << infoLog << std::endl;
 	}
 
@@ -176,24 +176,24 @@ GLuint Shader::CreateProgramFromSingleFile(const std::string& filepath)
 			exit(0);
 		}
 
-		glAttachShader(program, compiledShader);
+		GLCall(glAttachShader(program, compiledShader));
 
-		glLinkProgram(program);
+		GLCall(glLinkProgram(program));
 		CheckGLErrors("Shader Program 1");
-		glGetProgramiv(program, GL_LINK_STATUS, &status);
+		GLCall(glGetProgramiv(program, GL_LINK_STATUS, &status));
 		if (status == GL_FALSE)
 		{
 			fprintf(stderr, "Link failed.\n");
-			glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
+			GLCall(glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength));
 			GLchar* log = new GLchar[logLength];
-			glGetProgramInfoLog(program, logLength, NULL, log);
+			GLCall(glGetProgramInfoLog(program, logLength, NULL, log));
 			fprintf(stderr, "\n%s\n", log);
 			delete[] log;
 			exit(1);
 		}
 		CheckGLErrors("Shader Program 2");
 
-		glGetProgramiv(program, GL_VALIDATE_STATUS, &status);
+		GLCall(glGetProgramiv(program, GL_VALIDATE_STATUS, &status));
 		fprintf(stderr, "Program is %s.\n", status == GL_FALSE ? "invalid" : "valid");
 	}
 
@@ -216,25 +216,25 @@ GLint Shader::GetUniformLoc(char* name)
 void Shader::SetUniform1i(char* name, int val )
 {
 	GLint loc = GetUniformLoc(name);
-	glUniform1i( loc, val );
+	GLCall(glUniform1i( loc, val ));
 };
 
 void Shader::SetUniform1f(char* name, float val )
 {
 	GLint loc = GetUniformLoc(name);
-	glUniform1f( loc, val );
+	GLCall(glUniform1f( loc, val ));
 };
 
 void Shader::SetUniform3f(char* name, float val0, float val1, float val2 )
 {
 	GLint loc = GetUniformLoc(name);
-	glUniform3f( loc, val0, val1, val2 );
+	GLCall(glUniform3f( loc, val0, val1, val2 ));
 };
 
 void Shader::SetUniform4f(char* name, float val0, float val1, float val2, float val3 )
 {
 	GLint loc = GetUniformLoc(name);
-	glUniform4f( loc, val0, val1, val2, val3 );
+	GLCall(glUniform4f( loc, val0, val1, val2, val3 ));
 };
 
 void Shader::SetUniformfv(char* name, int count, float val[])
@@ -248,23 +248,23 @@ void Shader::SetUniformfv(char* name, int count, float val[])
 void Shader::SetUniformMat3( char* name, glm::mat3 val)
 {
 	GLint loc = GetUniformLoc(name);
-	glUniformMatrix3fv(loc, 1, GL_FALSE, glm::value_ptr(val));
+	GLCall(glUniformMatrix3fv(loc, 1, GL_FALSE, glm::value_ptr(val)));
 };
 
 void Shader::SetUniformMat4( char* name, glm::mat4 val)
 {
 	GLint loc = GetUniformLoc(name);
-	glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(val));
+	GLCall(glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(val)));
 };
 
 void Shader::SetUniformVec3( char* name, glm::vec3 val)
 {
 	GLint loc = GetUniformLoc(name);
-	glUniform3fv(loc, 1, glm::value_ptr(val));
+	GLCall(glUniform3fv(loc, 1, glm::value_ptr(val)));
 };
 
 void Shader::SetUniformVec4( char* name, glm::vec4 val)
 {
 	GLint loc = GetUniformLoc(name);
-	glUniform4fv(loc, 1, glm::value_ptr(val));
+	GLCall(glUniform4fv(loc, 1, glm::value_ptr(val)));
 };
