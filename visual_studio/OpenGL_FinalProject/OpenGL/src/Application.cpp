@@ -16,6 +16,7 @@
 #include "VertexArray.h"
 #include "VertexBufferLayout.h"
 #include "Shader.h"
+#include "glsl_reader.h"
 #include "Texture.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_opengl3.h"
@@ -50,16 +51,29 @@ glm::vec3 up(0., 1., 0.);
 glm::mat4 model;
 glm::mat4 view;
 glm::mat4 projection;
-glm::mat4 mv;
-glm::mat4 mvp;
 glm::mat3 normal;
+
+// for animate
+float r = 0.0f;
+float increment = 0.05f;
+
+// for imgui
+bool show_demo_window = true;
+bool show_another_window = true;
+ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+glm::vec3 translation(0., 0., 0.);
+glm::vec3 scaler(1., 1., 1.);
+float rotater = 0;
+float framerate;
 
 void Axes(float);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
-
-
+void update_viewport_size(GLFWwindow* window);
+void imgui_show_example_frame();
+glm::mat4 mv();
+glm::mat4 mvp();
 
 
 int main(void)
@@ -105,6 +119,7 @@ int main(void)
 	GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 	GLCall(glBlendEquation(GL_FUNC_ADD)); // default, but being explicit
 
+
 	// create the axes:
 	AxesList = glGenLists( 1 );
 	glNewList( AxesList, GL_COMPILE );
@@ -141,7 +156,7 @@ int main(void)
 		test_ib.Unbind();
 
 
-		Shader test_shader = Shader("res/shaders/Basic.glsl");
+		Shader test_shader = Shader("res/shaders/Test.glsl");
 		test_shader.Bind();
 		test_shader.SetUniformVec4("uColor", glm::vec4(0.8f, 0.3f, 0.8f, 1.0f));
 		test_shader.Unbind();
@@ -156,6 +171,7 @@ int main(void)
 		test_vb.Unbind();
 		test_ib.Unbind();
 
+		Shader axes_shader = Shader("res/shaders/Axes.glsl");
 		Renderer renderer;
 
 		// gui setup
@@ -165,69 +181,27 @@ int main(void)
 		ImGui::StyleColorsDark(); // Set Dark Style
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
 		ImGui_ImplOpenGL3_Init("#version 460");
-		// Our state
-		bool show_demo_window = true;
-		bool show_another_window = true;
-		ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-
-		// for animate
-		float r = 0.0f;
-		float increment = 0.05f;
-		glm::vec3 translation(0., 0., 0.);
-		glm::vec3 scaler(1., 1., 1.);
-		float rotater = 0;
 		/* Loop until the user closes the window */
 		while (!glfwWindowShouldClose(window))
 		{
 			/* Render here */
 			renderer.Clear();
+
+			// DEPTH BUFFER
+			GLCall(glDrawBuffer(GL_BACK));
+			GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+			GLCall(glEnable(GL_DEPTH_TEST));
 			
-			// update viewport when scaling window
-			GLsizei vx, vy;
-			glfwGetWindowSize(window, &vx, &vy);
-			GLsizei v = vx < vy ? vx : vy;			// minimum dimension
-			GLint xl = (vx - v) / 2;
-			GLint yb = (vy - v) / 2;
-			glViewport(xl, yb, v, v);
+			update_viewport_size(window); // update viewport size after scaling window
 
 			//img
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
+			framerate = io.Framerate;
+			imgui_show_example_frame();
 
-			{
-				static float f = 0.0f;
-				static int counter = 0;
-				ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-				ImGui::SliderFloat3("Translation", &translation.x, -1.f, 1.f);
-				ImGui::SliderFloat3("Scale", &scaler.x, -2.f, 2.f);
-				ImGui::SliderFloat("Rotation", &rotater, -200.f, 200.f);
-
-				ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-				ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-				ImGui::Checkbox("Another Window", &show_another_window);
-
-				ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-				ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-				if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-					counter++;
-				ImGui::SameLine();
-				ImGui::Text("counter = %d", counter);
-
-				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-				ImGui::End();
-			}
-			if (show_another_window)
-			{
-				ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-				ImGui::Text("Hello from another window!");
-				if (ImGui::Button("Close Me"))
-					show_another_window = false;
-				ImGui::End();
-			}
-			
 			// rotate and uniformly scale scene
 			model = glm::mat4(1);
 			view = glm::lookAt(eye, look, up);
@@ -238,19 +212,20 @@ int main(void)
 			view = glm::rotate(view, glm::radians(Yrot), glm::vec3(0., 1., 0.));
 			view = glm::rotate(view, glm::radians(Xrot), glm::vec3(1., 0., 0.));
 			view = glm::scale(view, glm::vec3(Scale, Scale, Scale));
-			mv = view * model;
-			mvp = projection * view * model;
 
 			test_shader.Bind();
+			model = glm::translate(glm::mat4(1.f), translation);
 			test_shader.SetUniformVec4((char*)"uColor", glm::vec4(r, 0.3f, 0.8f, 1.0f));
-			test_shader.SetUniformMat4("uMVP", mvp);
+			test_shader.SetUniformMat4("uMVP", mvp());
 
 			renderer.Draw(test_va, test_ib, test_shader);
 			if (r > 1.0f) increment = -0.05f;
 			else if (r < 0.0f) increment = 0.05f;
 			r += increment;
 
-			glColor3f( 1., 1., 0. );
+			axes_shader.Bind();
+			model = glm::mat4(1);
+			axes_shader.SetUniformMat4("uMVP", mvp());
 			GLCall(glCallList(AxesList));
 
 			// img 
@@ -387,7 +362,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	Scale = std::max(Scale, MINSCALE);
 }
 
-
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
 	double dx = xpos - Xmouse;
 	double dy = ypos - Ymouse;
@@ -407,4 +381,56 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
 	}
 	Xmouse = xpos;			// new current position
 	Ymouse = ypos;
+}
+
+void update_viewport_size(GLFWwindow* window)
+{
+	GLsizei vx, vy;
+	glfwGetWindowSize(window, &vx, &vy);
+	GLsizei v = vx < vy ? vx : vy;			// minimum dimension
+	GLint xl = (vx - v) / 2;
+	GLint yb = (vy - v) / 2;
+	glViewport(xl, yb, v, v);
+}
+
+void imgui_show_example_frame()
+{
+	static float f = 0.0f;
+	static int counter = 0;
+	ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+	ImGui::SliderFloat3("Translation", &translation.x, -1.f, 1.f);
+	ImGui::SliderFloat3("Scale", &scaler.x, -2.f, 2.f);
+	ImGui::SliderFloat("Rotation", &rotater, -200.f, 200.f);
+
+	ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+	ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
+	ImGui::Checkbox("Another Window", &show_another_window);
+
+	ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+	ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+
+	if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+		counter++;
+	ImGui::SameLine();
+	ImGui::Text("counter = %d", counter);
+
+	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / framerate, framerate);
+	ImGui::End();
+	if (show_another_window)
+	{
+		ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+		ImGui::Text("Hello from another window!");
+		if (ImGui::Button("Close Me"))
+			show_another_window = false;
+		ImGui::End();
+	}
+}
+
+glm::mat4 mv() 
+{
+	return view * model;
+}
+glm::mat4 mvp()
+{
+	return projection * view * model;
 }
