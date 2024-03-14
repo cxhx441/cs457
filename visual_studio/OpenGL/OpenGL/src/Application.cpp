@@ -80,6 +80,13 @@ int main(void)
 		IndexBuffer ib(indices, 2 * 3 * sizeof(unsigned int));
 		ib.Unbind();
 
+		glm::mat4 model = glm::mat4(1);
+		glm::mat4 view = glm::mat4(1);
+		glm::mat4 projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+		glm::mat4 modelview = view * model;
+		glm::mat4 modelviewprojection = projection * view * model;
+	
+
 		Shader shader = Shader("res/shaders/Basic.shader");
 		shader.Bind();
 		shader.SetUniformVec4("uColor", glm::vec4(0.8f, 0.3f, 0.8f, 1.0f));
@@ -89,6 +96,7 @@ int main(void)
 		texture.Bind(0);
 		shader.Bind();
 		shader.SetUniform1i("uTexture", 0);
+		shader.SetUniformMat4("uMVP", projection);
 		// clear 
 		va.Unbind();
 		shader.Unbind();
