@@ -11,6 +11,9 @@
 
 #include "glsl_reader.h"
 #include "Renderer.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
+#include "VertexArray.h"
 
 
 int main(void)
@@ -43,81 +46,83 @@ int main(void)
         std::cout << "Error: %s\n" << glewGetErrorString(err) << std::endl;
 	std::cout << "Status: Using GLEW " << glewGetString(GLEW_VERSION) << std::endl;
 	std::cout << "Status: Using OpenGL " << glGetString(GL_VERSION) << std::endl;
+    
+	{ // this block is to avoid infinite loop of glCheckError which provides an error when there is no gl context. stops infinite loop when we close the openggl window. 
+		// vertex positions
+		float positions[] = {
+			-0.5f, -0.5f,
+			 0.5f, -0.5f,
+			 0.5f,  0.5f,
+			-0.5f,  0.5f,
+		};
+		// indices of the vertices to be drawn
+		unsigned int indices[] = {
+			0, 1, 2,
+			2, 3, 0
+		};
 
-    // vertex positions
-    float positions[] = {
-		-0.5f, -0.5f,
-		 0.5f, -0.5f,
-		 0.5f,  0.5f,
-        -0.5f,  0.5f,   
-    };
-    // indices of the vertices to be drawn
-    unsigned int indices[] = {
-        0, 1, 2,
-        2, 3, 0
-    };
+		// generate vao
+		unsigned int vao; // vertex array object
 
-    // generate vao
-    unsigned int vao; // vertex array object
-    GLCall(glGenVertexArrays(1, &vao));
-    GLCall(glBindVertexArray(vao));
+		GLCall(glGenVertexArrays(1, &vao));
+		GLCall(glBindVertexArray(vao));
 
-    unsigned int vbo; // vertex buffer object
-	GLCall(glGenBuffers(1, &vbo));
-    GLCall(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-    GLCall(glBufferData(GL_ARRAY_BUFFER, 2 * 4 * sizeof(float), positions, GL_STATIC_DRAW));
-    GLCall(glEnableVertexAttribArray(0)); 
-    GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0)); // position // this links the buffer to the currently bound Vertex Array (vao right now)
-    GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
+		VertexArray va;
+		VertexBuffer vb(positions, 2 * 4 * sizeof(float));
+		VertexBufferLayout layout;
+		layout.Push<float>(2);
+		va.AddBuffer(vb, layout);
+		vb.Unbind();
 
-    unsigned int ibo; // index buffer object
-    GLCall(glGenBuffers(1, &ibo));
-    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
-    GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 2 * 3 * sizeof(unsigned int), indices, GL_STATIC_DRAW));
-    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-	
-	//GLuint triShader = glCreateProgram();
-	//read_compile_link_validate_shader(triShader, "res/shaders/Basic.vert", "vertex");
-	//read_compile_link_validate_shader(triShader, "res/shaders/Basic.frag", "fragment");
-    GLuint triShader = create_program_from_one_file("res/shaders/Basic.shader");
-    GLCall(glUseProgram(triShader));
-	set_uniform_variable(triShader, (char*)"uColor", glm::vec4(0.8f, 0.3f, 0.8f, 1.0f));
-    GLCall(glUseProgram(0));
+		IndexBuffer ib(indices, 2 * 3 * sizeof(unsigned int));
+		ib.Unbind();
 
-
-    // clear 
-    GLCall(glBindVertexArray(0));
-    GLCall(glUseProgram(0));
-    GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
-    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-
-    // for animate
-	float r = 0.0f;
-	float increment = 0.05;
-    /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window))
-    {
-        /* Render here */
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        GLCall(glUseProgram(triShader)); // bind shader
-        set_uniform_variable(triShader, (char*)"uColor", glm::vec4(r, 0.3f, 0.8f, 1.0f));
-
-        GLCall(glBindVertexArray(vao));
-        GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo)); // bind index buffer 
-        GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0)); // works with nullptr in last argument...because the index buffer is bound?
-        if (r > 1.0f) increment = -0.05f;
-        else if (r < 0.0f) increment = 0.05f;
-        r += increment;
-        GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+		//GLuint triShader = glCreateProgram();
+		//read_compile_link_validate_shader(triShader, "res/shaders/Basic.vert", "vertex");
+		//read_compile_link_validate_shader(triShader, "res/shaders/Basic.frag", "fragment");
+		GLuint triShader = create_program_from_one_file("res/shaders/Basic.shader");
+		GLCall(glUseProgram(triShader));
+		set_uniform_variable(triShader, (char*)"uColor", glm::vec4(0.8f, 0.3f, 0.8f, 1.0f));
 		GLCall(glUseProgram(0));
 
-        /* Swap front and back buffers */
-        glfwSwapBuffers(window);
 
-        /* Poll for and process events */
-        glfwPollEvents();
-    }
+		// clear 
+		va.Unbind();
+		GLCall(glUseProgram(0));
+		vb.Unbind();
+		ib.Unbind();
+		//GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
+		//GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+		// for animate
+		float r = 0.0f;
+		float increment = 0.05;
+		/* Loop until the user closes the window */
+		while (!glfwWindowShouldClose(window))
+		{
+			/* Render here */
+			glClear(GL_COLOR_BUFFER_BIT);
+
+			GLCall(glUseProgram(triShader)); // bind shader
+			set_uniform_variable(triShader, (char*)"uColor", glm::vec4(r, 0.3f, 0.8f, 1.0f));
+
+			//GLCall(glBindVertexArray(vao));
+			va.Bind();
+			ib.Bind();
+			GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0)); // works with nullptr in last argument...because the index buffer is bound?
+			if (r > 1.0f) increment = -0.05f;
+			else if (r < 0.0f) increment = 0.05f;
+			r += increment;
+			GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+			GLCall(glUseProgram(0));
+
+			/* Swap front and back buffers */
+			glfwSwapBuffers(window);
+
+			/* Poll for and process events */
+			glfwPollEvents();
+		}
+	}
 
     glfwTerminate();
     return 0;

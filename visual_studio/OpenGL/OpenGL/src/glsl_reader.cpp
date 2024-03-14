@@ -1,17 +1,14 @@
 
-#include <GL/glew.h>
+#include "glsl_reader.h"
 
 #include <iostream>
 #include <fstream>
-#include <string>
 #include <sstream>
 
 #include <stdio.h>
 #include <fstream>
 
 #define GLM_FORCE_RADIANS
-#include <glm/matrix.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 
 
