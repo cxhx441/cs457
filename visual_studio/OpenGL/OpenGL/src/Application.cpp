@@ -67,7 +67,7 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
 	double dx = xpos - Xmouse;
 	double dy = ypos - Ymouse;
 
-	if ( PressedButton == GLFW_MOUSE_BUTTON_LEFT ) 
+	if ( PressedButton == GLFW_MOUSE_BUTTON_RIGHT ) 
 	{
 		Xrot += ( ANGFACT*dy );
 		Yrot += ( ANGFACT*dx );

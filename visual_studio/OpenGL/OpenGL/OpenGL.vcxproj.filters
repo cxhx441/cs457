@@ -1405,5 +1405,6 @@
     <None Include="src\vendor\glm\gtx\wrap.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="res\shaders\Basic.glsl" />
   </ItemGroup>
 </Project>
