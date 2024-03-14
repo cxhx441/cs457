@@ -9,7 +9,6 @@
 
 #include <iostream>
 
-//#include "glsl_reader.h"
 #include "Renderer.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
@@ -23,7 +22,6 @@
 #include "imgui/imgui_impl_glfw.h"
 
 // multiplication factors for input interaction:
-//  (these are known from previous experience)
 const float ANGFACT = 1.f;
 const float SCLFACT = 0.005f;
 const float MINSCALE = 0.05f;
@@ -31,8 +29,6 @@ const float SCROLL_WHEEL_CLICK_FACTOR = 5.f;
 const int LEFT   = 0; // per https://www.glfw.org/docs/3.3/group__buttons.html
 const int RIGHT  = 1;
 const int MIDDLE = 2;
-
-const GLfloat AXES_WIDTH   = 3.;
 
 // non-constant global variables:
 int		ActiveButton;			// current button that is down
@@ -123,7 +119,7 @@ int main(void)
 	// create the axes:
 	AxesList = glGenLists( 1 );
 	glNewList( AxesList, GL_COMPILE );
-		glLineWidth( AXES_WIDTH );
+		glLineWidth( 3 );
 			Axes( 1.f );
 		glLineWidth( 1. );
 	glEndList( );
