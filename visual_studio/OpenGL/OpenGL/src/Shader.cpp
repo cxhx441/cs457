@@ -47,7 +47,7 @@ ShaderProgramSource Shader::ParseShader_Cherno(const std::string& filepath)
 	std::stringstream ss[5];
 	ShaderType type = ShaderType::NONE;
 	while (getline(stream, line)) {
-		if (line.find("#SHADER") != std::string::npos)
+		if (line.find("//SHADER") != std::string::npos)
 		{
 			if (line.find("VERTEX") != std::string::npos)
 				type = ShaderType::VERTEX;

@@ -207,7 +207,7 @@ int main(void)
 		ib.Unbind();
 
 
-		Shader shader = Shader("res/shaders/Basic.shader");
+		Shader shader = Shader("res/shaders/Basic.glsl");
 		shader.Bind();
 		shader.SetUniformVec4("uColor", glm::vec4(0.8f, 0.3f, 0.8f, 1.0f));
 		shader.Unbind();
@@ -335,7 +335,7 @@ int main(void)
 			r += increment;
 
 			glColor3f( 1., 1., 0. );
-			GLCall(glCallList(AxesList));
+			//GLCall(glCallList(AxesList));
 
 			// img 
 			ImGui::Render();
