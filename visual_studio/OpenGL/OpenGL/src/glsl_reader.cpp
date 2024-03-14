@@ -21,7 +21,7 @@ struct ShaderProgramSource
 	std::string FragmentSource;
 };
 
-static ShaderProgramSource ParseShader_Cherno(const std::string& filepath)
+static ShaderProgramSource parse_shader_cherno(const std::string& filepath)
 {
 	std::ifstream stream(filepath);
 
@@ -130,7 +130,7 @@ GLuint compileShader(GLenum shaderType, const char* source) {
 GLuint create_program_from_one_file(const std::string& filepath)
 {
 	GLuint program = glCreateProgram();
-	ShaderProgramSource shaderSource = ParseShader_Cherno(filepath);
+	ShaderProgramSource shaderSource = parse_shader_cherno(filepath);
 
 	
 	for (int i = 0; i < 5; i++)
@@ -241,58 +241,41 @@ read_compile_link_validate_shader(GLuint program, const char* filename, const ch
 
 }
 
-void
-set_uniform_variable(GLuint program, char* name, int val )
+GLint get_uniform_loc(GLuint program, char* name) 
 {
 	GLint loc = glGetUniformLocation(program, name);
-	if (loc < 0)
-	{
+	if (loc < 0) 
 		fprintf(stderr, "cannot find uniform variable %s\n", name);
-	}
+	return loc;
+}
+
+void set_uniform_variable(GLuint program, char* name, int val )
+{
+	GLint loc = get_uniform_loc(program, name);
 	glUniform1i( loc, val );
 };
 
-void
-set_uniform_variable(GLuint program, char* name, float val )
+void set_uniform_variable(GLuint program, char* name, float val )
 {
-	GLint loc = glGetUniformLocation(program, name);
-	if (loc < 0)
-	{
-		fprintf(stderr, "cannot find uniform variable %s\n", name);
-	}
+	GLint loc = get_uniform_loc(program, name);
 	glUniform1f( loc, val );
 };
 
-void
-set_uniform_variable(GLuint program, char* name, float val0, float val1, float val2 )
+void set_uniform_variable(GLuint program, char* name, float val0, float val1, float val2 )
 {
-	GLint loc = glGetUniformLocation(program, name);
-	if (loc < 0)
-	{
-		fprintf(stderr, "cannot find uniform variable %s\n", name);
-	}
+	GLint loc = get_uniform_loc(program, name);
 	glUniform3f( loc, val0, val1, val2 );
 };
 
-void
-set_uniform_variable(GLuint program, char* name, float val0, float val1, float val2, float val3 )
+void set_uniform_variable(GLuint program, char* name, float val0, float val1, float val2, float val3 )
 {
-	GLint loc = glGetUniformLocation(program, name);
-	if (loc < 0)
-	{
-		fprintf(stderr, "cannot find uniform variable %s\n", name);
-	}
+	GLint loc = get_uniform_loc(program, name);
 	glUniform4f( loc, val0, val1, val2, val3 );
 };
 
-void
-set_uniform_variable(GLuint program, char* name, int count, float val[])
+void set_uniform_variable(GLuint program, char* name, int count, float val[])
 {
-	GLint loc = glGetUniformLocation(program, name);
-	if (loc < 0)
-	{
-		fprintf(stderr, "cannot find uniform variable %s\n", name);
-	}
+	GLint loc = get_uniform_loc(program, name);
 	if (count == 2)      glUniform2fv(loc, 1, val);
 	else if (count == 3) glUniform3fv(loc, 1, val);
 	else if (count == 4) glUniform4fv(loc, 1, val);
@@ -301,31 +284,27 @@ set_uniform_variable(GLuint program, char* name, int count, float val[])
 void
 set_uniform_variable( GLuint program, char* name, glm::mat3 val)
 {
-	GLint loc = glGetUniformLocation(program, name);
-	if (loc < 0) fprintf(stderr, "cannot find uniform variable %s\n", name);
+	GLint loc = get_uniform_loc(program, name);
 	glUniformMatrix3fv(loc, 1, GL_FALSE, glm::value_ptr(val));
 };
 
 void
 set_uniform_variable( GLuint program, char* name, glm::mat4 val)
 {
-	GLint loc = glGetUniformLocation(program, name);
-	if (loc < 0) fprintf(stderr, "cannot find uniform variable %s\n", name);
+	GLint loc = get_uniform_loc(program, name);
 	glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(val));
 };
 
 void
 set_uniform_variable( GLuint program, char* name, glm::vec3 val)
 {
-	GLint loc = glGetUniformLocation(program, name);
-	if (loc < 0) fprintf(stderr, "cannot find uniform variable %s\n", name);
+	GLint loc = get_uniform_loc(program, name);
 	glUniform3fv(loc, 1, glm::value_ptr(val));
 };
 
 void
 set_uniform_variable( GLuint program, char* name, glm::vec4 val)
 {
-	GLint loc = glGetUniformLocation(program, name);
-	if (loc < 0) fprintf(stderr, "cannot find uniform variable %s\n", name);
+	GLint loc = get_uniform_loc(program, name);
 	glUniform4fv(loc, 1, glm::value_ptr(val));
 };
