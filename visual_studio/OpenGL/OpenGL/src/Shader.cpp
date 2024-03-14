@@ -202,7 +202,7 @@ GLuint Shader::CreateProgramFromSingleFile(const std::string& filepath)
 
 
 
-GLint Shader::GetUniformLoc(char* name) 
+GLint Shader::GetUniformLoc(const char* name) 
 {
 	if (m_UniformLocationCache.find(name) != m_UniformLocationCache.end())
 		return m_UniformLocationCache[name];
@@ -213,31 +213,31 @@ GLint Shader::GetUniformLoc(char* name)
 	return loc;
 }
 
-void Shader::SetUniform1i(char* name, int val )
+void Shader::SetUniform1i(const char* name, int val )
 {
 	GLint loc = GetUniformLoc(name);
 	GLCall(glUniform1i( loc, val ));
 };
 
-void Shader::SetUniform1f(char* name, float val )
+void Shader::SetUniform1f(const char* name, float val )
 {
 	GLint loc = GetUniformLoc(name);
 	GLCall(glUniform1f( loc, val ));
 };
 
-void Shader::SetUniform3f(char* name, float val0, float val1, float val2 )
+void Shader::SetUniform3f(const char* name, float val0, float val1, float val2 )
 {
 	GLint loc = GetUniformLoc(name);
 	GLCall(glUniform3f( loc, val0, val1, val2 ));
 };
 
-void Shader::SetUniform4f(char* name, float val0, float val1, float val2, float val3 )
+void Shader::SetUniform4f(const char* name, float val0, float val1, float val2, float val3 )
 {
 	GLint loc = GetUniformLoc(name);
 	GLCall(glUniform4f( loc, val0, val1, val2, val3 ));
 };
 
-void Shader::SetUniformfv(char* name, int count, float val[])
+void Shader::SetUniformfv(const char* name, int count, float val[])
 {
 	GLint loc = GetUniformLoc(name);
 	if (count == 2)      glUniform2fv(loc, 1, val);
@@ -245,25 +245,25 @@ void Shader::SetUniformfv(char* name, int count, float val[])
 	else if (count == 4) glUniform4fv(loc, 1, val);
 };
 
-void Shader::SetUniformMat3( char* name, glm::mat3 val)
+void Shader::SetUniformMat3( const char* name, glm::mat3 val)
 {
 	GLint loc = GetUniformLoc(name);
 	GLCall(glUniformMatrix3fv(loc, 1, GL_FALSE, glm::value_ptr(val)));
 };
 
-void Shader::SetUniformMat4( char* name, glm::mat4 val)
+void Shader::SetUniformMat4( const char* name, glm::mat4 val)
 {
 	GLint loc = GetUniformLoc(name);
 	GLCall(glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(val)));
 };
 
-void Shader::SetUniformVec3( char* name, glm::vec3 val)
+void Shader::SetUniformVec3( const char* name, glm::vec3 val)
 {
 	GLint loc = GetUniformLoc(name);
 	GLCall(glUniform3fv(loc, 1, glm::value_ptr(val)));
 };
 
-void Shader::SetUniformVec4( char* name, glm::vec4 val)
+void Shader::SetUniformVec4( const char* name, glm::vec4 val)
 {
 	GLint loc = GetUniformLoc(name);
 	GLCall(glUniform4fv(loc, 1, glm::value_ptr(val)));

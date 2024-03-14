@@ -30,16 +30,16 @@ public:
 	void Unbind() const;
 
 	// Set uniforms
-	GLint GetUniformLoc(char* name);
-	void SetUniform1i(char* name, int val);
-	void SetUniform1f(char* name, float val);
-	void SetUniform3f(char* name, float val0, float val1, float val2);
-	void SetUniform4f(char* name, float val0, float val1, float val2, float val3);
-	void SetUniformfv(char* name, int count, float val[]);
-	void SetUniformMat3(char* name, glm::mat3 val);
-	void SetUniformMat4(char* name, glm::mat4 val);
-	void SetUniformVec3(char* name, glm::vec3 val);
-	void SetUniformVec4(char* name, glm::vec4 val);
+	GLint GetUniformLoc(const char* name);
+	void SetUniform1i(const char* name, int val);
+	void SetUniform1f(const char* name, float val);
+	void SetUniform3f(const char* name, float val0, float val1, float val2);
+	void SetUniform4f(const char* name, float val0, float val1, float val2, float val3);
+	void SetUniformfv(const char* name, int count, float val[]);
+	void SetUniformMat3(const char* name, glm::mat3 val);
+	void SetUniformMat4(const char* name, glm::mat4 val);
+	void SetUniformVec3(const char* name, glm::vec3 val);
+	void SetUniformVec4(const char* name, glm::vec4 val);
 
 private:
 	ShaderProgramSource ParseShader_Cherno(const std::string& filepath);

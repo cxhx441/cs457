@@ -14,7 +14,9 @@
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "VertexArray.h"
+#include "VertexBufferLayout.h"
 #include "Shader.h"
+#include "Texture.h"
 
 
 int main(void)
@@ -51,10 +53,10 @@ int main(void)
 	{ // this block is to avoid infinite loop of glCheckError which provides an error when there is no gl context. stops infinite loop when we close the openggl window. 
 		// vertex positions
 		float positions[] = {
-			-0.5f, -0.5f,
-			 0.5f, -0.5f,
-			 0.5f,  0.5f,
-			-0.5f,  0.5f,
+			-0.5f, -0.5f, 0.0f, 0.0f, // 0
+			 0.5f, -0.5f, 1.0f, 0.0f, // 1
+			 0.5f,  0.5f, 1.0f, 1.0f, // 2
+			-0.5f,  0.5f, 0.0f, 1.0f  // 3
 		};
 		// indices of the vertices to be drawn
 		unsigned int indices[] = {
@@ -62,27 +64,38 @@ int main(void)
 			2, 3, 0
 		};
 
+		GLCall(glEnable(GL_BLEND));
+		GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+		GLCall(glBlendEquation(GL_FUNC_ADD)); // default, but being explicit
+
 		// generate vao
 		VertexArray va;
-		VertexBuffer vb(positions, 2 * 4 * sizeof(float));
+		VertexBuffer vb(positions, 4 * 4 * sizeof(float));
 		VertexBufferLayout layout;
-		layout.Push<float>(2);
+		layout.Push<float>(2); // vertex position, 2 floats
+		layout.Push<float>(2); // vertex texture coords, 2 floats
 		va.AddBuffer(vb, layout);
 		vb.Unbind();
 
 		IndexBuffer ib(indices, 2 * 3 * sizeof(unsigned int));
 		ib.Unbind();
 
-		Shader triShader = Shader("res/shaders/Basic.shader");
-		triShader.Bind();
-		triShader.SetUniformVec4((char*)"uColor", glm::vec4(0.8f, 0.3f, 0.8f, 1.0f));
-		triShader.Unbind();
-
+		Shader shader = Shader("res/shaders/Basic.shader");
+		shader.Bind();
+		shader.SetUniformVec4("uColor", glm::vec4(0.8f, 0.3f, 0.8f, 1.0f));
+		shader.Unbind();
+		
+		Texture texture("res/textures/dice.png");
+		texture.Bind(0);
+		shader.Bind();
+		shader.SetUniform1i("uTexture", 0);
 		// clear 
 		va.Unbind();
-		triShader.Unbind();
+		shader.Unbind();
 		vb.Unbind();
 		ib.Unbind();
+
+		Renderer renderer;
 
 		// for animate
 		float r = 0.0f;
@@ -91,18 +104,14 @@ int main(void)
 		while (!glfwWindowShouldClose(window))
 		{
 			/* Render here */
-			glClear(GL_COLOR_BUFFER_BIT);
+			renderer.Clear();
 
-			triShader.Bind();
-			triShader.SetUniformVec4((char*)"uColor", glm::vec4(r, 0.3f, 0.8f, 1.0f));
-			va.Bind();
-			ib.Bind();
-			GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0)); // works with nullptr in last argument...because the index buffer is bound?
+			shader.Bind();
+			shader.SetUniformVec4((char*)"uColor", glm::vec4(r, 0.3f, 0.8f, 1.0f));
+			renderer.Draw(va, ib, shader);
 			if (r > 1.0f) increment = -0.05f;
 			else if (r < 0.0f) increment = 0.05f;
 			r += increment;
-			ib.Unbind();
-			triShader.Unbind();
 
 			/* Swap front and back buffers */
 			glfwSwapBuffers(window);
