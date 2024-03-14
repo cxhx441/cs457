@@ -130,6 +130,52 @@ int main(void)
 	glEndList( );
 
 	{ // this block is to avoid infinite loop of glCheckError which provides an error when there is no gl context. stops infinite loop when we close the openggl window. 
+		float axes_position[] = {
+			1.5, 0.0, 0.0,
+			0.0, 0.0, 0.0,
+			0.0, 1.5, 0.0,
+
+			0.0, 0.0, 0.0,
+			0.0, 0.0, 1.5,
+
+			1.65f, -0.075f, 0.f, // X!
+			1.8f, 0.075f, 0.f,
+			1.65f, 0.075f, 0.f,
+			1.8f, -0.075f, 0.f,
+
+			0.f, 1.65f, 0.f, // Y!
+			0.f, 1.74f, 0.f,
+			-0.075f, 1.8f, 0.f,
+			0.f, 1.74f, 0.f,
+			0.075f, 1.8f, 0.f,
+
+			0.f, 0.075f, 1.8f, // Z!
+			0.f, 0.075f, 1.65f,
+			0.f, -0.075f, 1.8f,
+			0.f, -0.075f, 1.65f,
+			0.f, 0.f, 1.6875f,
+			0.f, 0.f, 1.7625f
+		};
+		unsigned int axes_indices[] = {
+			0, 1,
+			1, 2,
+
+			3, 4,
+
+			5, 6,
+			7, 8,
+
+			9, 10,
+			10, 11,
+			12, 13,
+
+			14, 15,
+			15, 16,
+			16, 17,
+			18, 19
+		};
+
+
 
 		// vertex positions
 		float positions[] = {
@@ -351,7 +397,6 @@ void Axes( float length )
 		glVertex3f( 0., 0., 0. );
 		glVertex3f( 0., 0., length );
 	glEnd( );
-
 	float fact = LENFRAC * length;
 	float base = BASEFRAC * length;
 
