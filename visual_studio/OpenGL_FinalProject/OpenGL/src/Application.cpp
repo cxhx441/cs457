@@ -41,7 +41,7 @@ double Xmouse, Ymouse;
 int PressedButton = -1;
 
 // for mvp
-glm::vec3 eye(1., 1., 1.5f);
+glm::vec3 eye(1., 1., 4.f);
 glm::vec3 look(0., 0., 0.);
 glm::vec3 up(0., 1., 0.);
 glm::mat4 model;
@@ -64,16 +64,18 @@ float framerate;
 
 // FOR PLATE SHADER
 glm::vec3 uPlateColor = glm::vec3(0.2f, 0.2f, 0.2f);
+float uPlateDim = 2.f;
 // FOR SAND COMPUTE/RENDER SHADER
 float uCubeSize =  0.015f;
-float uGravityMetersPerSec = -.3f;
-//float uGravityMetersPerSec = -9.8f;
+//float uGravityMetersPerSec = -.3f;
+float uBounceFactor = 0.5;
+float uGravityMetersPerSec = -9.8f;
 float uSpawnHeight =  1.5f;
 float uDeathHeight = -30.5f;
 float uPlateHeight =  0.0f;
 GLuint SandShaderProgram;
 GLuint ComputeSandShaderProgram;
-int num_parts_dim = 128;
+int num_parts_dim = 16; // 128
 int NUM_PARTICLES = num_parts_dim * num_parts_dim * num_parts_dim;   // total number of particles to move
 #define WORK_GROUP_SIZE 128 // # work-items per work-group
 struct position { float x,  y,  z,  w; };
@@ -81,6 +83,11 @@ struct velocity { float vx, vy, vz, vw; };
 struct rotation { float rx, ry, rz, rw; };
 struct rotationSpeed { float s; };
 struct color    { float r,  g,  b,  a; };
+//struct position { float x,  y,  z; };
+//struct velocity { float vx, vy, vz; };
+//struct rotation { float rx, ry, rz, rw; };
+//struct rotationSpeed { float s; };
+//struct color    { float r,  g,  b; };
 GLuint posSSbo;
 GLuint velSSbo;
 GLuint rotSSbo;
@@ -152,10 +159,10 @@ int main(void)
 
 		// vertex positions
 		float test_positions[] = {
-			-1.0f, 0.0f,   -1.0f, 0.0f, 0.0f,   0.0f, 1.0f, 0.0f, // 0 vertex.xyz, tex.st, normal.xyz
-			 1.0f, 0.0f,   -1.0f, 1.0f, 0.0f,   0.0f, 1.0f, 0.0f, // 1
-			 1.0f, 0.0f,    1.0f, 1.0f, 1.0f,   0.0f, 1.0f, 0.0f, // 2
-			-1.0f, 0.0f,    1.0f, 0.0f, 1.0f,   0.0f, 1.0f, 0.0f, // 3
+			-0.5f, 0.0f, -0.5f,   0.0f, 0.0f,   0.0f, 1.0f, 0.0f, // 0 vertex.xyz, tex.st, normal.xyz
+			 0.5f, 0.0f, -0.5f,   1.0f, 0.0f,   0.0f, 1.0f, 0.0f, // 1
+			 0.5f, 0.0f,  0.5f,   1.0f, 1.0f,   0.0f, 1.0f, 0.0f, // 2
+			-0.5f, 0.0f,  0.5f,   0.0f, 1.0f,   0.0f, 1.0f, 0.0f, // 3
 		};
 		// indices of the vertices to be drawn
 		unsigned int test_indices[] = {
@@ -194,9 +201,9 @@ int main(void)
 
 		Shader axes_shader = Shader("res/shaders/Axes.glsl");
 		Shader plate_shader = Shader("res/shaders/Plate.glsl");
-		plate_shader.Bind();
-		plate_shader.SetUniformVec3("uColor", glm::vec3(0.0f, 0.0f, 0.0f));
-		plate_shader.Unbind();
+		//plate_shader.Bind();
+		//plate_shader.SetUniformVec3("uColor", glm::vec3(0.0f, 0.0f, 0.0f));
+		//plate_shader.Unbind();
 
 		Renderer renderer;
 
@@ -242,6 +249,7 @@ int main(void)
 			// PLATE
 			plate_shader.Bind();
 			//test_shader.SetUniformVec4((char*)"uColor", glm::vec4(r, 0.3f, 0.8f, 1.0f));
+			model = glm::scale(glm::mat4(1), glm::vec3(uPlateDim));
 			plate_shader.SetUniformVec3("uPlateColor", uPlateColor);
 			plate_shader.SetUniformMat4("uMVP", mvp());
 			plate_shader.SetUniformMat4("uMV", mv());
@@ -265,6 +273,8 @@ int main(void)
 			set_uniform_variable(ComputeSandShaderProgram, "uGravityMetersPerSec", uGravityMetersPerSec);
 			set_uniform_variable(ComputeSandShaderProgram, "uSpawnHeight", uSpawnHeight);
 			set_uniform_variable(ComputeSandShaderProgram, "uDeathHeight", uDeathHeight);
+			set_uniform_variable(ComputeSandShaderProgram, "uPlateDim", uPlateDim);
+			set_uniform_variable(ComputeSandShaderProgram, "uBounceFactor", uBounceFactor);
 			//std::cout << "gravity_meters_per_sec: " << uGravityMetersPerSec << std::endl;
 			//std::cout << "grav*time: " << 1.f / framerate * uGravityMetersPerSec << std::endl;
 			glDispatchCompute( NUM_PARTICLES  / WORK_GROUP_SIZE, 1,  1 );
@@ -447,11 +457,13 @@ void imgui_show_sand_frame()
 	//static float f = 0.0f;
 	//static int counter = 0;
 	ImGui::Begin("Sand");                          // Create a window called "Hello, world!" and append into it.
-	ImGui::SliderFloat("uCubeSize", &uCubeSize, 0.0f, 0.5f);
+	ImGui::SliderFloat("uCubeSize", &uCubeSize, 0.001f, 0.05f);
 	ImGui::SliderFloat("uGravityMetersPerSec", &uGravityMetersPerSec, -10.f, 10.f);
 	ImGui::SliderFloat("uSpawnHeight", &uSpawnHeight, -5.f, 5.f);
 	ImGui::SliderFloat("uDeathHeight", &uDeathHeight, -5.f, 5.f);
 	ImGui::SliderFloat3("uPlateColor", &uPlateColor.x, 0.f, 1.f);
+	ImGui::SliderFloat("uPlateDim", &uPlateDim, 0.1f, 3.f);
+	ImGui::SliderFloat("uBounceFactor", &uBounceFactor, 0.01f, 1.f);
 	//ImGui::SliderFloat3("Scale", &scaler.x, -2.f, 2.f);
 	//ImGui::SliderFloat("Rotation", &rotater, -200.f, 200.f);
 
@@ -535,6 +547,7 @@ void initSand() {
 		points[i].x = ((rand() % 10000) / 10000.f - 0.5f) * 2 * 1.5; // -1. to 1 
 		points[i].y = ((rand() % 10000) / 10000.f - 0.5f) * 2 + 1;
 		points[i].z = ((rand() % 10000) / 10000.f - 0.5f) * 2 * 1.5;
+		points[i].w = 1;
 	}
 	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
 
@@ -543,9 +556,13 @@ void initSand() {
 	glBufferData( GL_SHADER_STORAGE_BUFFER, NUM_PARTICLES * sizeof(struct velocity), NULL, GL_STATIC_DRAW );
 	struct velocity *velocities = (struct velocity *) glMapBufferRange( GL_SHADER_STORAGE_BUFFER, 0, NUM_PARTICLES * sizeof(struct velocity), bufMask );
 	for( int i = 0; i < NUM_PARTICLES; i++ ) {
-		velocities[i].vx = ((rand() % 100) / 50.f - 1.) / 50.f; // -0.5 to 0.5 / 50
-		velocities[i].vy = ((rand() % 100) / 50.f - 1.) / 100.f;
-		velocities[i].vz = ((rand() % 100) / 50.f - 1.) / 50.f;
+		//velocities[i].vx = ((rand() % 100) / 50.f - 1.) / 50.f; // -0.5 to 0.5 / 50
+		//velocities[i].vy = ((rand() % 100) / 50.f - 1.) / 100.f;
+		//velocities[i].vz = ((rand() % 100) / 50.f - 1.) / 50.f;
+		//velocities[i].vw = 1.;
+		velocities[i].vx = 0;
+		velocities[i].vy = 0;
+		velocities[i].vz = 0;
 		velocities[i].vw = 1.;
 	}
 	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );

@@ -17,7 +17,7 @@ layout( std430, binding=6 )  buffer  Rot {
 };
 
 layout( std430, binding=7 )  buffer  RotSpeed {
-	vec4 RotationsSpeed[]; // array of structures
+	vec4 RotationSpeeds[]; // array of structures
 };
 
 
@@ -27,33 +27,77 @@ uniform float uGravityMetersPerSec;
 uniform float uDeltaTime;
 uniform float uSpawnHeight;
 uniform float uDeathHeight;
+uniform float uPlateDim;
+uniform float uBounceFactor;
 //float RotMult = .5f; 
 
+const float PI = 3.14159265359;
+const float y_fudge = -0.01;
+
+bool within_plate_boundary(vec4 p){
+	float d = uPlateDim / 2.f;
+	return p.x > -d && p.x < d && p.z > -d && p.z < d  ;
+}
+
+float chladni_res_factor(float x, float y, float n, float m, float L)
+{
+    // return a range of -2 to 2
+    return cos(n * PI * x / L) * cos(m * PI * y / L) - cos(m * PI * x / L) * cos(n * PI * y / L);
+}
+
+
 void main() {
+	float d = uPlateDim;
 	uint index = gl_GlobalInvocationID.x;	
-	Positions[index] += Velocities[index] * uDeltaTime;
+	vec4 pos = Positions[index];
+	//vec4 newPos = vec4(Velocities[index].xyz * uDeltaTime, 1.f);
 	// handle respawn
 	//float t = step(uDeathHeight, Positions[index].y); // 0 if respawning, 1 if still flying
 	//Positions[index].y = Positions[index].y + abs(t-1)*(-uDeathHeight + uSpawnHeight);  // abs(t-1) inverts t
 	//Velocities[index].xyz *= t*vec3(1.f); // set veloctity to zero if respawning. 
-	if ((Positions[index].y <= 0.0f) && ( Positions[index].x > -1.0f && Positions[index].x < 1.0f && Positions[index].z > -1.0f && Positions[index].z < 1.0f  ) )
+	//if ((Positions[index].y <= 0.0f) && ( Positions[index].x > -1.0f && Positions[index].x < 1.0f && Positions[index].z > -1.0f && Positions[index].z < 1.0f  ) )
+	if (pos.y <= 0.0f && pos.y > y_fudge && within_plate_boundary(pos) )
 	{
-		Positions[index].y = 0.0f;
-		Velocities[index].y = 0.0f;
+		// Reflect off plate boundary, meaning, redirect the velocity. 
+		// add force vector of plate resonance. 
+		// 
+		//float val = chladni_res_factor(pos.x, pos.y, uN, uM, 1.0);
+		//float val = chladni_res_factor(pos.x, pos.y, uN, uM, uPlateDim);
+		//val = abs(val) / 2.; // range 0 to 1
+		// d = 0.001;
+		// dx0 = chladni_res_factor(pos.x - d, pos.z, uN, uM, uPlateDim)
+		// dx1 = chladni_res_factor(pos.x + d, pos.z, uN, uM, uPlateDim)
+		// dz0 = chladni_res_factor(pos.x, pos.z - d, uN, uM, uPlateDim)
+		// dz1 = chladni_res_factor(pos.x, pos.z + d, uN, uM, uPlateDim)
+		// dx = vec3(pos.x - d, dx0, pos.z    ) - vec3(pos.x + d, dx1, pos.z)
+		// dz = vec3(pos.x    , dz0, pos.z - d) - vec3(pos.x    , dz1, pos.z + d)
+		vec3 plate_normal = vec3(0.f, 1.f, 0.f);
+		// plate_normal = normalize(cross( dx, dz ));
+		// plate_velocity_factor = plate_res_factor(pos.x, pos.z, uN, uM, uPlateDim)
+		vec3 particle_reflected_velocity = reflect(Velocities[index].xyz, plate_normal);
+		// particle_reflected_velocity *= (plate_velocity_factor + 1) * uPlateAmp
+		Velocities[index].xyz = particle_reflected_velocity.xyz * uBounceFactor;
+		Positions[index].xyz += Velocities[index].xyz * uDeltaTime;
+		//Positions[index].y = 0.0f;
+		//Velocities[index].y = 0.0f;
 	}
-
-	if (Positions[index].y < uDeathHeight) 
+	else if (pos.y <= uDeathHeight) 
 	{
 		Positions[index].y = uSpawnHeight;
 		Velocities[index] = vec4(0.f, 0.f, 0.f, 1.f);
+		//Rotations[index].w += sign(Rotations[index].w) * 2.5 * uDeltaTime;
 	}
-	//float rot_sign = sign(Rotations[index].w);
-	//Rotations[index].w += rot_sign * RotationsSpeed[index].s*RotMult * deltaTime;
-	//Rotations[index].w = mod(Rotations[index].w + RotationsSpeed[index].s*RotMult, 6.28);
-	Rotations[index].w += 2.5 * .01;
-	Velocities[index].xyz += vec3(0.f, uGravityMetersPerSec, 0.f) * uDeltaTime;
-	Velocities[index].x /= 1.01;
-	Velocities[index].z /= 1.01;
+	else
+	{
+		//float rot_sign = sign(Rotations[index].w);
+		//Rotations[index].w += rot_sign * RotationSpeeds[index].s*RotMult * deltaTime;
+		//Rotations[index].w = mod(Rotations[index].w + RotationSpeeds[index].s*RotMult, 6.28);
+		Positions[index] += Velocities[index] * uDeltaTime;
+		Rotations[index].w += sign(Rotations[index].w) * 2.5 * uDeltaTime;
+		Velocities[index].y += uGravityMetersPerSec * uDeltaTime;
+		//Velocities[index].x /= 1.01;
+		//Velocities[index].z /= 1.01;
+	}
 }
 
 //vec3 gravity = vec3(0, -9.8f, 0);
