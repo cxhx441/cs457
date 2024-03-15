@@ -78,6 +78,7 @@ float uDeathHeight = -30.5f;
 float uPlateHeight =  0.0f;
 int uChladni_N = 1;
 int uChladni_M = 2;
+bool uQuickRespawn = false;
 GLuint SandShaderProgram;
 GLuint ComputeSandShaderProgram;
 int num_parts_dim = 64; // 128
@@ -285,6 +286,8 @@ int main(void)
 			set_uniform_variable(ComputeSandShaderProgram, "uChladni_M", uChladni_M);
 			set_uniform_variable(ComputeSandShaderProgram, "uPlateNormalScale", uPlateNormalScale);
 			set_uniform_variable(ComputeSandShaderProgram, "uPlateNormalDelta", uPlateNormalDelta);
+			set_uniform_variable(ComputeSandShaderProgram, "uQuickRespawn", uQuickRespawn);
+			uQuickRespawn = false; // turn off!
 			//std::cout << "gravity_meters_per_sec: " << uGravityMetersPerSec << std::endl;
 			//std::cout << "grav*time: " << 1.f / framerate * uGravityMetersPerSec << std::endl;
 			glDispatchCompute( NUM_PARTICLES  / WORK_GROUP_SIZE, 1,  1 );
@@ -479,6 +482,11 @@ void imgui_show_sand_frame()
 	ImGui::SliderInt("uPlateNormalDelta", &uPlateNormalDelta, 1, 20);
 	ImGui::SliderInt("uChladni_N", &uChladni_N, 1, 10);
 	ImGui::SliderInt("uChladni_M", &uChladni_M, 1, 10);
+	//ImGui::Checkbox("uQuickRespawn", &uQuickRespawn);
+	if (ImGui::Button("uQuickRespawn"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+		uQuickRespawn = true;
+	ImGui::SameLine();
+	ImGui::Text("uQuickRespan = %d", uQuickRespawn);
 	//ImGui::SliderFloat3("Scale", &scaler.x, -2.f, 2.f);
 	//ImGui::SliderFloat("Rotation", &rotater, -200.f, 200.f);
 

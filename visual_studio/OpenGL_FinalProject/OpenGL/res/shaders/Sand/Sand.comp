@@ -33,6 +33,7 @@ uniform int uChladni_N, uChladni_M;
 uniform float uChladniResAmp;
 uniform float uPlateNormalScale;
 uniform int uPlateNormalDelta;
+uniform bool uQuickRespawn;
 //float RotMult = .5f; 
 
 const float PI = 3.14159265359;
@@ -40,6 +41,7 @@ const float y_fudge = -0.01;
 
 vec4 pos, vel;
 vec4 newPos, newVel;
+uint index;
 
 bool within_plate_boundary(vec4 p){
 	float d = uPlateDim / 2.f;
@@ -56,15 +58,28 @@ float chladni_res_factor(float x, float y, float n, float m, float L)
 
 float random(vec2 st) { return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123); }
 
+void respawn()
+{
+	Positions[index].y = uSpawnHeight;
+	Positions[index].x = random(pos.xz) * uPlateDim - uPlateDim/2.f;
+	Positions[index].z = random(pos.zx) * uPlateDim - uPlateDim/2.f;
+	Velocities[index] = vec4(0.f, 0.f, 0.f, 1.f);
+	//Rotations[index].w += sign(Rotations[index].w) * 2.5 * uDeltaTime;
+}
+
 void main() {
-	uint index = gl_GlobalInvocationID.x;	
+	index = gl_GlobalInvocationID.x;	
+
 
 	pos = Positions[index];
 	vel = Velocities[index];
 	newVel = Velocities[index];
 	newPos = pos + vec4(vel.xyz * uDeltaTime, 1.f);
 
-	if (pos.y >= 0.0f && newPos.y <= 0.0f && within_plate_boundary(pos) )
+	if (uQuickRespawn) { 
+		respawn(); 
+	}
+	else if (pos.y >= 0.0f && newPos.y <= 0.0f && within_plate_boundary(pos) )
 	{
 		// get plate normal
 		float d = uPlateNormalDelta;
@@ -96,11 +111,7 @@ void main() {
 	}
 	else if (newPos.y <= uDeathHeight)  // RESPAWN
 	{
-		Positions[index].y = uSpawnHeight;
-		Positions[index].x = random(pos.xz) * uPlateDim - uPlateDim/2.f;
-		Positions[index].z = random(pos.zx) * uPlateDim - uPlateDim/2.f;
-		Velocities[index] = vec4(0.f, 0.f, 0.f, 1.f);
-		//Rotations[index].w += sign(Rotations[index].w) * 2.5 * uDeltaTime;
+		respawn();
 	}
 	else // FALL NORMALLY
 	{
