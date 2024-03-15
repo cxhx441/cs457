@@ -64,18 +64,21 @@ float framerate;
 
 // FOR PLATE SHADER
 glm::vec3 uPlateColor = glm::vec3(0.2f, 0.2f, 0.2f);
-float uPlateDim = 2.f;
+float uPlateDim = 4.f;
 // FOR SAND COMPUTE/RENDER SHADER
 float uCubeSize =  0.015f;
 //float uGravityMetersPerSec = -.3f;
-float uBounceFactor = 0.5;
+float uBounceFactor = 0.1;
+float uChladniResAmp = 1;
 float uGravityMetersPerSec = -9.8f;
-float uSpawnHeight =  1.5f;
+float uSpawnHeight =  15.f;
 float uDeathHeight = -30.5f;
 float uPlateHeight =  0.0f;
+int uChladni_N = 1;
+int uChladni_M = 2;
 GLuint SandShaderProgram;
 GLuint ComputeSandShaderProgram;
-int num_parts_dim = 16; // 128
+int num_parts_dim = 64; // 128
 int NUM_PARTICLES = num_parts_dim * num_parts_dim * num_parts_dim;   // total number of particles to move
 #define WORK_GROUP_SIZE 128 // # work-items per work-group
 struct position { float x,  y,  z,  w; };
@@ -275,6 +278,9 @@ int main(void)
 			set_uniform_variable(ComputeSandShaderProgram, "uDeathHeight", uDeathHeight);
 			set_uniform_variable(ComputeSandShaderProgram, "uPlateDim", uPlateDim);
 			set_uniform_variable(ComputeSandShaderProgram, "uBounceFactor", uBounceFactor);
+			set_uniform_variable(ComputeSandShaderProgram, "uChladniResAmp", uChladniResAmp);
+			set_uniform_variable(ComputeSandShaderProgram, "uChladni_N", uChladni_N);
+			set_uniform_variable(ComputeSandShaderProgram, "uChladni_M", uChladni_M);
 			//std::cout << "gravity_meters_per_sec: " << uGravityMetersPerSec << std::endl;
 			//std::cout << "grav*time: " << 1.f / framerate * uGravityMetersPerSec << std::endl;
 			glDispatchCompute( NUM_PARTICLES  / WORK_GROUP_SIZE, 1,  1 );
@@ -464,6 +470,9 @@ void imgui_show_sand_frame()
 	ImGui::SliderFloat3("uPlateColor", &uPlateColor.x, 0.f, 1.f);
 	ImGui::SliderFloat("uPlateDim", &uPlateDim, 0.1f, 3.f);
 	ImGui::SliderFloat("uBounceFactor", &uBounceFactor, 0.01f, 1.f);
+	ImGui::SliderFloat("uChladniResAmp", &uChladniResAmp, 0.01f, 20.f);
+	ImGui::SliderInt("uChladni_N", &uChladni_N, 1, 10);
+	ImGui::SliderInt("uChladni_M", &uChladni_M, 1, 10);
 	//ImGui::SliderFloat3("Scale", &scaler.x, -2.f, 2.f);
 	//ImGui::SliderFloat("Rotation", &rotater, -200.f, 200.f);
 

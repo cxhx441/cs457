@@ -29,6 +29,8 @@ uniform float uSpawnHeight;
 uniform float uDeathHeight;
 uniform float uPlateDim;
 uniform float uBounceFactor;
+uniform int uChladni_N, uChladni_M;
+uniform float uChladniResAmp;
 //float RotMult = .5f; 
 
 const float PI = 3.14159265359;
@@ -41,8 +43,10 @@ bool within_plate_boundary(vec4 p){
 
 float chladni_res_factor(float x, float y, float n, float m, float L)
 {
-    // return a range of -2 to 2
-    return cos(n * PI * x / L) * cos(m * PI * y / L) - cos(m * PI * x / L) * cos(n * PI * y / L);
+    // range of -2 to 2
+    float chladni_val = cos(n * PI * x / L) * cos(m * PI * y / L) - cos(m * PI * x / L) * cos(n * PI * y / L);
+    // return a range of 0 to 1;
+    return abs(chladni_val) / 2.f;
 }
 
 
@@ -62,21 +66,25 @@ void main() {
 		// add force vector of plate resonance. 
 		// 
 		//float val = chladni_res_factor(pos.x, pos.y, uN, uM, 1.0);
-		//float val = chladni_res_factor(pos.x, pos.y, uN, uM, uPlateDim);
-		//val = abs(val) / 2.; // range 0 to 1
-		// d = 0.001;
-		// dx0 = chladni_res_factor(pos.x - d, pos.z, uN, uM, uPlateDim)
-		// dx1 = chladni_res_factor(pos.x + d, pos.z, uN, uM, uPlateDim)
-		// dz0 = chladni_res_factor(pos.x, pos.z - d, uN, uM, uPlateDim)
-		// dz1 = chladni_res_factor(pos.x, pos.z + d, uN, uM, uPlateDim)
-		// dx = vec3(pos.x - d, dx0, pos.z    ) - vec3(pos.x + d, dx1, pos.z)
-		// dz = vec3(pos.x    , dz0, pos.z - d) - vec3(pos.x    , dz1, pos.z + d)
+		//float val = chladni_res_factor(pos.x, pos.y, uChladni_N, uChladni_M, uPlateDim);
+		float d = 1.f;
+		float west = chladni_res_factor(pos.x - d, pos.z    , uChladni_N, uChladni_M, uPlateDim);
+		float east = chladni_res_factor(pos.x + d, pos.z    , uChladni_N, uChladni_M, uPlateDim);
+		float north = chladni_res_factor(pos.x    , pos.z - d, uChladni_N, uChladni_M, uPlateDim);
+		float south = chladni_res_factor(pos.x    , pos.z + d, uChladni_N, uChladni_M, uPlateDim);
+		vec3 stangent = vec3(d * 2., (east-west), 0.    );
+		vec3 ttangent = vec3(0     , (east-west), d * 2.);
+		//vec3 vdx = vec3(pos.x - d, dx0, pos.z    ) - vec3(pos.x + d, dx1, pos.z);
+		//vec3 vdz = vec3(pos.x    , dz0, pos.z - d) - vec3(pos.x    , dz1, pos.z + d);
 		vec3 plate_normal = vec3(0.f, 1.f, 0.f);
-		// plate_normal = normalize(cross( dx, dz ));
-		// plate_velocity_factor = plate_res_factor(pos.x, pos.z, uN, uM, uPlateDim)
-		vec3 particle_reflected_velocity = reflect(Velocities[index].xyz, plate_normal);
-		// particle_reflected_velocity *= (plate_velocity_factor + 1) * uPlateAmp
-		Velocities[index].xyz = particle_reflected_velocity.xyz * uBounceFactor;
+		//vec3 plate_normal = normalize(cross( stangent, ttangent ));
+		vec3 reflected = reflect(Velocities[index].xyz, plate_normal);
+		float chladni_val = chladni_res_factor(pos.x, pos.z, uChladni_N, uChladni_M, uPlateDim);
+		//vec3 particle_reflected_velocity = reflected * (chladni_val * uChladniResAmp);
+		vec3 stnd_bounce = reflected * uBounceFactor;
+		vec3 chladni_push = normalize(reflected) * vec3(chladni_val * uChladniResAmp);
+		vec3 particle_reflected_velocity = stnd_bounce + chladni_push;
+		Velocities[index].xyz = particle_reflected_velocity.xyz;
 		Positions[index].xyz += Velocities[index].xyz * uDeltaTime;
 		//Positions[index].y = 0.0f;
 		//Velocities[index].y = 0.0f;
@@ -84,6 +92,8 @@ void main() {
 	else if (pos.y <= uDeathHeight) 
 	{
 		Positions[index].y = uSpawnHeight;
+		//Positions[index].x = sign(pos.x) * mod(pos.x, uPlateDim/2.f);
+		//Positions[index].z = sign(pos.z) * mod(pos.z, uPlateDim/2.f);
 		Velocities[index] = vec4(0.f, 0.f, 0.f, 1.f);
 		//Rotations[index].w += sign(Rotations[index].w) * 2.5 * uDeltaTime;
 	}
