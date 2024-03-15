@@ -57,27 +57,16 @@ float chladni_res_factor(float x, float y, float n, float m, float L)
 float random(vec2 st) { return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123); }
 
 void main() {
-	float d = uPlateDim;
 	uint index = gl_GlobalInvocationID.x;	
+
 	pos = Positions[index];
 	vel = Velocities[index];
 	newVel = Velocities[index];
-	//newPos = Positions[index];
 	newPos = pos + vec4(vel.xyz * uDeltaTime, 1.f);
-	//newPos += vec4(Velocities[index].xyz * uDeltaTime, 1);
-	//vec4 newPos = vec4(Velocities[index].xyz * uDeltaTime, 1.f);
-	// handle respawn
-	//float t = step(uDeathHeight, Positions[index].y); // 0 if respawning, 1 if still flying
-	//Positions[index].y = Positions[index].y + abs(t-1)*(-uDeathHeight + uSpawnHeight);  // abs(t-1) inverts t
-	//Velocities[index].xyz *= t*vec3(1.f); // set veloctity to zero if respawning. 
-	//if ((Positions[index].y <= 0.0f) && ( Positions[index].x > -1.0f && Positions[index].x < 1.0f && Positions[index].z > -1.0f && Positions[index].z < 1.0f  ) )
+
 	if (pos.y >= 0.0f && newPos.y <= 0.0f && within_plate_boundary(pos) )
 	{
-		// Reflect off plate boundary, meaning, redirect the velocity. 
-		// add force vector of plate resonance. 
-		// 
-		//float val = chladni_res_factor(pos.x, pos.y, uN, uM, 1.0);
-		//float val = chladni_res_factor(pos.x, pos.y, uChladni_N, uChladni_M, uPlateDim);
+		// get plate normal
 		float d = uPlateNormalDelta;
 		float west  = chladni_res_factor(pos.x - d, pos.z    , uChladni_N, uChladni_M, uPlateDim);
 		float east  = chladni_res_factor(pos.x + d, pos.z    , uChladni_N, uChladni_M, uPlateDim);
@@ -86,14 +75,20 @@ void main() {
 		vec3 stangent = normalize(vec3(d * 2., uPlateNormalScale*(east-west), 0.    ));
 		vec3 ttangent = normalize(vec3(0     , uPlateNormalScale*(south-north), d * 2.));
 		vec3 plate_normal = normalize(cross( stangent, ttangent ));
-		plate_normal = sign(plate_normal.y) * plate_normal;
+		//plate_normal = sign(plate_normal.y) * plate_normal; // hack make sure pointing up
 
+		// get standard bounce
 		vec3 reflected = reflect(vel.xyz, plate_normal);
 		vec3 stnd_bounce = reflected * uBounceFactor;
 
+		// add velocity from force of moving plate
 		float chladni_val = chladni_res_factor(pos.x, pos.z, uChladni_N, uChladni_M, uPlateDim);
 		vec3 chladni_bounce = normalize(reflected) * vec3(chladni_val * uChladniResAmp);
+
+		// combine
 		vec3 newVel = stnd_bounce + chladni_bounce;
+
+		// update vars
 		Velocities[index].xyz = newVel.xyz;
 		Positions[index].xyz += Velocities[index].xyz * uDeltaTime;
 		//Positions[index].y = 0.0f;
@@ -119,17 +114,3 @@ void main() {
 		//Velocities[index].z /= 1.01;
 	}
 }
-
-//vec3 gravity = vec3(0, -9.8f, 0);
-//float deltaTime = .0083333f;
-//float RotMult = .5f; 
-
-//void main() {
-	//deltaTime = uDeltaTime;
-	//uint index = gl_GlobalInvocationID.x;	
-	//Positions[index] += Velocities[index] * deltaTime;
-	//Rotations[index].w += 2.5 * deltaTime;
-	//Velocities[index].xyz += gravity * deltaTime;
-	//Velocities[index].x /= 1.01;
-	//Velocities[index].z /= 1.01;
-//}
