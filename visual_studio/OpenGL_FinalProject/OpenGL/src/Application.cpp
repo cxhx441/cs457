@@ -41,7 +41,7 @@ double Xmouse, Ymouse;
 int PressedButton = -1;
 
 // for mvp
-glm::vec3 eye(0., 0., 3.);
+glm::vec3 eye(1., 1., 1.5f);
 glm::vec3 look(0., 0., 0.);
 glm::vec3 up(0., 1., 0.);
 glm::mat4 model;
@@ -62,14 +62,44 @@ glm::vec3 scaler(1., 1., 1.);
 float rotater = 0;
 float framerate;
 
+// FOR PLATE SHADER
+glm::vec3 uPlateColor = glm::vec3(0.2f, 0.2f, 0.2f);
+// FOR SAND COMPUTE/RENDER SHADER
+float uCubeSize =  0.015f;
+float uGravityMetersPerSec = -.3f;
+//float uGravityMetersPerSec = -9.8f;
+float uSpawnHeight =  1.5f;
+float uDeathHeight = -0.5f;
+float uPlateHeight =  0.0f;
+GLuint SandShaderProgram;
+GLuint ComputeSandShaderProgram;
+int num_parts_dim = 128;
+int NUM_PARTICLES = num_parts_dim * num_parts_dim * num_parts_dim;   // total number of particles to move
+#define WORK_GROUP_SIZE 128 // # work-items per work-group
+struct position { float x,  y,  z,  w; };
+struct velocity { float vx, vy, vz, vw; };
+struct rotation { float rx, ry, rz, rw; };
+struct rotationSpeed { float s; };
+struct color    { float r,  g,  b,  a; };
+GLuint posSSbo;
+GLuint velSSbo;
+GLuint rotSSbo;
+GLuint rotSpeedSSbo;
+GLuint colSSbo;
+void initSand();
+void initAxes();
+
+
 void Axes(float);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
 void update_viewport_size(GLFWwindow* window);
 void imgui_show_example_frame();
+void imgui_show_sand_frame();
 glm::mat4 mv();
 glm::mat4 mvp();
+glm::mat3 n(glm::mat4 mat);
 
 
 int main(void)
@@ -87,7 +117,7 @@ int main(void)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(1200, 1200, "Hello World", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -110,28 +140,22 @@ int main(void)
 	std::cout << "Status: Using GLEW " << glewGetString(GLEW_VERSION) << std::endl;
 	std::cout << "Status: Using OpenGL " << glGetString(GL_VERSION) << std::endl;
 
-	// texture blending
-	GLCall(glEnable(GL_BLEND));
-	GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-	GLCall(glBlendEquation(GL_FUNC_ADD)); // default, but being explicit
-
-
-	// create the axes:
-	AxesList = glGenLists( 1 );
-	glNewList( AxesList, GL_COMPILE );
-		glLineWidth( 3 );
-			Axes( 1.f );
-		glLineWidth( 1. );
-	glEndList( );
 
 	{ // this block is to avoid infinite loop of glCheckError which provides an error when there is no gl context. stops infinite loop when we close the openggl window. 
-		// vertex positions
+		// texture blending
+		GLCall(glEnable(GL_BLEND));
+		GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+		GLCall(glBlendEquation(GL_FUNC_ADD)); // default, but being explicit
 
+		initAxes();
+		initSand();
+
+		// vertex positions
 		float test_positions[] = {
-			-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // 0
-			 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // 1
-			 0.5f,  0.5f, 0.0f, 1.0f, 1.0f, // 2
-			-0.5f,  0.5f, 0.0f, 0.0f, 1.0f  // 3
+			-1.0f, 0.0f,   -1.0f, 0.0f, 0.0f,   0.0f, 1.0f, 0.0f, // 0 vertex.xyz, tex.st, normal.xyz
+			 1.0f, 0.0f,   -1.0f, 1.0f, 0.0f,   0.0f, 1.0f, 0.0f, // 1
+			 1.0f, 0.0f,    1.0f, 1.0f, 1.0f,   0.0f, 1.0f, 0.0f, // 2
+			-1.0f, 0.0f,    1.0f, 0.0f, 1.0f,   0.0f, 1.0f, 0.0f, // 3
 		};
 		// indices of the vertices to be drawn
 		unsigned int test_indices[] = {
@@ -141,10 +165,11 @@ int main(void)
 
 		// generate vao
 		VertexArray test_va;
-		VertexBuffer test_vb(test_positions, 4 * 5 * sizeof(float));
+		VertexBuffer test_vb(test_positions, 4 * 8 * sizeof(float));
 		VertexBufferLayout test_layout;
 		test_layout.Push<float>(3); // vertex position, 3 floats
 		test_layout.Push<float>(2); // vertex texture coords, 2 floats
+		test_layout.Push<float>(3); // vertex normal coords, 3 floats
 		test_va.AddBuffer(test_vb, test_layout);
 		test_vb.Unbind();
 
@@ -168,6 +193,11 @@ int main(void)
 		test_ib.Unbind();
 
 		Shader axes_shader = Shader("res/shaders/Axes.glsl");
+		Shader plate_shader = Shader("res/shaders/Plate.glsl");
+		plate_shader.Bind();
+		plate_shader.SetUniformVec3("uColor", glm::vec3(0.0f, 0.0f, 0.0f));
+		plate_shader.Unbind();
+
 		Renderer renderer;
 
 		// gui setup
@@ -195,34 +225,63 @@ int main(void)
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
+
 			framerate = io.Framerate;
-			imgui_show_example_frame();
+			//imgui_show_example_frame();
+			imgui_show_sand_frame();
 
 			// rotate and uniformly scale scene
 			model = glm::mat4(1);
 			view = glm::lookAt(eye, look, up);
 			//projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1000.f);
 			projection = glm::perspective(glm::radians(90.f), 1.f, 0.1f, 1000.f);
-
-			//view = glm::mat4(1);
 			view = glm::rotate(view, glm::radians(Yrot), glm::vec3(0., 1., 0.));
 			view = glm::rotate(view, glm::radians(Xrot), glm::vec3(1., 0., 0.));
 			view = glm::scale(view, glm::vec3(Scale, Scale, Scale));
 
-			test_shader.Bind();
-			model = glm::translate(glm::mat4(1.f), translation);
-			test_shader.SetUniformVec4((char*)"uColor", glm::vec4(r, 0.3f, 0.8f, 1.0f));
-			test_shader.SetUniformMat4("uMVP", mvp());
+			// PLATE
+			plate_shader.Bind();
+			//test_shader.SetUniformVec4((char*)"uColor", glm::vec4(r, 0.3f, 0.8f, 1.0f));
+			plate_shader.SetUniformVec3("uPlateColor", uPlateColor);
+			plate_shader.SetUniformMat4("uMVP", mvp());
+			plate_shader.SetUniformMat4("uMV", mv());
+			plate_shader.SetUniformMat3("uN", n(mv()));
+			renderer.Draw(test_va, test_ib, plate_shader);
 
-			renderer.Draw(test_va, test_ib, test_shader);
-			if (r > 1.0f) increment = -0.05f;
-			else if (r < 0.0f) increment = 0.05f;
-			r += increment;
-
+			// AXES
 			axes_shader.Bind();
 			model = glm::mat4(1);
 			axes_shader.SetUniformMat4("uMVP", mvp());
 			GLCall(glCallList(AxesList));
+
+			// COMPUTE SAND
+			glEnable( GL_NORMALIZE ); // TODO do i need this? 
+
+			glUseProgram( ComputeSandShaderProgram );
+			model = glm::mat4(1);
+			normal = glm::mat3(glm::inverseTranspose(model));
+			set_uniform_variable(ComputeSandShaderProgram, "uDeltaTime", 1.f / framerate); 
+			//std::cout << "framerate: " << framerate << ", frametime: " << 1.f / framerate << std::endl;
+			set_uniform_variable(ComputeSandShaderProgram, "uGravityMetersPerSec", uGravityMetersPerSec);
+			set_uniform_variable(ComputeSandShaderProgram, "uSpawnHeight", uSpawnHeight);
+			set_uniform_variable(ComputeSandShaderProgram, "uDeathHeight", uDeathHeight);
+			//std::cout << "gravity_meters_per_sec: " << uGravityMetersPerSec << std::endl;
+			//std::cout << "grav*time: " << 1.f / framerate * uGravityMetersPerSec << std::endl;
+			glDispatchCompute( NUM_PARTICLES  / WORK_GROUP_SIZE, 1,  1 );
+			glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
+
+			// DRAW SAND
+			glUseProgram(SandShaderProgram);
+			set_uniform_variable( SandShaderProgram, "uMV",       mv());
+			set_uniform_variable( SandShaderProgram, "uMVP",      mvp());
+			set_uniform_variable( SandShaderProgram, "uCubeSize", uCubeSize);
+			glBindBuffer( GL_ARRAY_BUFFER, posSSbo );
+			glVertexPointer( 4, GL_FLOAT, 0, (void *)0 );
+			glEnableClientState( GL_VERTEX_ARRAY );
+			glDrawArrays( GL_POINTS, 0, NUM_PARTICLES );
+			glDisableClientState( GL_VERTEX_ARRAY );
+			glBindBuffer( GL_ARRAY_BUFFER, 0 );
+			glUseProgram(0);
 
 			// img 
 			ImGui::Render();
@@ -288,7 +347,6 @@ void Axes( float length )
 	float base = BASEFRAC * length;
 
 	glBegin( GL_LINE_STRIP );
-		std::cout << "X!\n";
 		for( int i = 0; i < 4; i++ )
 		{
 			int j = xorder[i];
@@ -301,12 +359,10 @@ void Axes( float length )
 			}
 			j--;
 			glVertex3f( base + fact*xx[j], fact*xy[j], 0.0 );
-			std::cout << base + fact*xx[j] << "f, " << fact* xy[j] << "f, " << 0.0 << "f\n";
 		}
 	glEnd( );
 
 	glBegin( GL_LINE_STRIP );
-		std::cout << "Y!\n";
 		for( int i = 0; i < 5; i++ )
 		{
 			int j = yorder[i];
@@ -319,12 +375,10 @@ void Axes( float length )
 			}
 			j--;
 			glVertex3f( fact*yx[j], base + fact*yy[j], 0.0 );
-			std::cout << fact*yx[j] << "f, " << base + fact*yy[j] << "f, " << 0.0 << "f\n";
 		}
 	glEnd( );
 
 	glBegin( GL_LINE_STRIP );
-		std::cout << "Z!\n";
 		for( int i = 0; i < 6; i++ )
 		{
 			int j = zorder[i];
@@ -337,7 +391,6 @@ void Axes( float length )
 			}
 			j--;
 			glVertex3f( 0.0, fact*zy[j], base + fact*zx[j] );
-			std::cout << 0.0 << "f, " << fact*zy[j] << "f, " << base + fact*zx[j] << "f\n";
 		}
 	glEnd( );
 
@@ -389,6 +442,43 @@ void update_viewport_size(GLFWwindow* window)
 	glViewport(xl, yb, v, v);
 }
 
+void imgui_show_sand_frame()
+{
+	//static float f = 0.0f;
+	//static int counter = 0;
+	ImGui::Begin("Sand");                          // Create a window called "Hello, world!" and append into it.
+	ImGui::SliderFloat("uCubeSize", &uCubeSize, 0.0f, 0.5f);
+	ImGui::SliderFloat("uGravityMetersPerSec", &uGravityMetersPerSec, -10.f, 10.f);
+	ImGui::SliderFloat("uSpawnHeight", &uSpawnHeight, -5.f, 5.f);
+	ImGui::SliderFloat("uDeathHeight", &uDeathHeight, -5.f, 5.f);
+	ImGui::SliderFloat3("uPlateColor", &uPlateColor.x, 0.f, 1.f);
+	//ImGui::SliderFloat3("Scale", &scaler.x, -2.f, 2.f);
+	//ImGui::SliderFloat("Rotation", &rotater, -200.f, 200.f);
+
+	//ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+	//ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
+	//ImGui::Checkbox("Another Window", &show_another_window);
+
+	//ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+	//ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+
+	//if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+	//	counter++;
+	//ImGui::SameLine();
+	//ImGui::Text("counter = %d", counter);
+
+	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / framerate, framerate);
+	ImGui::End();
+
+	//if (show_another_window)
+	//{
+	//	ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+	//	ImGui::Text("Hello from another window!");
+	//	if (ImGui::Button("Close Me"))
+	//		show_another_window = false;
+	//	ImGui::End();
+	//}
+}
 void imgui_show_example_frame()
 {
 	static float f = 0.0f;
@@ -422,11 +512,95 @@ void imgui_show_example_frame()
 	}
 }
 
-glm::mat4 mv() 
-{
-	return view * model;
+glm::mat4 mv() { return view * model; }
+glm::mat4 mvp() { return projection * view * model; }
+glm::mat3 n(glm::mat4 mat) { return glm::mat3(glm::inverseTranspose(mat)); }
+
+void initSand() {
+	SandShaderProgram = glCreateProgram( );
+	read_compile_link_validate_shader(SandShaderProgram, "res/shaders/Sand/Sand.vert", "vertex");
+    read_compile_link_validate_shader(SandShaderProgram, "res/shaders/Sand/Sand.geom", "geometry");
+	read_compile_link_validate_shader(SandShaderProgram, "res/shaders/Sand/Sand.frag", "fragment");
+	
+	ComputeSandShaderProgram = glCreateProgram( );
+	read_compile_link_validate_shader(ComputeSandShaderProgram, "res/shaders/Sand/Sand.comp", "compute");
+
+	//SETUP SHADER STORAGE BUFFERS OBJECTS FOR COMPUTE SHADER (ssbo)
+	glGenBuffers(1, &posSSbo);
+	glBindBuffer( GL_SHADER_STORAGE_BUFFER, posSSbo );
+	glBufferData( GL_SHADER_STORAGE_BUFFER, NUM_PARTICLES * sizeof(struct position), NULL, GL_STATIC_DRAW );
+	GLint bufMask = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT ; // the invalidate makes a big difference when re-writing
+	struct position *points = (struct position *) glMapBufferRange( GL_SHADER_STORAGE_BUFFER, 0, NUM_PARTICLES * sizeof(struct position), bufMask );
+	for (int i = 0; i < NUM_PARTICLES; i++) {
+		points[i].x = ((rand() % 10000) / 10000.f - 0.5f) * 2 * 1.5; // -1. to 1 
+		points[i].y = ((rand() % 10000) / 10000.f - 0.5f) * 2 + 1;
+		points[i].z = ((rand() % 10000) / 10000.f - 0.5f) * 2 * 1.5;
+	}
+	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
+
+	glGenBuffers( 1, &velSSbo);
+	glBindBuffer( GL_SHADER_STORAGE_BUFFER, velSSbo );
+	glBufferData( GL_SHADER_STORAGE_BUFFER, NUM_PARTICLES * sizeof(struct velocity), NULL, GL_STATIC_DRAW );
+	struct velocity *velocities = (struct velocity *) glMapBufferRange( GL_SHADER_STORAGE_BUFFER, 0, NUM_PARTICLES * sizeof(struct velocity), bufMask );
+	for( int i = 0; i < NUM_PARTICLES; i++ ) {
+		velocities[i].vx = ((rand() % 100) / 50.f - 1.) / 50.f; // -0.5 to 0.5 / 50
+		velocities[i].vy = ((rand() % 100) / 50.f - 1.) / 100.f;
+		velocities[i].vz = ((rand() % 100) / 50.f - 1.) / 50.f;
+		velocities[i].vw = 1.;
+	}
+	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
+
+	glGenBuffers( 1, &rotSSbo);
+	glBindBuffer( GL_SHADER_STORAGE_BUFFER, rotSSbo );
+	glBufferData( GL_SHADER_STORAGE_BUFFER, NUM_PARTICLES * sizeof(struct rotation), NULL, GL_STATIC_DRAW );
+	struct rotation *rotations = (struct rotation *) glMapBufferRange( GL_SHADER_STORAGE_BUFFER, 0, NUM_PARTICLES * sizeof(struct rotation), bufMask );
+	for( int i = 0; i < NUM_PARTICLES; i++ ) {
+		rotations[ i ].rx = ((rand() % 100) / 100.f); // 0 to 1 // xyz is axis of rotations
+		rotations[ i ].ry = ((rand() % 100) / 100.f);
+		rotations[ i ].rz = ((rand() % 100) / 100.f);
+		rotations[ i ].rw = (((rand() % 100) / 50.f) - 1) * 6.28; // -2pi to 2pi // can change to 3.14??
+	}
+	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
+
+	glGenBuffers( 1, &rotSpeedSSbo);
+	glBindBuffer( GL_SHADER_STORAGE_BUFFER, rotSpeedSSbo );
+	glBufferData( GL_SHADER_STORAGE_BUFFER, NUM_PARTICLES * sizeof(struct rotationSpeed), NULL, GL_STATIC_DRAW );
+	struct rotationSpeed *rotationSpeeds = (struct rotationSpeed *) glMapBufferRange( GL_SHADER_STORAGE_BUFFER, 0, NUM_PARTICLES * sizeof(struct rotationSpeed), bufMask );
+	for( int i = 0; i < NUM_PARTICLES; i++ ) {
+		float amp = ((rand() % 100) / 100.f) - 0.5; // -1 to -0.5 || 0.5 to 1.0
+		if (amp < 0)
+			amp -= .5;
+		else
+			amp += .5;
+		rotationSpeeds[i].s = amp;
+	}
+	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
+
+
+	glGenBuffers( 1, &colSSbo);
+	glBindBuffer( GL_SHADER_STORAGE_BUFFER, colSSbo );
+	glBufferData( GL_SHADER_STORAGE_BUFFER, NUM_PARTICLES * sizeof(struct color), NULL, GL_STATIC_DRAW );
+	struct color *colors = (struct color *) glMapBufferRange( GL_SHADER_STORAGE_BUFFER, 0, NUM_PARTICLES * sizeof(struct color), bufMask );
+	for( int i = 0; i < NUM_PARTICLES; i++ ) {
+		colors[ i ].r = ((rand() % 100)) / 100.f;
+		colors[ i ].g = ((rand() % 100)) / 100.f;
+		colors[ i ].b = ((rand() % 100)) / 100.f;
+		colors[ i ].a = 1.;
+	}
+	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
+
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, posSSbo);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, velSSbo);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, rotSSbo);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, rotSpeedSSbo);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, colSSbo);
 }
-glm::mat4 mvp()
-{
-	return projection * view * model;
+
+void initAxes() {
+	AxesList = glGenLists( 1 );
+	glNewList( AxesList, GL_COMPILE );
+		glLineWidth( 3 );
+			Axes( 1.f );
+		glLineWidth( 1. );
+	glEndList( );
 }

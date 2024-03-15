@@ -1407,5 +1407,6 @@
     </None>
     <None Include="res\shaders\Test.glsl" />
     <None Include="res\shaders\Axes.glsl" />
+    <None Include="res\shaders\Plate.glsl" />
   </ItemGroup>
 </Project>
