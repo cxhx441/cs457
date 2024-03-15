@@ -36,6 +36,9 @@ uniform float uChladniResAmp;
 const float PI = 3.14159265359;
 const float y_fudge = -0.01;
 
+vec4 pos;
+vec4 newPos;
+
 bool within_plate_boundary(vec4 p){
 	float d = uPlateDim / 2.f;
 	return p.x > -d && p.x < d && p.z > -d && p.z < d  ;
@@ -53,14 +56,16 @@ float chladni_res_factor(float x, float y, float n, float m, float L)
 void main() {
 	float d = uPlateDim;
 	uint index = gl_GlobalInvocationID.x;	
-	vec4 pos = Positions[index];
+	pos = Positions[index];
+	newPos = Positions[index];
+	newPos += vec4(Velocities[index].xyz * uDeltaTime, 1);
 	//vec4 newPos = vec4(Velocities[index].xyz * uDeltaTime, 1.f);
 	// handle respawn
 	//float t = step(uDeathHeight, Positions[index].y); // 0 if respawning, 1 if still flying
 	//Positions[index].y = Positions[index].y + abs(t-1)*(-uDeathHeight + uSpawnHeight);  // abs(t-1) inverts t
 	//Velocities[index].xyz *= t*vec3(1.f); // set veloctity to zero if respawning. 
 	//if ((Positions[index].y <= 0.0f) && ( Positions[index].x > -1.0f && Positions[index].x < 1.0f && Positions[index].z > -1.0f && Positions[index].z < 1.0f  ) )
-	if (pos.y <= 0.0f && pos.y > y_fudge && within_plate_boundary(pos) )
+	if (pos.y > 0.0f && newPos.y <= 0.0f && pos.y > y_fudge && within_plate_boundary(pos) )
 	{
 		// Reflect off plate boundary, meaning, redirect the velocity. 
 		// add force vector of plate resonance. 
