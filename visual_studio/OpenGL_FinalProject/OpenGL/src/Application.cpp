@@ -69,7 +69,7 @@ float uCubeSize =  0.015f;
 float uGravityMetersPerSec = -.3f;
 //float uGravityMetersPerSec = -9.8f;
 float uSpawnHeight =  1.5f;
-float uDeathHeight = -0.5f;
+float uDeathHeight = -30.5f;
 float uPlateHeight =  0.0f;
 GLuint SandShaderProgram;
 GLuint ComputeSandShaderProgram;

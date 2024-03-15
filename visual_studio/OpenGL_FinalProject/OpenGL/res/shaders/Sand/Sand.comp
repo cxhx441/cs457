@@ -36,6 +36,12 @@ void main() {
 	//float t = step(uDeathHeight, Positions[index].y); // 0 if respawning, 1 if still flying
 	//Positions[index].y = Positions[index].y + abs(t-1)*(-uDeathHeight + uSpawnHeight);  // abs(t-1) inverts t
 	//Velocities[index].xyz *= t*vec3(1.f); // set veloctity to zero if respawning. 
+	if ((Positions[index].y <= 0.0f) && ( Positions[index].x > -1.0f && Positions[index].x < 1.0f && Positions[index].z > -1.0f && Positions[index].z < 1.0f  ) )
+	{
+		Positions[index].y = 0.0f;
+		Velocities[index].y = 0.0f;
+	}
+
 	if (Positions[index].y < uDeathHeight) 
 	{
 		Positions[index].y = uSpawnHeight;
