@@ -52,6 +52,8 @@ glm::mat3 normal;
 // for animate
 float r = 0.0f;
 float increment = 0.05f;
+double cur_time_sec; 
+double cur_time_ms; 
 
 // for imgui
 bool show_demo_window = true;
@@ -62,22 +64,26 @@ glm::vec3 scaler(1., 1., 1.);
 float rotater = 0;
 float framerate;
 
+
 // FOR PLATE SHADER
 glm::vec3 uPlateColor = glm::vec3(0.2f, 0.2f, 0.2f);
 float uPlateDim = 4.f;
 // FOR SAND COMPUTE/RENDER SHADER
-float uCubeSize =  0.015f;
+float uCubeSize =  0.01f;
 //float uGravityMetersPerSec = -.3f;
 float uBounceFactor = 0.010f;
 float uChladniResAmp = 1.25f;
 float uPlateNormalScale = 0.6f;
 int uPlateNormalDelta = 1;
+bool uUseChladniNormals = false;
 float uGravityMetersPerSec = -9.8f;
 float uSpawnHeight =  15.f;
 float uDeathHeight = -30.5f;
 float uPlateHeight =  0.0f;
 int uChladni_N = 1;
 int uChladni_M = 2;
+float uChladni_DX = 0;
+float uChladni_DZ = 0;
 bool uQuickRespawn = false;
 GLuint SandShaderProgram;
 GLuint ComputeSandShaderProgram;
@@ -226,6 +232,8 @@ int main(void)
 		{
 			/* Render here */
 			renderer.Clear();
+			cur_time_sec = glfwGetTime();
+			cur_time_ms = 1000.f * cur_time_sec;
 
 			// DEPTH BUFFER
 			GLCall(glDrawBuffer(GL_BACK));
@@ -284,9 +292,13 @@ int main(void)
 			set_uniform_variable(ComputeSandShaderProgram, "uChladniResAmp", uChladniResAmp);
 			set_uniform_variable(ComputeSandShaderProgram, "uChladni_N", uChladni_N);
 			set_uniform_variable(ComputeSandShaderProgram, "uChladni_M", uChladni_M);
+			set_uniform_variable(ComputeSandShaderProgram, "uChladni_DX", uChladni_DX);
+			set_uniform_variable(ComputeSandShaderProgram, "uChladni_DZ", uChladni_DZ);
 			set_uniform_variable(ComputeSandShaderProgram, "uPlateNormalScale", uPlateNormalScale);
 			set_uniform_variable(ComputeSandShaderProgram, "uPlateNormalDelta", uPlateNormalDelta);
 			set_uniform_variable(ComputeSandShaderProgram, "uQuickRespawn", uQuickRespawn);
+			set_uniform_variable(ComputeSandShaderProgram, "uUseChladniNormals", uUseChladniNormals);
+			set_uniform_variable(ComputeSandShaderProgram, "uTime", (float)cur_time_ms);
 			uQuickRespawn = false; // turn off!
 			//std::cout << "gravity_meters_per_sec: " << uGravityMetersPerSec << std::endl;
 			//std::cout << "grav*time: " << 1.f / framerate * uGravityMetersPerSec << std::endl;
@@ -482,7 +494,9 @@ void imgui_show_sand_frame()
 	ImGui::SliderInt("uPlateNormalDelta", &uPlateNormalDelta, 1, 20);
 	ImGui::SliderInt("uChladni_N", &uChladni_N, 1, 10);
 	ImGui::SliderInt("uChladni_M", &uChladni_M, 1, 10);
-	//ImGui::Checkbox("uQuickRespawn", &uQuickRespawn);
+	ImGui::SliderFloat("uChladni_DX", &uChladni_DX, -4.f, 4.f);
+	ImGui::SliderFloat("uChladni_DZ", &uChladni_DZ, -4.f, 4.f);
+	ImGui::Checkbox("uUseChladniNormals", &uUseChladniNormals);
 	if (ImGui::Button("uQuickRespawn"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
 		uQuickRespawn = true;
 	ImGui::SameLine();
@@ -598,7 +612,8 @@ void initSand() {
 		rotations[ i ].rx = ((rand() % 100) / 100.f); // 0 to 1 // xyz is axis of rotations
 		rotations[ i ].ry = ((rand() % 100) / 100.f);
 		rotations[ i ].rz = ((rand() % 100) / 100.f);
-		rotations[ i ].rw = (((rand() % 100) / 50.f) - 1) * 6.28; // -2pi to 2pi // can change to 3.14??
+		//rotations[ i ].rw = (((rand() % 100) / 50.f) - 1) * 6.28; // -2pi to 2pi // can change to 3.14??
+		rotations[i].rw = 0;// -2pi to 2pi // can change to 3.14??
 	}
 	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
 
@@ -612,7 +627,8 @@ void initSand() {
 			amp -= .5;
 		else
 			amp += .5;
-		rotationSpeeds[i].s = amp;
+		//rotationSpeeds[i].s = amp;
+		rotationSpeeds[i].s = 0;
 	}
 	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
 

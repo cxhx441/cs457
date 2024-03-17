@@ -4,22 +4,17 @@
 
 layout( local_size_x = 128, local_size_y = 1, local_size_z = 1 ) in;
 
-layout( std430, binding=4 )  buffer  Pos {
+layout( std430, binding=4 ) buffer Pos      { vec4 Positions[]; }; // array of structures 
 	vec4 Positions[]; // array of structures
 };
 
-layout( std430, binding=5 )  buffer   Vel {
-	vec4 Velocities[]; // array of structures
-};
+layout( std430, binding=5 ) buffer Vel      { vec4 Velocities[]; }; // array of structures 
 
-layout( std430, binding=6 )  buffer  Rot {
-	vec4 Rotations[]; // array of structures
-};
+layout( std430, binding=6 ) buffer Rot      { vec4 Rotations[]; }; // array of structures 
 
-layout( std430, binding=7 )  buffer  RotSpeed {
-	vec4 RotationSpeeds[]; // array of structures
-};
+layout( std430, binding=7 ) buffer RotSpeed { vec4 RotationSpeeds[]; }; // array of structures 
 
+//layout( std430, binding=8 ) buffer Color    { vec4 Colors[]; }; // array of structures 
 
 //uniform float deltaTime;
 //uniform vec3 gravity;
@@ -30,15 +25,19 @@ uniform float uDeathHeight;
 uniform float uPlateDim;
 uniform float uBounceFactor;
 uniform int uChladni_N, uChladni_M;
+uniform float uChladni_DX, uChladni_DZ;
 uniform float uChladniResAmp;
 uniform float uPlateNormalScale;
 uniform int uPlateNormalDelta;
 uniform bool uQuickRespawn;
+uniform float uTime;
+uniform float uCubeSize;
 //float RotMult = .5f; 
 
 const float PI = 3.14159265359;
 const float y_fudge = -0.01;
 
+float PlateHeight;
 vec4 pos, vel;
 vec4 newPos, newVel;
 uint index;
@@ -51,7 +50,9 @@ bool within_plate_boundary(vec4 p){
 float chladni_res_factor(float x, float y, float n, float m, float L)
 {
     // range of -2 to 2
-    float chladni_val = cos(n * PI * x / L) * cos(m * PI * y / L) - cos(m * PI * x / L) * cos(n * PI * y / L);
+	x += uChladni_DX;
+	z += uChladni_DZ;
+    float chladni_val = cos(n * PI * x / L) * cos(m * PI * z / L) - cos(m * PI * x / L) * cos(n * PI * z / L);
     // return a range of 0 to 1;
     return abs(chladni_val) / 2.f;
 }
@@ -76,12 +77,16 @@ void main() {
 	newVel = Velocities[index];
 	newPos = pos + vec4(vel.xyz * uDeltaTime, 1.f);
 
+	PlateHeight = 0.0f; //+ uCubeSize/2.f;
 	if (uQuickRespawn) { 
 		respawn(); 
 	}
 	else if (pos.y >= 0.0f && newPos.y <= 0.0f && within_plate_boundary(pos) )
+	else if (pos.y >= PlateHeight && newPos.y <= PlateHeight && within_plate_boundary(pos) )
 	{
 		// get plate normal
+		vec3 plate_normal = vec3(0.f, 1.f, 0.f);
+		if (uUseChladniNormals){
 		float d = uPlateNormalDelta;
 		float west  = chladni_res_factor(pos.x - d, pos.z    , uChladni_N, uChladni_M, uPlateDim);
 		float east  = chladni_res_factor(pos.x + d, pos.z    , uChladni_N, uChladni_M, uPlateDim);
@@ -89,7 +94,7 @@ void main() {
 		float south = chladni_res_factor(pos.x    , pos.z + d, uChladni_N, uChladni_M, uPlateDim);
 		vec3 stangent = normalize(vec3(d * 2., uPlateNormalScale*(east-west), 0.    ));
 		vec3 ttangent = normalize(vec3(0     , uPlateNormalScale*(south-north), d * 2.));
-		vec3 plate_normal = normalize(cross( stangent, ttangent ));
+			plate_normal = normalize(cross( stangent, ttangent ));
 		//plate_normal = sign(plate_normal.y) * plate_normal; // hack make sure pointing up
 
 		// get standard bounce
