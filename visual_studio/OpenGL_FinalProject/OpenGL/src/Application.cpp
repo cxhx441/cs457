@@ -72,10 +72,10 @@ float uPlateDim = 4.f;
 float uCubeSize =  0.01f;
 //float uGravityMetersPerSec = -.3f;
 float uBounceFactor = 0.010f;
-float uChladniResAmp = 1.25f;
-float uPlateNormalScale = 0.6f;
+float uChladniResAmp = 2.0f;
+float uPlateNormalScale = 1.f;
 int uPlateNormalDelta = 1;
-bool uUseChladniNormals = false;
+bool uUseChladniNormals = true;
 float uGravityMetersPerSec = -9.8f;
 float uSpawnHeight =  0.5f;
 float uDeathHeight = -10.5f;
@@ -277,6 +277,8 @@ int main(void)
 			set_uniform_variable(ComputeSandShaderProgram, "uDeltaTime", 1.f / framerate); 
 			//std::cout << "framerate: " << framerate << ", frametime: " << 1.f / framerate << std::endl;
 			set_uniform_variable(ComputeSandShaderProgram, "uGravityMetersPerSec", uGravityMetersPerSec);
+			set_uniform_variable(ComputeSandShaderProgram, "uPlateNormalScale", uPlateNormalScale);
+			set_uniform_variable(ComputeSandShaderProgram, "uPlateNormalDelta", uPlateNormalDelta);
 			set_uniform_variable(ComputeSandShaderProgram, "uSpawnHeight", uSpawnHeight);
 			set_uniform_variable(ComputeSandShaderProgram, "uDeathHeight", uDeathHeight);
 			set_uniform_variable(ComputeSandShaderProgram, "uPlateDim", uPlateDim);
@@ -286,8 +288,6 @@ int main(void)
 			set_uniform_variable(ComputeSandShaderProgram, "uChladni_M", uChladni_M);
 			set_uniform_variable(ComputeSandShaderProgram, "uChladni_DX", uChladni_DX);
 			set_uniform_variable(ComputeSandShaderProgram, "uChladni_DZ", uChladni_DZ);
-			set_uniform_variable(ComputeSandShaderProgram, "uPlateNormalScale", uPlateNormalScale);
-			set_uniform_variable(ComputeSandShaderProgram, "uPlateNormalDelta", uPlateNormalDelta);
 			set_uniform_variable(ComputeSandShaderProgram, "uQuickRespawn", uQuickRespawn);
 			set_uniform_variable(ComputeSandShaderProgram, "uUseChladniNormals", uUseChladniNormals);
 			set_uniform_variable(ComputeSandShaderProgram, "uTime", (float)cur_time_ms);
@@ -463,6 +463,8 @@ void imgui_show_sand_frame()
 	//static float f = 0.0f;
 	//static int counter = 0;
 	ImGui::Begin("Sand");                          // Create a window called "Hello, world!" and append into it.
+	ImGui::SliderFloat("uPlateNormalScale", &uPlateNormalScale, 0.001f, 10.f);
+	ImGui::SliderInt("uPlateNormalDelta", &uPlateNormalDelta, 1, 20);
 	ImGui::SliderFloat("uCubeSize", &uCubeSize, 0.001f, 0.05f);
 	ImGui::SliderFloat("uGravityMetersPerSec", &uGravityMetersPerSec, -10.f, 10.f);
 	ImGui::SliderFloat("uSpawnHeight", &uSpawnHeight, -1.f, 10.f);
@@ -471,8 +473,6 @@ void imgui_show_sand_frame()
 	ImGui::SliderFloat("uPlateDim", &uPlateDim, 0.0f, 4.f);
 	ImGui::SliderFloat("uBounceFactor", &uBounceFactor, 0.0f, 1.f);
 	ImGui::SliderFloat("uChladniResAmp", &uChladniResAmp, 0.0f, 20.f);
-	ImGui::SliderFloat("uPlateNormalScale", &uPlateNormalScale, 0.001f, 10.f);
-	ImGui::SliderInt("uPlateNormalDelta", &uPlateNormalDelta, 1, 20);
 	ImGui::SliderInt("uChladni_N", &uChladni_N, 1, 40);
 	ImGui::SliderInt("uChladni_M", &uChladni_M, 1, 40);
 	ImGui::SliderFloat("uChladni_DX", &uChladni_DX, -2.f, 2.f);

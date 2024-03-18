@@ -52,7 +52,7 @@ float chladni_res_factor(float x, float z, float n, float m, float L)
     // range of -2 to 2
 	x += uChladni_DX;
 	z += uChladni_DZ;
-    float chladni_val = cos(n * PI * x / L) * cos(m * PI * z / L) - cos(m * PI * x / L) * cos(n * PI * z / L);
+    float chladni_val = cos(n * PI * x / L) * cos(m * PI * z / L) + cos(m * PI * x / L) * cos(n * PI * z / L);
     // return a range of 0 to 1;
     return abs(chladni_val) / 2.f;
 }
@@ -87,6 +87,7 @@ void main() {
 		respawn(); 
 	}
 	else if ((pos.y >= PlateHeight && newPos.y <= PlateHeight || newPos == pos) && within_plate_boundary(pos) )
+	//else if (within_plate_boundary(pos) && pos.y >= 0 && newPos.y <= PlateHeight || newPos == pos);
 	{
 		// get plate normal
 		vec3 plate_normal = vec3(0.f, 1.f, 0.f);
@@ -98,23 +99,27 @@ void main() {
 			float south = chladni_res_factor(pos.x    , pos.z + d, uChladni_N, uChladni_M, uPlateDim);
 			vec3 stangent = normalize(vec3(d * 2., uPlateNormalScale*(east-west), 0.    ));
 			vec3 ttangent = normalize(vec3(0     , uPlateNormalScale*(south-north), d * 2.));
-			plate_normal = normalize(cross( stangent, ttangent ));
+			plate_normal = normalize(cross( ttangent, stangent ));
+			//if (plate_normal.y <= 0) plate_normal *= -1;
+			//plate_normal = vec3((east-west), 1.f, (south-north));
 		}
 
+		vec3 reflected = reflect(vel.xyz, normalize(plate_normal));
+
 		// get standard bounce
-		vec3 reflected = reflect(vel.xyz, plate_normal);
-		vec3 stnd_bounce = normalize(reflected) * uBounceFactor;
+		vec3 stnd_bounce = reflected * uBounceFactor;
 
 		// add velocity from force of moving plate
 		float chladni_val = chladni_res_factor(pos.x, pos.z, uChladni_N, uChladni_M, uPlateDim);
-		vec3 chladni_bounce = normalize(reflected) * chladni_val * uChladniResAmp;
+		vec3 chladni_bounce = plate_normal * chladni_val * uChladniResAmp;
 
 		// combine
 		newVel = vec4(stnd_bounce + chladni_bounce, 1.f);
+		//newVel = vec4(0.0f + chladni_bounce, 1.f);
 
 		// update vars
 		Velocities[index].xyz = newVel.xyz;
-		Positions[index].xyz += Velocities[index].xyz * uDeltaTime;
+		Positions[index].xyz += newVel.xyz * uDeltaTime;
 	}
 	else if (newPos.y <= uDeathHeight || pos.y <= uDeathHeight)  // RESPAWN
 	{
