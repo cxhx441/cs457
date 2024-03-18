@@ -90,15 +90,11 @@ GLuint ComputeSandShaderProgram;
 int num_parts_dim = 64; // 128
 int NUM_PARTICLES = num_parts_dim * num_parts_dim * num_parts_dim;   // total number of particles to move
 #define WORK_GROUP_SIZE 128 // # work-items per work-group
-//float uCollisionSpaceDim = 4.f;
-//float uCollisionSpaceDimCount = uCollisionSpaceDim / uCubeSize;
-//int uCollisionSpaceSize = int(uCollisionSpaceDimCount * uCollisionSpaceDimCount * uCollisionSpaceDimCount);
 struct position { float x,  y,  z,  w; };
 struct velocity { float vx, vy, vz, vw; };
 struct rotation { float rx, ry, rz, rw; };
 struct rotationSpeed { float s; };
 struct color    { float r,  g,  b,  a; };
-//struct collision    { int x,  y,  z,  w; };
 //struct position { float x,  y,  z; };
 //struct velocity { float vx, vy, vz; };
 //struct rotation { float rx, ry, rz, rw; };
@@ -109,7 +105,6 @@ GLuint velSSbo;
 GLuint rotSSbo;
 GLuint rotSpeedSSbo;
 GLuint colSSbo;
-//GLuint collisionSSbo;
 void initSand();
 void initAxes();
 
@@ -218,9 +213,6 @@ int main(void)
 
 		Shader axes_shader = Shader("res/shaders/Axes.glsl");
 		Shader plate_shader = Shader("res/shaders/Plate.glsl");
-		//plate_shader.Bind();
-		//plate_shader.SetUniformVec3("uColor", glm::vec3(0.0f, 0.0f, 0.0f));
-		//plate_shader.Unbind();
 
 		Renderer renderer;
 
@@ -303,9 +295,6 @@ int main(void)
 			set_uniform_variable(ComputeSandShaderProgram, "uPlateNormalDelta", uPlateNormalDelta);
 			set_uniform_variable(ComputeSandShaderProgram, "uQuickRespawn", uQuickRespawn);
 			set_uniform_variable(ComputeSandShaderProgram, "uUseChladniNormals", uUseChladniNormals);
-			//set_uniform_variable(ComputeSandShaderProgram, "uCollisionSpaceDim", uCollisionSpaceDim);
-			//set_uniform_variable(ComputeSandShaderProgram, "uCollisionSpaceDimCount", uCollisionSpaceDimCount);
-			//set_uniform_variable(ComputeSandShaderProgram, "uCollisionSpaceSize", uCollisionSpaceSize);
 			set_uniform_variable(ComputeSandShaderProgram, "uTime", (float)cur_time_ms);
 			uQuickRespawn = false; // turn off!
 			//std::cout << "gravity_meters_per_sec: " << uGravityMetersPerSec << std::endl;
@@ -653,37 +642,11 @@ void initSand() {
 	}
 	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
 
-	//glGenBuffers( 1, &collisionSSbo);
-	//glBindBuffer( GL_SHADER_STORAGE_BUFFER, collisionSSbo );
-	//glBufferData( GL_SHADER_STORAGE_BUFFER, uCollisionSpaceSize * sizeof(struct collision), NULL, GL_STATIC_DRAW );
-	//struct collision *collisions = (struct collision *) glMapBufferRange( GL_SHADER_STORAGE_BUFFER, 0, uCollisionSpaceSize * sizeof(struct color), bufMask );
-	//for( int i = 0; i < NUM_PARTICLES; i++ ) {
-		//collisions[i].x = -1;
-		//collisions[i].y = 0;
-		//collisions[i].z = 0;
-		//collisions[i].w = 0;
-	//}
-	//glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
-
-	////glm::vec3 collisionSpaceDim = glm::vec3(1.f);
-	//glGenBuffers( 1, &collisionSSbo);
-	//glBindBuffer( GL_SHADER_STORAGE_BUFFER, collisionSSbo );
-	//size_t bufferSize = sizeof(int) * uCollisionSpaceSize;
-	//int* intData = new int[uCollisionSpaceSize];
-	//std::fill(intData, intData + uCollisionSpaceSize, -1);
-	//glBufferData( GL_SHADER_STORAGE_BUFFER, bufferSize, intData, GL_STATIC_DRAW );
-	//struct collision *collisions = (struct collision *) glMapBufferRange( GL_SHADER_STORAGE_BUFFER, 0, uNumCollisionSpacePositions * sizeof(struct collision), bufMask );
-	//for( int i = 0; i < uNumCollisionSpacePositions; i++ ) {
-	//	collisions[i].idx = -1;
-	//}
-	//glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
-
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, posSSbo);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, velSSbo);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, rotSSbo);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, rotSpeedSSbo);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, colSSbo);
-	//glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, collisionSSbo);
 }
 
 void initAxes() {
