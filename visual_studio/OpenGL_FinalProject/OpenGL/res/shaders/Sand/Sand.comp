@@ -5,8 +5,6 @@
 layout( local_size_x = 128, local_size_y = 1, local_size_z = 1 ) in;
 
 layout( std430, binding=4 ) buffer Pos      { vec4 Positions[]; }; // array of structures 
-	vec4 Positions[]; // array of structures
-};
 
 layout( std430, binding=5 ) buffer Vel      { vec4 Velocities[]; }; // array of structures 
 
@@ -16,8 +14,7 @@ layout( std430, binding=7 ) buffer RotSpeed { vec4 RotationSpeeds[]; }; // array
 
 //layout( std430, binding=8 ) buffer Color    { vec4 Colors[]; }; // array of structures 
 
-//uniform float deltaTime;
-//uniform vec3 gravity;
+
 uniform float uGravityMetersPerSec;
 uniform float uDeltaTime;
 uniform float uSpawnHeight;
@@ -30,7 +27,11 @@ uniform float uChladniResAmp;
 uniform float uPlateNormalScale;
 uniform int uPlateNormalDelta;
 uniform bool uQuickRespawn;
+uniform bool uUseChladniNormals;
 uniform float uTime;
+//uniform float uCollisionSpaceDim;
+//uniform float uCollisionSpaceDimCount;
+//uniform int uCollisionSpaceSize;
 uniform float uCubeSize;
 //float RotMult = .5f; 
 
@@ -40,6 +41,8 @@ const float y_fudge = -0.01;
 float PlateHeight;
 vec4 pos, vel;
 vec4 newPos, newVel;
+ivec3 collisionPos, newCollisionPos;
+int collisionIndex, newCollisionIndex;
 uint index;
 
 bool within_plate_boundary(vec4 p){
@@ -47,7 +50,7 @@ bool within_plate_boundary(vec4 p){
 	return p.x > -d && p.x < d && p.z > -d && p.z < d  ;
 }
 
-float chladni_res_factor(float x, float y, float n, float m, float L)
+float chladni_res_factor(float x, float z, float n, float m, float L)
 {
     // range of -2 to 2
 	x += uChladni_DX;
@@ -56,6 +59,24 @@ float chladni_res_factor(float x, float y, float n, float m, float L)
     // return a range of 0 to 1;
     return abs(chladni_val) / 2.f;
 }
+
+//float chladni_res_factor_dx(float x, float z, float n, float m, float L)
+//{
+	//x += uChladni_DX;
+	//z += uChladni_DZ;
+    ////float chladni_val_dx = (PI / L) * ( m * sin(m * PI * x / L) * cos(n * PI * z / L) - n * cos(m * PI * z / L) * sin(n * PI * x / L));
+	////float chladni_val_dx = (PI * (m * cos((n * PI * z)/L) * sin((m * PI * x)/L) - n * cos((m * PI * z)/L) * sin((n * PI * x)/L)))/L;
+    ////return chladni_val_dx;
+	//return (-((cos((n * PI * x)/L) * cos((m * PI * z)/L) - cos((m * PI * x)/L) * cos((n * PI * z)/L)) * (-(m * PI * cos((n * PI * z)/L) * sin((m * PI * x)/L)) + n * PI * cos((m * PI * z)/L) * sin((n * PI * x)/L))))/(2 * L * abs(cos((n * PI * x)/L) * cos((m * PI * z)/L) - cos((m * PI * x)/L) * cos((n * PI * z)/L)));
+//}
+//float chladni_res_factor_dz(float x, float z, float n, float m, float L)
+//{
+	//x += uChladni_DX;
+	//z += uChladni_DZ;
+	////float chladni_val_dz = (-m * PI * cos((n * PI * x)/L) * sin((m * PI * z)/L) + n * PI * cos((m * PI * x)/L) * sin((n * PI * z)/L))/L;
+    ////return chladni_val_dz;
+	//return ((cos((n * PI * x)/L) * cos((m * PI * z)/L) - cos((m * PI * x)/L) * cos((n * PI * z)/L)) * (-((m * PI * cos((n * PI * x)/L) * sin((m * PI * z)/L))/L) + (n * PI * cos((m * PI * x)/L) * sin((n * PI * z)/L))/L))/(2 * abs(cos((n * PI * x)/L) * cos((m * PI * z)/L) - cos((m * PI * x)/L) * cos((n * PI * z)/L)));
+//}
 
 float random(vec2 st) { return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123); }
 
@@ -68,34 +89,76 @@ void respawn()
 	//Rotations[index].w += sign(Rotations[index].w) * 2.5 * uDeltaTime;
 }
 
+//int getCollisionSpaceIndex(vec3 pos){
+	//pos += vec3(uCollisionSpaceDim/2.f);  // shift up to within dimension;
+	//if ( any(lessThan(pos, vec3(0))) || any(greaterThan(pos, vec3(uCollisionSpaceDim))) ) return -2;
+	//pos *= uCollisionSpaceDimCount; // scale to collisionSpace interval count;
+	//ivec3 ipos = ivec3(round(pos));
+	//int idx = int(ipos.x + (ipos.y * 3) + (ipos.z * 3 * 3)); // calc idx 
+	//if (idx < 0 || idx > (uCollisionSpaceSize - 1 )) return -3;
+	//else return idx;
+//}
+
+//int setCollisionSpaceIndex(vec3 pos, uint globalIndex){
+	//int idx = getCollisionSpaceIndex(pos);
+	//if (idx < 0) return -1;
+	//CollisionSpace[idx].x = int(globalIndex);
+	//return 1;
+//}
+
 void main() {
 	index = gl_GlobalInvocationID.x;	
 
-
 	pos = Positions[index];
+	//int myOldCollisionIndex = getCollisionSpaceIndex(pos.xyz);
 	vel = Velocities[index];
 	newVel = Velocities[index];
 	newPos = pos + vec4(vel.xyz * uDeltaTime, 1.f);
-
+	//newCollisionPos = ivec3(round(newPos.xyz));
+	//collisionIndex = getCollisionSpaceIndex(newPos.xyz);
+	//int collidedCubeIndex = CollisionSpace[collisionIndex].x;
+	//collidedCubeIndex = -1;
+	//newCollisionIndex = getCollisionSpaceIndex(newCollisionPos);
+	
+	//pos.y -= uCubeSize;
+	//newPos.y -= uCubeSize;
 	PlateHeight = 0.0f; //+ uCubeSize/2.f;
+
 	if (uQuickRespawn) { 
 		respawn(); 
 	}
-	else if (pos.y >= 0.0f && newPos.y <= 0.0f && within_plate_boundary(pos) )
+	//else if( collidedCubeIndex == -1){
+	//	Positions[index].y = 0;
+	//}
+	//else if( collidedCubeIndex != -1 && collidedCubeIndex != index){
+		//// apply collision
+		//vec4 collidedCubePos = Positions[collidedCubeIndex];
+		//vec4 collidedCubeVel = Velocities[collidedCubeIndex];
+		//Velocities[index].xyz = vel.xyz - collidedCubeVel.xyz;
+		//Positions[index].xyz += Velocities[index].xyz * uDeltaTime;
+	//}
 	else if (pos.y >= PlateHeight && newPos.y <= PlateHeight && within_plate_boundary(pos) )
 	{
 		// get plate normal
 		vec3 plate_normal = vec3(0.f, 1.f, 0.f);
 		if (uUseChladniNormals){
-		float d = uPlateNormalDelta;
-		float west  = chladni_res_factor(pos.x - d, pos.z    , uChladni_N, uChladni_M, uPlateDim);
-		float east  = chladni_res_factor(pos.x + d, pos.z    , uChladni_N, uChladni_M, uPlateDim);
-		float north = chladni_res_factor(pos.x    , pos.z - d, uChladni_N, uChladni_M, uPlateDim);
-		float south = chladni_res_factor(pos.x    , pos.z + d, uChladni_N, uChladni_M, uPlateDim);
-		vec3 stangent = normalize(vec3(d * 2., uPlateNormalScale*(east-west), 0.    ));
-		vec3 ttangent = normalize(vec3(0     , uPlateNormalScale*(south-north), d * 2.));
+			float d = uPlateNormalDelta;
+			float west  = chladni_res_factor(pos.x - d, pos.z    , uChladni_N, uChladni_M, uPlateDim);
+			float east  = chladni_res_factor(pos.x + d, pos.z    , uChladni_N, uChladni_M, uPlateDim);
+			float north = chladni_res_factor(pos.x    , pos.z - d, uChladni_N, uChladni_M, uPlateDim);
+			float south = chladni_res_factor(pos.x    , pos.z + d, uChladni_N, uChladni_M, uPlateDim);
+			vec3 stangent = normalize(vec3(d * 2., uPlateNormalScale*(east-west), 0.    ));
+			vec3 ttangent = normalize(vec3(0     , uPlateNormalScale*(south-north), d * 2.));
 			plate_normal = normalize(cross( stangent, ttangent ));
-		//plate_normal = sign(plate_normal.y) * plate_normal; // hack make sure pointing up
+
+			//float dx = chladni_res_factor_dx(pos.x, pos.z, uChladni_N, uChladni_M, uPlateDim);
+			//float dz = chladni_res_factor_dz(pos.x, pos.z, uChladni_N, uChladni_M, uPlateDim);
+			//vec3 xtangent = normalize(vec3(1.f, dx * uPlateNormalScale, 0.f));
+			//vec3 ztangent = normalize(vec3(0.f, dz * uPlateNormalScale, 1.f));
+			//plate_normal = normalize(cross( xtangent, ztangent));
+			//plate_normal = normalize(vec3(dx*uPlateNormalScale, 1.f, dz*uPlateNormalScale));
+			//plate_normal = normalize(vec3(dx, 1.f, dz));
+		}
 
 		// get standard bounce
 		vec3 reflected = reflect(vel.xyz, plate_normal);
@@ -103,16 +166,14 @@ void main() {
 
 		// add velocity from force of moving plate
 		float chladni_val = chladni_res_factor(pos.x, pos.z, uChladni_N, uChladni_M, uPlateDim);
-		vec3 chladni_bounce = normalize(reflected) * vec3(chladni_val * uChladniResAmp);
+		vec3 chladni_bounce = normalize(reflected) * chladni_val * uChladniResAmp;
 
 		// combine
-		vec3 newVel = stnd_bounce + chladni_bounce;
+		newVel = vec4(stnd_bounce + chladni_bounce, 1.f);
 
 		// update vars
 		Velocities[index].xyz = newVel.xyz;
 		Positions[index].xyz += Velocities[index].xyz * uDeltaTime;
-		//Positions[index].y = 0.0f;
-		//Velocities[index].y = 0.0f;
 	}
 	else if (newPos.y <= uDeathHeight)  // RESPAWN
 	{
@@ -129,4 +190,7 @@ void main() {
 		//Velocities[index].x /= 1.01;
 		//Velocities[index].z /= 1.01;
 	}
+	//Positions[index].y = max(Positions[index].y, uCubeSize);
+		//Positions[index].y = 1;
+
 }
