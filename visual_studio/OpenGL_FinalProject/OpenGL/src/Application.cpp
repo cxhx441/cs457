@@ -77,8 +77,8 @@ float uPlateNormalScale = 0.6f;
 int uPlateNormalDelta = 1;
 bool uUseChladniNormals = false;
 float uGravityMetersPerSec = -9.8f;
-float uSpawnHeight =  15.f;
-float uDeathHeight = -30.5f;
+float uSpawnHeight =  0.5f;
+float uDeathHeight = -10.5f;
 float uPlateHeight =  0.0f;
 int uChladni_N = 1;
 int uChladni_M = 2;
@@ -95,11 +95,6 @@ struct velocity { float vx, vy, vz, vw; };
 struct rotation { float rx, ry, rz, rw; };
 struct rotationSpeed { float s; };
 struct color    { float r,  g,  b,  a; };
-//struct position { float x,  y,  z; };
-//struct velocity { float vx, vy, vz; };
-//struct rotation { float rx, ry, rz, rw; };
-//struct rotationSpeed { float s; };
-//struct color    { float r,  g,  b; };
 GLuint posSSbo;
 GLuint velSSbo;
 GLuint rotSSbo;
@@ -342,29 +337,16 @@ void Axes( float length )
 {
 
 	static float xx[ ] = { 0.f, 1.f, 0.f, 1.f };
-
 	static float xy[ ] = { -.5f, .5f, .5f, -.5f };
-
 	static int xorder[ ] = { 1, 2, -3, 4 };
-
 	static float yx[ ] = { 0.f, 0.f, -.5f, .5f };
-
 	static float yy[ ] = { 0.f, .6f, 1.f, 1.f };
-
 	static int yorder[ ] = { 1, 2, 3, -2, 4 };
-
 	static float zx[ ] = { 1.f, 0.f, 1.f, 0.f, .25f, .75f };
-
 	static float zy[ ] = { .5f, .5f, -.5f, -.5f, 0.f, 0.f };
-
 	static int zorder[ ] = { 1, 2, 3, 4, -5, 6 };
-
-	// fraction of the length to use as height of the characters:
-	const float LENFRAC = 0.10f;
-
-	// fraction of length to use as start location of the characters:
-	const float BASEFRAC = 1.10f;
-
+	const float LENFRAC = 0.10f; // fraction of the length to use as height of the characters:
+	const float BASEFRAC = 1.10f; // fraction of length to use as start location of the characters:
 
 	glBegin( GL_LINE_STRIP );
 		glVertex3f( length, 0., 0. );
@@ -428,7 +410,8 @@ void Axes( float length )
 
 }
 
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) 
+{
 	if( action == GLFW_PRESS ) {
 		glfwGetCursorPos(window, &Xmouse, &Ymouse);
 		PressedButton = button;
@@ -443,7 +426,8 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	Scale = std::max(Scale, MINSCALE);
 }
 
-void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
+void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) 
+{
 	double dx = xpos - Xmouse;
 	double dy = ypos - Ymouse;
 
@@ -481,7 +465,7 @@ void imgui_show_sand_frame()
 	ImGui::Begin("Sand");                          // Create a window called "Hello, world!" and append into it.
 	ImGui::SliderFloat("uCubeSize", &uCubeSize, 0.001f, 0.05f);
 	ImGui::SliderFloat("uGravityMetersPerSec", &uGravityMetersPerSec, -10.f, 10.f);
-	ImGui::SliderFloat("uSpawnHeight", &uSpawnHeight, -5.f, 5.f);
+	ImGui::SliderFloat("uSpawnHeight", &uSpawnHeight, -1.f, 10.f);
 	ImGui::SliderFloat("uDeathHeight", &uDeathHeight, -5.f, 5.f);
 	ImGui::SliderFloat3("uPlateColor", &uPlateColor.x, 0.f, 1.f);
 	ImGui::SliderFloat("uPlateDim", &uPlateDim, 0.0f, 4.f);
@@ -489,10 +473,10 @@ void imgui_show_sand_frame()
 	ImGui::SliderFloat("uChladniResAmp", &uChladniResAmp, 0.0f, 20.f);
 	ImGui::SliderFloat("uPlateNormalScale", &uPlateNormalScale, 0.001f, 10.f);
 	ImGui::SliderInt("uPlateNormalDelta", &uPlateNormalDelta, 1, 20);
-	ImGui::SliderInt("uChladni_N", &uChladni_N, 1, 10);
-	ImGui::SliderInt("uChladni_M", &uChladni_M, 1, 10);
-	ImGui::SliderFloat("uChladni_DX", &uChladni_DX, -4.f, 4.f);
-	ImGui::SliderFloat("uChladni_DZ", &uChladni_DZ, -4.f, 4.f);
+	ImGui::SliderInt("uChladni_N", &uChladni_N, 1, 40);
+	ImGui::SliderInt("uChladni_M", &uChladni_M, 1, 40);
+	ImGui::SliderFloat("uChladni_DX", &uChladni_DX, -2.f, 2.f);
+	ImGui::SliderFloat("uChladni_DZ", &uChladni_DZ, -2.f, 2.f);
 	ImGui::Checkbox("uUseChladniNormals", &uUseChladniNormals);
 	if (ImGui::Button("uQuickRespawn"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
 		uQuickRespawn = true;

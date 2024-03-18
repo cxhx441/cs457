@@ -61,9 +61,12 @@ float random(vec2 st) { return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 437
 
 void respawn()
 {
-	Positions[index].y = uSpawnHeight;
-	Positions[index].x = random(pos.xz) * uPlateDim - uPlateDim/2.f;
-	Positions[index].z = random(pos.zx) * uPlateDim - uPlateDim/2.f;
+	float rand_xz = random(pos.xz);
+	float rand_zx = random(pos.zx);
+	float rand_t = random(vec2(gl_GlobalInvocationID)) - 0.5;
+	Positions[index].y = uSpawnHeight * (1+rand_t);
+	Positions[index].x = rand_xz * uPlateDim - uPlateDim/2.f;
+	Positions[index].z = rand_zx * uPlateDim - uPlateDim/2.f;
 	Velocities[index] = vec4(0.f, 0.f, 0.f, 1.f);
 	//Rotations[index].w += sign(Rotations[index].w) * 2.5 * uDeltaTime;
 }
@@ -71,19 +74,19 @@ void respawn()
 void main() {
 	index = gl_GlobalInvocationID.x;	
 
-	pos = Positions[index];
-	vel = Velocities[index];
-	newVel = Velocities[index];
+	pos    = Positions[index];
+	vel    = Velocities[index];
 	newPos = pos + vec4(vel.xyz * uDeltaTime, 1.f);
+	newVel = vel + uGravityMetersPerSec * uDeltaTime;
 	
 	//pos.y -= uCubeSize;
 	//newPos.y -= uCubeSize;
-	PlateHeight = 0.0f; //+ uCubeSize/2.f;
+	PlateHeight = uCubeSize/2.f; //+ uCubeSize/2.f;
 
 	if (uQuickRespawn) { 
 		respawn(); 
 	}
-	else if (pos.y >= PlateHeight && newPos.y <= PlateHeight && within_plate_boundary(pos) )
+	else if ((pos.y >= PlateHeight && newPos.y <= PlateHeight || newPos == pos) && within_plate_boundary(pos) )
 	{
 		// get plate normal
 		vec3 plate_normal = vec3(0.f, 1.f, 0.f);
@@ -100,7 +103,7 @@ void main() {
 
 		// get standard bounce
 		vec3 reflected = reflect(vel.xyz, plate_normal);
-		vec3 stnd_bounce = reflected * uBounceFactor;
+		vec3 stnd_bounce = normalize(reflected) * uBounceFactor;
 
 		// add velocity from force of moving plate
 		float chladni_val = chladni_res_factor(pos.x, pos.z, uChladni_N, uChladni_M, uPlateDim);
@@ -113,7 +116,7 @@ void main() {
 		Velocities[index].xyz = newVel.xyz;
 		Positions[index].xyz += Velocities[index].xyz * uDeltaTime;
 	}
-	else if (newPos.y <= uDeathHeight)  // RESPAWN
+	else if (newPos.y <= uDeathHeight || pos.y <= uDeathHeight)  // RESPAWN
 	{
 		respawn();
 	}
@@ -122,10 +125,8 @@ void main() {
 		//float rot_sign = sign(Rotations[index].w);
 		//Rotations[index].w += rot_sign * RotationSpeeds[index].s*RotMult * deltaTime;
 		//Rotations[index].w = mod(Rotations[index].w + RotationSpeeds[index].s*RotMult, 6.28);
-		Positions[index] += Velocities[index] * uDeltaTime;
+		Positions[index] = newPos;
+		Velocities[index].y = newVel.y;
 		Rotations[index].w += sign(Rotations[index].w) * 2.5 * uDeltaTime;
-		Velocities[index].y += uGravityMetersPerSec * uDeltaTime;
-		//Velocities[index].x /= 1.01;
-		//Velocities[index].z /= 1.01;
 	}
 }
