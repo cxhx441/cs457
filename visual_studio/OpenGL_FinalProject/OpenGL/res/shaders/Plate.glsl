@@ -13,7 +13,7 @@ out vec3 vE;
 out vec2 vST;
 out vec2 vMC;
 
-vec3 LIGHTPOS = vec3(0., 0., 10.);
+vec3 LIGHTPOS = vec3(0., 10., 10.);
 vec4 ECPosition;
 	
 void main()

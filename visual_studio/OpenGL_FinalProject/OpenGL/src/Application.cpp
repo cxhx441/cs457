@@ -43,7 +43,7 @@ double Xmouse, Ymouse;
 int PressedButton = -1;
 
 // for mvp
-glm::vec3 eye(1., 1., 4.f);
+glm::vec3 eye(0.5, 3., 3.f);
 glm::vec3 look(0., 0., 0.);
 glm::vec3 up(0., 1., 0.);
 glm::mat4 model;
@@ -74,7 +74,7 @@ float uPlateDim = 4.f;
 float uCubeSize =  0.005f;
 //float uGravityMetersPerSec = -.3f;
 float uBounceFactor = 0.235f;
-float uChladniResAmp = 2.0f;
+float uChladniResAmp = 1.0f;
 float uPlateNormalScale = 0.1f;
 bool uUseChladniNormals = true;
 bool uUseChladniNormalsForLighting = false;
@@ -89,7 +89,7 @@ float uChladni_DZ = 0;
 bool uQuickRespawn = false;
 GLuint SandShaderProgram;
 GLuint ComputeSandShaderProgram;
-int num_parts_dim = 64; // 128
+int num_parts_dim = 128; // 128
 int NUM_PARTICLES = num_parts_dim * num_parts_dim * num_parts_dim;   // total number of particles to move
 #define WORK_GROUP_SIZE 128 // # work-items per work-group
 struct position { float x,  y,  z,  w; };
@@ -276,7 +276,7 @@ int main(void)
 			axes_shader.Bind();
 			model = glm::mat4(1);
 			axes_shader.SetUniformMat4("uMVP", mvp());
-			GLCall(glCallList(AxesList));
+			//GLCall(glCallList(AxesList));
 
 			// COMPUTE SAND
 			glEnable( GL_NORMALIZE ); // TODO do i need this? 
@@ -477,7 +477,7 @@ void imgui_show_sand_frame()
 	//static float f = 0.0f;
 	//static int counter = 0;
 	ImGui::Begin("Sand");                          // Create a window called "Hello, world!" and append into it.
-	ImGui::SliderFloat("uPlateNormalScale", &uPlateNormalScale, 0.001f, 1.f);
+	//ImGui::SliderFloat("uPlateNormalScale", &uPlateNormalScale, 0.001f, 1.f);
 	ImGui::SliderFloat("uCubeSize", &uCubeSize, 0.001f, 0.2f);
 	ImGui::SliderFloat("uGravityMetersPerSec", &uGravityMetersPerSec, -10.f, 10.f);
 	ImGui::SliderFloat("uSpawnHeight", &uSpawnHeight, -1.f, 10.f);
@@ -485,7 +485,7 @@ void imgui_show_sand_frame()
 	ImGui::SliderFloat3("uPlateColor", &uPlateColor.x, 0.f, 1.f);
 	ImGui::SliderFloat("uPlateDim", &uPlateDim, 0.0f, 4.f);
 	ImGui::SliderFloat("uBounceFactor", &uBounceFactor, 0.0f, 1.f);
-	ImGui::SliderFloat("uChladniResAmp", &uChladniResAmp, 0.0f, 20.f);
+	ImGui::SliderFloat("uChladniResAmp", &uChladniResAmp, 0.0f, 5.f);
 	ImGui::SliderInt("uChladni_N", &uChladni_N, 1, 40);
 	ImGui::SliderInt("uChladni_M", &uChladni_M, 1, 40);
 	ImGui::SliderFloat("uChladni_DX", &uChladni_DX, -2.f, 2.f);
@@ -512,6 +512,13 @@ void imgui_show_sand_frame()
 				uQuickRespawn = doRespawn; 
 			}
 		}
+	}
+
+	if (ImGui::Button("Random (n, m)"))
+	{ 
+		uChladni_N = rand()%20; 
+		uChladni_M = rand()%20; 
+		uQuickRespawn = doRespawn; 
 	}
 	//ImGui::SliderFloat3("Scale", &scaler.x, -2.f, 2.f);
 	//ImGui::SliderFloat("Rotation", &rotater, -200.f, 200.f);
@@ -593,9 +600,9 @@ void initSand() {
 	GLint bufMask = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT ; // the invalidate makes a big difference when re-writing
 	struct position *points = (struct position *) glMapBufferRange( GL_SHADER_STORAGE_BUFFER, 0, NUM_PARTICLES * sizeof(struct position), bufMask );
 	for (int i = 0; i < NUM_PARTICLES; i++) {
-		points[i].x = ((rand() % 10000) / 10000.f - 0.5f) * 2 * 1.5; // -1. to 1 
+		points[i].x = ((rand() % 10000) / 10000.f - 0.5f) * uPlateDim; // -1. to 1 
 		points[i].y = ((rand() % 10000) / 10000.f - 0.5f) * 2 + 1;
-		points[i].z = ((rand() % 10000) / 10000.f - 0.5f) * 2 * 1.5;
+		points[i].z = ((rand() % 10000) / 10000.f - 0.5f) * uPlateDim;
 		points[i].w = 1;
 	}
 	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
@@ -650,6 +657,7 @@ void initSand() {
 	glBufferData( GL_SHADER_STORAGE_BUFFER, NUM_PARTICLES * sizeof(struct color), NULL, GL_STATIC_DRAW );
 	struct color *colors = (struct color *) glMapBufferRange( GL_SHADER_STORAGE_BUFFER, 0, NUM_PARTICLES * sizeof(struct color), bufMask );
 	for( int i = 0; i < NUM_PARTICLES; i++ ) {
+		// RainbowColors
 		//colors[ i ].r = ((rand() % 100)) / 100.f;
 		//colors[ i ].g = ((rand() % 100)) / 100.f;
 		//colors[ i ].b = ((rand() % 100)) / 100.f;

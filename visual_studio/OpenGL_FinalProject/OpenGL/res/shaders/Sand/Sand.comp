@@ -92,7 +92,7 @@ void main() {
 		// get plate normal
 		vec3 plate_normal = vec3(0.f, 1.f, 0.f);
 		if (uUseChladniNormals){
-			float d = 0.1f;
+			float d = 0.01f;
 			float west  = chladni_res_factor(pos.x - d, pos.z    , uChladni_N, uChladni_M, uPlateDim);
 			float east  = chladni_res_factor(pos.x + d, pos.z    , uChladni_N, uChladni_M, uPlateDim);
 			float north = chladni_res_factor(pos.x    , pos.z - d, uChladni_N, uChladni_M, uPlateDim);
@@ -124,7 +124,7 @@ void main() {
 	}
 	else if (newPos.y <= uDeathHeight || pos.y <= uDeathHeight)  // RESPAWN
 	{
-		respawn();
+		//respawn();
 	}
 	else // FALL NORMALLY
 	{
