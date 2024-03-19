@@ -43,8 +43,7 @@ double Xmouse, Ymouse;
 int PressedButton = -1;
 
 // for mvp
-//glm::vec3 eye(1., 1., 4.f);
-glm::vec3 eye(1., -0.01, 1.f);
+glm::vec3 eye(1., 1., 4.f);
 glm::vec3 look(0., 0., 0.);
 glm::vec3 up(0., 1., 0.);
 glm::mat4 model;
