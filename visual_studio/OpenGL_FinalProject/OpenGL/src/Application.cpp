@@ -75,11 +75,12 @@ float uCubeSize =  0.005f;
 //float uGravityMetersPerSec = -.3f;
 float uBounceFactor = 0.235f;
 float uChladniResAmp = 1.0f;
+float lastChladniResAmp = uChladniResAmp;
 float uPlateNormalScale = 0.1f;
 bool uUseChladniNormals = true;
 bool uUseChladniNormalsForLighting = false;
 float uGravityMetersPerSec = -9.8f;
-float uSpawnHeight =  0.1f;
+float uSpawnHeight =  0.75f;
 float uDeathHeight = -10.5f;
 float uPlateHeight =  0.0f;
 int uChladni_N = 1;
@@ -87,6 +88,7 @@ int uChladni_M = 2;
 float uChladni_DX = 0;
 float uChladni_DZ = 0;
 bool uQuickRespawn = false;
+bool uSignalMode = false;
 GLuint SandShaderProgram;
 GLuint ComputeSandShaderProgram;
 int num_parts_dim = 128; // 128
@@ -110,6 +112,7 @@ void Axes(float);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void update_viewport_size(GLFWwindow* window);
 void imgui_show_example_frame();
 void imgui_show_sand_frame();
@@ -133,7 +136,7 @@ int main(void)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(1200, 1200, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(1200, 1200, "Chladni Plate Simulation", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -149,6 +152,7 @@ int main(void)
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	glfwSetCursorPosCallback(window, cursor_position_callback);
 	glfwSetScrollCallback(window, scroll_callback);
+	glfwSetKeyCallback(window, key_callback);
 
     GLenum err = glewInit();
     if (err != GLEW_OK) 
@@ -297,10 +301,18 @@ int main(void)
 			set_uniform_variable(ComputeSandShaderProgram, "uChladni_DX", uChladni_DX);
 			set_uniform_variable(ComputeSandShaderProgram, "uChladni_DZ", uChladni_DZ);
 			set_uniform_variable(ComputeSandShaderProgram, "uQuickRespawn", uQuickRespawn);
+			//set_uniform_variable(ComputeSandShaderProgram, "uSignalMode", uSignalMode);
 			set_uniform_variable(ComputeSandShaderProgram, "uUseChladniNormals", uUseChladniNormals);
-			set_uniform_variable(ComputeSandShaderProgram, "uTime", (float)cur_time_ms);
-			set_uniform_variable(ComputeSandShaderProgram, "uCubeSize", uCubeSize);
+			//set_uniform_variable(ComputeSandShaderProgram, "uTime", (float)cur_time_ms);
+			//set_uniform_variable(ComputeSandShaderProgram, "uCubeSize", uCubeSize);
 			uQuickRespawn = false; // turn off!
+			if (uSignalMode) {
+				if (uChladniResAmp != 0.f) lastChladniResAmp = uChladniResAmp;
+				uChladniResAmp = 0.f;
+			}
+			else {
+				uChladniResAmp = lastChladniResAmp;
+			}
 			//std::cout << "gravity_meters_per_sec: " << uGravityMetersPerSec << std::endl;
 			//std::cout << "grav*time: " << 1.f / framerate * uGravityMetersPerSec << std::endl;
 			glDispatchCompute( NUM_PARTICLES  / WORK_GROUP_SIZE, 1,  1 );
@@ -448,13 +460,28 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
 
 	else if( PressedButton == GLFW_MOUSE_BUTTON_MIDDLE ) 
 	{
-		std::cout << "scaler" << std::endl;
+		//std::cout << "scaler" << std::endl;
 		Scale += SCLFACT * (float) ( dx - dy );
 		Scale = std::max(Scale, MINSCALE);
-		std::cout << "scale: " << Scale << std::endl;
+		//std::cout << "scale: " << Scale << std::endl;
 	}
 	Xmouse = xpos;			// new current position
 	Ymouse = ypos;
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS) {
+		if (key == GLFW_KEY_D && action == GLFW_PRESS) { uChladni_DX += 1; }
+		else if (key == GLFW_KEY_A && action == GLFW_PRESS) { uChladni_DX -= 1; }
+		else if (key == GLFW_KEY_W && action == GLFW_PRESS) { uChladni_DZ += 1; }
+		else if (key == GLFW_KEY_S && action == GLFW_PRESS) { uChladni_DZ -= 1; }
+	}
+	else if (key == GLFW_KEY_D && action == GLFW_PRESS) { uChladni_N += 1; }
+	else if (key == GLFW_KEY_A && action == GLFW_PRESS) { uChladni_N -= 1; }
+	else if (key == GLFW_KEY_W && action == GLFW_PRESS) { uChladni_M += 1; }
+	else if (key == GLFW_KEY_S && action == GLFW_PRESS) { uChladni_M -= 1; }
+	else if (key == GLFW_KEY_R && action == GLFW_PRESS) { uQuickRespawn = true; }
+	else if (key == GLFW_KEY_Z && action == GLFW_PRESS) { uChladni_M = rand()%20, uChladni_N = rand()%20; }
 }
 
 void update_viewport_size(GLFWwindow* window)
@@ -469,7 +496,7 @@ void update_viewport_size(GLFWwindow* window)
 
 std::string intToStrComma(int value1, int value2) {
     // Use std::to_string to convert integers to strings and concatenate them
-    return std::to_string(value1) + ", " + std::to_string(value2);
+    return std::to_string(value1) + "/" + std::to_string(value2);
 }
 
 void imgui_show_sand_frame()
@@ -484,32 +511,38 @@ void imgui_show_sand_frame()
 	ImGui::SliderFloat("uDeathHeight", &uDeathHeight, -5.f, 5.f);
 	ImGui::SliderFloat3("uPlateColor", &uPlateColor.x, 0.f, 1.f);
 	ImGui::SliderFloat("uPlateDim", &uPlateDim, 0.0f, 4.f);
-	ImGui::SliderFloat("uBounceFactor", &uBounceFactor, 0.0f, 1.f);
+	//ImGui::SliderFloat("uBounceFactor", &uBounceFactor, 0.0f, 1.f);
 	ImGui::SliderFloat("uChladniResAmp", &uChladniResAmp, 0.0f, 5.f);
-	ImGui::SliderInt("uChladni_N", &uChladni_N, 1, 40);
-	ImGui::SliderInt("uChladni_M", &uChladni_M, 1, 40);
+	if (ImGui::IsItemActive()) {
+		lastChladniResAmp = uChladniResAmp;
+	}
+	ImGui::SliderInt("uChladni_N", &uChladni_N, 0, 40);
+	ImGui::SliderInt("uChladni_M", &uChladni_M, 0, 40);
 	ImGui::SliderFloat("uChladni_DX", &uChladni_DX, -2.f, 2.f);
 	ImGui::SliderFloat("uChladni_DZ", &uChladni_DZ, -2.f, 2.f);
 	ImGui::Checkbox("uUseChladniNormalsForLighting", &uUseChladniNormalsForLighting);
 	ImGui::Checkbox("uUseChladniNormals", &uUseChladniNormals);
 	if (ImGui::Button("uQuickRespawn"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
 		uQuickRespawn = true;
-	ImGui::SameLine();
-	ImGui::Text("uQuickRespan = %d", uQuickRespawn);
+	ImGui::Checkbox("uSignalMode", &uSignalMode);
 
 	bool doRespawn = false;
 	for (int n = 1; n < 10; n++) {
-		if (ImGui::Button(intToStrComma(n, 1).c_str())) { 
+		ImGui::Button(intToStrComma(n, 1).c_str());
+		if (ImGui::IsItemActive()) {
 			uChladni_N = n; 
 			uChladni_M = 1; 
-			uQuickRespawn = doRespawn; }
+			uQuickRespawn = doRespawn; 
+			uChladniResAmp = lastChladniResAmp;
+		}
 		for (int m = 2; m < 10; m++) {
 			ImGui::SameLine(); 
-			if (ImGui::Button(intToStrComma(n, m).c_str())) 
-			{ 
+			ImGui::Button(intToStrComma(n, m).c_str());
+			if (ImGui::IsItemActive()) {
 				uChladni_N = n; 
 				uChladni_M = m; 
 				uQuickRespawn = doRespawn; 
+				uChladniResAmp = lastChladniResAmp;
 			}
 		}
 	}
@@ -551,7 +584,7 @@ void imgui_show_example_frame()
 {
 	static float f = 0.0f;
 	static int counter = 0;
-	ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+	ImGui::Begin("Chladni Plate Simulation");                          // Create a window called "Hello, world!" and append into it.
 	ImGui::SliderFloat3("Translation", &translation.x, -1.f, 1.f);
 	ImGui::SliderFloat3("Scale", &scaler.x, -2.f, 2.f);
 	ImGui::SliderFloat("Rotation", &rotater, -200.f, 200.f);
