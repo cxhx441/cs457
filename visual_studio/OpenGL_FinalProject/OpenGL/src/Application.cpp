@@ -8,6 +8,8 @@
 #include <glm/gtc/matrix_inverse.hpp>
 
 #include <iostream>
+#include <format>
+#include <string>
 
 #include "Renderer.h"
 #include "VertexBuffer.h"
@@ -41,7 +43,8 @@ double Xmouse, Ymouse;
 int PressedButton = -1;
 
 // for mvp
-glm::vec3 eye(1., 1., 4.f);
+//glm::vec3 eye(1., 1., 4.f);
+glm::vec3 eye(1., -0.01, 1.f);
 glm::vec3 look(0., 0., 0.);
 glm::vec3 up(0., 1., 0.);
 glm::mat4 model;
@@ -66,18 +69,18 @@ float framerate;
 
 
 // FOR PLATE SHADER
-glm::vec3 uPlateColor = glm::vec3(0.2f, 0.2f, 0.2f);
+glm::vec3 uPlateColor = glm::vec3(1.0f, 1.0f, 1.0f);
 float uPlateDim = 4.f;
 // FOR SAND COMPUTE/RENDER SHADER
-float uCubeSize =  0.01f;
+float uCubeSize =  0.005f;
 //float uGravityMetersPerSec = -.3f;
-float uBounceFactor = 0.010f;
+float uBounceFactor = 0.235f;
 float uChladniResAmp = 2.0f;
-float uPlateNormalScale = 1.f;
-int uPlateNormalDelta = 1;
+float uPlateNormalScale = 0.1f;
 bool uUseChladniNormals = true;
+bool uUseChladniNormalsForLighting = false;
 float uGravityMetersPerSec = -9.8f;
-float uSpawnHeight =  0.5f;
+float uSpawnHeight =  0.1f;
 float uDeathHeight = -10.5f;
 float uPlateHeight =  0.0f;
 int uChladni_N = 1;
@@ -231,6 +234,7 @@ int main(void)
 			GLCall(glDrawBuffer(GL_BACK));
 			GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 			GLCall(glEnable(GL_DEPTH_TEST));
+			glClearColor(0.15f, 0.15f, 0.35f, 1.0f);
 			
 			update_viewport_size(window); // update viewport size after scaling window
 
@@ -257,6 +261,13 @@ int main(void)
 			//test_shader.SetUniformVec4((char*)"uColor", glm::vec4(r, 0.3f, 0.8f, 1.0f));
 			model = glm::scale(glm::mat4(1), glm::vec3(uPlateDim));
 			plate_shader.SetUniformVec3("uPlateColor", uPlateColor);
+			plate_shader.SetUniform1f("uPlateDim", uPlateDim);
+			plate_shader.SetUniform1i("uChladni_N", uChladni_N);
+			plate_shader.SetUniform1i("uChladni_M", uChladni_M);
+			plate_shader.SetUniform1f("uChladni_DX", uChladni_DX);
+			plate_shader.SetUniform1f("uChladni_DZ", uChladni_DZ);
+			plate_shader.SetUniform1f("uPlateNormalScale", uPlateNormalScale);
+			plate_shader.SetUniform1i("uUseChladniNormalsForLighting", uUseChladniNormalsForLighting);
 			plate_shader.SetUniformMat4("uMVP", mvp());
 			plate_shader.SetUniformMat4("uMV", mv());
 			plate_shader.SetUniformMat3("uN", n(mv()));
@@ -277,8 +288,6 @@ int main(void)
 			set_uniform_variable(ComputeSandShaderProgram, "uDeltaTime", 1.f / framerate); 
 			//std::cout << "framerate: " << framerate << ", frametime: " << 1.f / framerate << std::endl;
 			set_uniform_variable(ComputeSandShaderProgram, "uGravityMetersPerSec", uGravityMetersPerSec);
-			set_uniform_variable(ComputeSandShaderProgram, "uPlateNormalScale", uPlateNormalScale);
-			set_uniform_variable(ComputeSandShaderProgram, "uPlateNormalDelta", uPlateNormalDelta);
 			set_uniform_variable(ComputeSandShaderProgram, "uSpawnHeight", uSpawnHeight);
 			set_uniform_variable(ComputeSandShaderProgram, "uDeathHeight", uDeathHeight);
 			set_uniform_variable(ComputeSandShaderProgram, "uPlateDim", uPlateDim);
@@ -291,6 +300,7 @@ int main(void)
 			set_uniform_variable(ComputeSandShaderProgram, "uQuickRespawn", uQuickRespawn);
 			set_uniform_variable(ComputeSandShaderProgram, "uUseChladniNormals", uUseChladniNormals);
 			set_uniform_variable(ComputeSandShaderProgram, "uTime", (float)cur_time_ms);
+			set_uniform_variable(ComputeSandShaderProgram, "uCubeSize", uCubeSize);
 			uQuickRespawn = false; // turn off!
 			//std::cout << "gravity_meters_per_sec: " << uGravityMetersPerSec << std::endl;
 			//std::cout << "grav*time: " << 1.f / framerate * uGravityMetersPerSec << std::endl;
@@ -458,14 +468,18 @@ void update_viewport_size(GLFWwindow* window)
 	glViewport(xl, yb, v, v);
 }
 
+std::string intToStrComma(int value1, int value2) {
+    // Use std::to_string to convert integers to strings and concatenate them
+    return std::to_string(value1) + ", " + std::to_string(value2);
+}
+
 void imgui_show_sand_frame()
 {
 	//static float f = 0.0f;
 	//static int counter = 0;
 	ImGui::Begin("Sand");                          // Create a window called "Hello, world!" and append into it.
-	ImGui::SliderFloat("uPlateNormalScale", &uPlateNormalScale, 0.001f, 10.f);
-	ImGui::SliderInt("uPlateNormalDelta", &uPlateNormalDelta, 1, 20);
-	ImGui::SliderFloat("uCubeSize", &uCubeSize, 0.001f, 0.05f);
+	ImGui::SliderFloat("uPlateNormalScale", &uPlateNormalScale, 0.001f, 1.f);
+	ImGui::SliderFloat("uCubeSize", &uCubeSize, 0.001f, 0.2f);
 	ImGui::SliderFloat("uGravityMetersPerSec", &uGravityMetersPerSec, -10.f, 10.f);
 	ImGui::SliderFloat("uSpawnHeight", &uSpawnHeight, -1.f, 10.f);
 	ImGui::SliderFloat("uDeathHeight", &uDeathHeight, -5.f, 5.f);
@@ -477,11 +491,29 @@ void imgui_show_sand_frame()
 	ImGui::SliderInt("uChladni_M", &uChladni_M, 1, 40);
 	ImGui::SliderFloat("uChladni_DX", &uChladni_DX, -2.f, 2.f);
 	ImGui::SliderFloat("uChladni_DZ", &uChladni_DZ, -2.f, 2.f);
+	ImGui::Checkbox("uUseChladniNormalsForLighting", &uUseChladniNormalsForLighting);
 	ImGui::Checkbox("uUseChladniNormals", &uUseChladniNormals);
 	if (ImGui::Button("uQuickRespawn"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
 		uQuickRespawn = true;
 	ImGui::SameLine();
 	ImGui::Text("uQuickRespan = %d", uQuickRespawn);
+
+	bool doRespawn = false;
+	for (int n = 1; n < 10; n++) {
+		if (ImGui::Button(intToStrComma(n, 1).c_str())) { 
+			uChladni_N = n; 
+			uChladni_M = 1; 
+			uQuickRespawn = doRespawn; }
+		for (int m = 2; m < 10; m++) {
+			ImGui::SameLine(); 
+			if (ImGui::Button(intToStrComma(n, m).c_str())) 
+			{ 
+				uChladni_N = n; 
+				uChladni_M = m; 
+				uQuickRespawn = doRespawn; 
+			}
+		}
+	}
 	//ImGui::SliderFloat3("Scale", &scaler.x, -2.f, 2.f);
 	//ImGui::SliderFloat("Rotation", &rotater, -200.f, 200.f);
 
@@ -593,8 +625,8 @@ void initSand() {
 		rotations[ i ].rx = ((rand() % 100) / 100.f); // 0 to 1 // xyz is axis of rotations
 		rotations[ i ].ry = ((rand() % 100) / 100.f);
 		rotations[ i ].rz = ((rand() % 100) / 100.f);
-		//rotations[ i ].rw = (((rand() % 100) / 50.f) - 1) * 6.28; // -2pi to 2pi // can change to 3.14??
-		rotations[i].rw = 0;// -2pi to 2pi // can change to 3.14??
+		rotations[ i ].rw = (((rand() % 100) / 50.f) - 1) * 6.28; // -2pi to 2pi // can change to 3.14??
+		//rotations[i].rw = 0;// -2pi to 2pi // can change to 3.14??
 	}
 	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
 
@@ -608,8 +640,8 @@ void initSand() {
 			amp -= .5;
 		else
 			amp += .5;
-		//rotationSpeeds[i].s = amp;
-		rotationSpeeds[i].s = 0;
+		rotationSpeeds[i].s = amp;
+		//rotationSpeeds[i].s = 0;
 	}
 	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
 
@@ -619,9 +651,14 @@ void initSand() {
 	glBufferData( GL_SHADER_STORAGE_BUFFER, NUM_PARTICLES * sizeof(struct color), NULL, GL_STATIC_DRAW );
 	struct color *colors = (struct color *) glMapBufferRange( GL_SHADER_STORAGE_BUFFER, 0, NUM_PARTICLES * sizeof(struct color), bufMask );
 	for( int i = 0; i < NUM_PARTICLES; i++ ) {
-		colors[ i ].r = ((rand() % 100)) / 100.f;
-		colors[ i ].g = ((rand() % 100)) / 100.f;
-		colors[ i ].b = ((rand() % 100)) / 100.f;
+		//colors[ i ].r = ((rand() % 100)) / 100.f;
+		//colors[ i ].g = ((rand() % 100)) / 100.f;
+		//colors[ i ].b = ((rand() % 100)) / 100.f;
+		//colors[ i ].a = 1.;
+		//SAND COLORS
+		colors[ i ].r = (236.f + (rand()%40 -10.f)) / 255.f;
+		colors[ i ].g = (204.f + (rand()%40 -10.f)) / 255.f;
+		colors[ i ].b = (162.f + (rand()%40 -10.f)) / 255.f;
 		colors[ i ].a = 1.;
 	}
 	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
