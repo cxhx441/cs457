@@ -68,7 +68,7 @@ float framerate;
 
 
 // FOR PLATE SHADER
-glm::vec3 uPlateColor = glm::vec3(1.0f, 1.0f, 1.0f);
+glm::vec3 uPlateColor = glm::vec3(0.f);
 float uPlateDim = 4.f;
 // FOR SAND COMPUTE/RENDER SHADER
 float uCubeSize =  0.005f;
@@ -88,7 +88,7 @@ int uChladni_M = 2;
 float uChladni_DX = 0;
 float uChladni_DZ = 0;
 bool uQuickRespawn = false;
-bool uSignalMode = false;
+bool uPulseMode = false;
 GLuint SandShaderProgram;
 GLuint ComputeSandShaderProgram;
 int num_parts_dim = 128; // 128
@@ -271,6 +271,7 @@ int main(void)
 			plate_shader.SetUniform1f("uChladni_DZ", uChladni_DZ);
 			plate_shader.SetUniform1f("uPlateNormalScale", uPlateNormalScale);
 			plate_shader.SetUniform1i("uUseChladniNormalsForLighting", uUseChladniNormalsForLighting);
+			plate_shader.SetUniform1f("uChladniResAmp", uChladniResAmp);
 			plate_shader.SetUniformMat4("uMVP", mvp());
 			plate_shader.SetUniformMat4("uMV", mv());
 			plate_shader.SetUniformMat3("uN", n(mv()));
@@ -306,7 +307,7 @@ int main(void)
 			//set_uniform_variable(ComputeSandShaderProgram, "uTime", (float)cur_time_ms);
 			//set_uniform_variable(ComputeSandShaderProgram, "uCubeSize", uCubeSize);
 			uQuickRespawn = false; // turn off!
-			if (uSignalMode) {
+			if (uPulseMode) {
 				if (uChladniResAmp != 0.f) lastChladniResAmp = uChladniResAmp;
 				uChladniResAmp = 0.f;
 			}
@@ -504,7 +505,7 @@ void imgui_show_sand_frame()
 	//static float f = 0.0f;
 	//static int counter = 0;
 	ImGui::Begin("Sand");                          // Create a window called "Hello, world!" and append into it.
-	//ImGui::SliderFloat("uPlateNormalScale", &uPlateNormalScale, 0.001f, 1.f);
+	ImGui::SliderFloat("uPlateNormalScale", &uPlateNormalScale, 0.001f, 1.f);
 	ImGui::SliderFloat("uCubeSize", &uCubeSize, 0.001f, 0.2f);
 	ImGui::SliderFloat("uGravityMetersPerSec", &uGravityMetersPerSec, -10.f, 10.f);
 	ImGui::SliderFloat("uSpawnHeight", &uSpawnHeight, -1.f, 10.f);
@@ -524,7 +525,7 @@ void imgui_show_sand_frame()
 	ImGui::Checkbox("uUseChladniNormals", &uUseChladniNormals);
 	if (ImGui::Button("uQuickRespawn"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
 		uQuickRespawn = true;
-	ImGui::Checkbox("uSignalMode", &uSignalMode);
+	ImGui::Checkbox("uSignalMode", &uPulseMode);
 
 	bool doRespawn = false;
 	for (int n = 1; n < 10; n++) {

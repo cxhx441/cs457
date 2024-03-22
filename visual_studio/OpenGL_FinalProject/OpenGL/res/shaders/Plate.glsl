@@ -36,6 +36,7 @@ uniform float uPlateDim;
 uniform int uChladni_N, uChladni_M;
 uniform float uChladni_DX, uChladni_DZ;
 uniform float uPlateNormalScale;
+uniform float uChladniResAmp;
 uniform bool uUseChladniNormalsForLighting;
 uniform mat3 uN;
 
@@ -60,6 +61,7 @@ float chladni_res_factor(float x, float z, float n, float m, float L)
 
 void main()
 {
+	vec3 localPlateColor = uPlateColor;
 	vec3 Normal = normalize(vN);
 	vec3 heightColor = vec3(1.f);
 	if (uUseChladniNormalsForLighting){
@@ -69,19 +71,21 @@ void main()
 		float east  = chladni_res_factor(xy.s + d, xy.t    , uChladni_N, uChladni_M, 1.f);
 		float north = chladni_res_factor(xy.s    , xy.t - d, uChladni_N, uChladni_M, 1.f);
 		float south = chladni_res_factor(xy.s    , xy.t + d, uChladni_N, uChladni_M, 1.f);
-		vec3 stangent = normalize(vec3(d * 2., uPlateNormalScale*(east-west), 0.    ));
-		vec3 ttangent = normalize(vec3(0     , uPlateNormalScale*(south-north), d * 2.));
+		vec3 stangent = normalize(vec3(d * 2., uChladniResAmp * uPlateNormalScale*(east-west), 0.    ));
+		vec3 ttangent = normalize(vec3(0     , uChladniResAmp * uPlateNormalScale*(south-north), d * 2.));
 		Normal = normalize(cross( ttangent, stangent ));
 		Normal = normalize(uN * Normal);
 		heightColor = vec3(chladni_res_factor(xy.s, xy.t, uChladni_N, uChladni_M, 1.f));
+		localPlateColor = vec3(1);
 	}
+	if (uChladniResAmp == 0.f) heightColor = vec3(0.f);
 	vec3 Light  = normalize(vL);
 	vec3 Eye    = normalize(vE);
 
-	vec3 ambient = 0.2 * heightColor * uPlateColor;
+	vec3 ambient = 0.2 * heightColor * localPlateColor;
 
 	float dd = max( dot(Normal,Light), 0. );       // only do diffuse if the light can see the point
-	vec3 diffuse = 0.4 * dd * heightColor * uPlateColor;
+	vec3 diffuse = 0.4 * dd * heightColor * localPlateColor;
 
 	float ss = 0.;
 	if( dot(Normal,Light) > 0. )	      // only do specular if the light can see the point
