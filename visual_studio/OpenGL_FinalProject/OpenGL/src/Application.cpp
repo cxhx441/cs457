@@ -220,8 +220,6 @@ int main(void)
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
 
-
-
 		// vertex positions
 		float plate_positions[] = {
 			-0.5f, 0.0f, -0.5f,   0.0f, 0.0f,   0.0f, 1.0f, 0.0f, // 0 vertex.xyz, tex.st, normal.xyz
@@ -300,7 +298,7 @@ int main(void)
 			view = glm::rotate(view, glm::radians(Xrot), glm::vec3(1., 0., 0.));
 			view = glm::scale(view, glm::vec3(Scale, Scale, Scale));
 
-			// PLATE
+			// DRAW PLATE
 			plate_shader.Bind();
 			//test_shader.SetUniformVec4((char*)"uColor", glm::vec4(r, 0.3f, 0.8f, 1.0f));
 			model = glm::scale(glm::mat4(1), glm::vec3(uPlateDim));
@@ -318,18 +316,22 @@ int main(void)
 			plate_shader.SetUniformMat3("uN", n(mv()));
 			renderer.Draw(plate_va, plate_ib, plate_shader);
 
-			// AXES
+			// DRAW AXES
 			axes_shader.Bind();
 			model = glm::mat4(1);
 			axes_shader.SetUniformMat4("uMVP", mvp());
 			GLCall(glBindVertexArray(axes_vao));
 			GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, axes_ibo));
+			GLCall(glLineWidth(3));
+			GLCall(glEnable(GL_LINE_SMOOTH)); // enable antialiasing
 			GLCall(glDrawElements(GL_LINE_STRIP, 5, GL_UNSIGNED_INT, 0));
 			GLCall(glDrawElements(GL_LINE_STRIP, 2, GL_UNSIGNED_INT, (const GLvoid*) (5 * sizeof(unsigned int)))); 
 			GLCall(glDrawElements(GL_LINE_STRIP, 2, GL_UNSIGNED_INT, (const GLvoid*) (7 * sizeof(unsigned int)))); 
 			GLCall(glDrawElements(GL_LINE_STRIP, 5, GL_UNSIGNED_INT, (const GLvoid*) (9 * sizeof(unsigned int)))); 
 			GLCall(glDrawElements(GL_LINE_STRIP, 4, GL_UNSIGNED_INT, (const GLvoid*) (14 * sizeof(unsigned int)))); 
 			GLCall(glDrawElements(GL_LINE_STRIP, 2, GL_UNSIGNED_INT, (const GLvoid*) (18 * sizeof(unsigned int)))); 
+			GLCall(glLineWidth(1));
+			GLCall(glDisable(GL_LINE_SMOOTH)); // disable antialiasing
 			GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
 			// COMPUTE SAND
