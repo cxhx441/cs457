@@ -171,30 +171,30 @@ int main(void)
 		initSand();
 
 		// vertex positions
-		float test_positions[] = {
+		float plate_positions[] = {
 			-0.5f, 0.0f, -0.5f,   0.0f, 0.0f,   0.0f, 1.0f, 0.0f, // 0 vertex.xyz, tex.st, normal.xyz
 			 0.5f, 0.0f, -0.5f,   1.0f, 0.0f,   0.0f, 1.0f, 0.0f, // 1
 			 0.5f, 0.0f,  0.5f,   1.0f, 1.0f,   0.0f, 1.0f, 0.0f, // 2
 			-0.5f, 0.0f,  0.5f,   0.0f, 1.0f,   0.0f, 1.0f, 0.0f, // 3
 		};
 		// indices of the vertices to be drawn
-		unsigned int test_indices[] = {
+		unsigned int plate_indices[] = {
 			0, 1, 2,
 			2, 3, 0
 		};
 
 		// generate vao
-		VertexArray test_va;
-		VertexBuffer test_vb(test_positions, 4 * 8 * sizeof(float));
-		VertexBufferLayout test_layout;
-		test_layout.Push<float>(3); // vertex position, 3 floats
-		test_layout.Push<float>(2); // vertex texture coords, 2 floats
-		test_layout.Push<float>(3); // vertex normal coords, 3 floats
-		test_va.AddBuffer(test_vb, test_layout);
-		test_vb.Unbind();
+		VertexArray plate_va;
+		VertexBuffer plate_vb(plate_positions, 4 * 8 * sizeof(float));
+		VertexBufferLayout plate_layout;
+		plate_layout.Push<float>(3); // vertex position, 3 floats
+		plate_layout.Push<float>(2); // vertex texture coords, 2 floats
+		plate_layout.Push<float>(3); // vertex normal coords, 3 floats
+		plate_va.AddBuffer(plate_vb, plate_layout);
+		plate_vb.Unbind();
 
-		IndexBuffer test_ib(test_indices, 2 * 3 * sizeof(unsigned int));
-		test_ib.Unbind();
+		IndexBuffer plate_ib(plate_indices, 2 * 3 * sizeof(unsigned int));
+		plate_ib.Unbind();
 
 
 		Shader test_shader = Shader("res/shaders/Test.glsl");
@@ -207,10 +207,9 @@ int main(void)
 		test_shader.Bind();
 		test_shader.SetUniform1i("uTexture", 0);
 		// clear 
-		test_va.Unbind();
-		test_shader.Unbind();
-		test_vb.Unbind();
-		test_ib.Unbind();
+		plate_va.Unbind();
+		plate_vb.Unbind();
+		plate_ib.Unbind();
 
 		Shader axes_shader = Shader("res/shaders/Axes.glsl");
 		Shader plate_shader = Shader("res/shaders/Plate.glsl");
@@ -275,7 +274,7 @@ int main(void)
 			plate_shader.SetUniformMat4("uMVP", mvp());
 			plate_shader.SetUniformMat4("uMV", mv());
 			plate_shader.SetUniformMat3("uN", n(mv()));
-			renderer.Draw(test_va, test_ib, plate_shader);
+			renderer.Draw(plate_va, plate_ib, plate_shader);
 
 			// AXES
 			axes_shader.Bind();
