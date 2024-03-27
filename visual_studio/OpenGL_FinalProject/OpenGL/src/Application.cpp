@@ -105,10 +105,10 @@ GLuint rotSSbo;
 GLuint rotSpeedSSbo;
 GLuint colSSbo;
 void initSand();
-void initAxes();
+//void initAxes();
 
 
-void Axes(float);
+//void Axes(float);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
@@ -132,8 +132,8 @@ int main(void)
     // set opengl version 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-    //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 
     /* Create a windowed mode window and its OpenGL context */
     window = glfwCreateWindow(1200, 1200, "Chladni Plate Simulation", NULL, NULL);
@@ -167,8 +167,61 @@ int main(void)
 		GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 		GLCall(glBlendEquation(GL_FUNC_ADD)); // default, but being explicit
 
-		initAxes();
+		//initAxes();
 		initSand();
+
+		// axes
+		float axes_positions[] = {
+			 1.0f, 0.0f, 0.0f, // lines
+			 0.0f, 0.0f, 0.0f,
+			 0.0f, 1.0f, 0.0f,
+			 0.0f, 0.0f, 0.0f,
+			 0.0f, 0.0f, 1.0f,
+
+			 1.1f, -0.05f, 0.0f, // X
+			 1.2f,  0.05f, 0.0f,
+			 1.1f,  0.05f, 0.0f,
+			 1.2f, -0.05f, 0.0f,
+
+			 0.0f,  1.1f,  0.0f, // Y
+			 0.0f,  1.16f, 0.0f,
+			-0.05f, 1.2f,  0.0f,
+			 0.0f,  1.16f, 0.0f,
+			 0.05f, 1.2f,  0.0f,
+
+			 0.0f,  0.05f, 1.2f, // Z
+			 0.0f,  0.05f, 1.1f,
+			 0.0f, -0.05f, 1.2f,
+			 0.0f, -0.05f, 1.1f,
+			 0.0f,  0.0f,  1.125f,
+			 0.0f,  0.0f,  1.175f,
+		};
+		unsigned int axes_indices[] = {
+			0, 1, 2, 3, 4,         // lines
+			5, 6, 7, 8,            // X
+			9, 10, 11, 12, 13,     // Y
+			14, 15, 16, 17, 18, 19 // Z	
+		};
+
+		unsigned int axes_vao;
+		GLCall(glGenVertexArrays(1, &axes_vao));
+		GLCall(glBindVertexArray(axes_vao));
+		unsigned int axes_vbo;
+		GLCall(glGenBuffers(1, &axes_vbo));
+		GLCall(glBindBuffer(GL_ARRAY_BUFFER, axes_vbo));
+		GLCall(glBufferData(GL_ARRAY_BUFFER, 3 * 20 * sizeof(float), axes_positions, GL_STATIC_DRAW));
+		GLCall(glEnableVertexAttribArray(0)); // sets to currently bound vao
+		//GLCall(glEnableVertexArrayAttrib(axes_vao, 0)); // should do the same thing? 
+		GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof (float), 0))
+		GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
+		unsigned int axes_ibo;
+		GLCall(glGenBuffers(1, &axes_ibo));
+		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, axes_ibo));
+		GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 20 * sizeof(unsigned int), axes_indices, GL_STATIC_DRAW));
+		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+
+
 
 		// vertex positions
 		float plate_positions[] = {
@@ -196,16 +249,6 @@ int main(void)
 		IndexBuffer plate_ib(plate_indices, 2 * 3 * sizeof(unsigned int));
 		plate_ib.Unbind();
 
-
-		Shader test_shader = Shader("res/shaders/Test.glsl");
-		test_shader.Bind();
-		test_shader.SetUniformVec4("uColor", glm::vec4(0.8f, 0.3f, 0.8f, 1.0f));
-		test_shader.Unbind();
-		
-		Texture test_texture("res/textures/dice.png");
-		test_texture.Bind(0);
-		test_shader.Bind();
-		test_shader.SetUniform1i("uTexture", 0);
 		// clear 
 		plate_va.Unbind();
 		plate_vb.Unbind();
@@ -280,7 +323,15 @@ int main(void)
 			axes_shader.Bind();
 			model = glm::mat4(1);
 			axes_shader.SetUniformMat4("uMVP", mvp());
-			//GLCall(glCallList(AxesList));
+			GLCall(glBindVertexArray(axes_vao));
+			GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, axes_ibo));
+			GLCall(glDrawElements(GL_LINE_STRIP, 5, GL_UNSIGNED_INT, 0));
+			GLCall(glDrawElements(GL_LINE_STRIP, 2, GL_UNSIGNED_INT, (const GLvoid*) (5 * sizeof(unsigned int)))); 
+			GLCall(glDrawElements(GL_LINE_STRIP, 2, GL_UNSIGNED_INT, (const GLvoid*) (7 * sizeof(unsigned int)))); 
+			GLCall(glDrawElements(GL_LINE_STRIP, 5, GL_UNSIGNED_INT, (const GLvoid*) (9 * sizeof(unsigned int)))); 
+			GLCall(glDrawElements(GL_LINE_STRIP, 4, GL_UNSIGNED_INT, (const GLvoid*) (14 * sizeof(unsigned int)))); 
+			GLCall(glDrawElements(GL_LINE_STRIP, 2, GL_UNSIGNED_INT, (const GLvoid*) (18 * sizeof(unsigned int)))); 
+			GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
 			// COMPUTE SAND
 			glEnable( GL_NORMALIZE ); // TODO do i need this? 
@@ -289,7 +340,6 @@ int main(void)
 			model = glm::mat4(1);
 			normal = glm::mat3(glm::inverseTranspose(model));
 			set_uniform_variable(ComputeSandShaderProgram, "uDeltaTime", 1.f / framerate); 
-			//std::cout << "framerate: " << framerate << ", frametime: " << 1.f / framerate << std::endl;
 			set_uniform_variable(ComputeSandShaderProgram, "uGravityMetersPerSec", uGravityMetersPerSec);
 			set_uniform_variable(ComputeSandShaderProgram, "uSpawnHeight", uSpawnHeight);
 			set_uniform_variable(ComputeSandShaderProgram, "uDeathHeight", uDeathHeight);
@@ -301,10 +351,7 @@ int main(void)
 			set_uniform_variable(ComputeSandShaderProgram, "uChladni_DX", uChladni_DX);
 			set_uniform_variable(ComputeSandShaderProgram, "uChladni_DZ", uChladni_DZ);
 			set_uniform_variable(ComputeSandShaderProgram, "uQuickRespawn", uQuickRespawn);
-			//set_uniform_variable(ComputeSandShaderProgram, "uSignalMode", uSignalMode);
 			set_uniform_variable(ComputeSandShaderProgram, "uUseChladniNormals", uUseChladniNormals);
-			//set_uniform_variable(ComputeSandShaderProgram, "uTime", (float)cur_time_ms);
-			//set_uniform_variable(ComputeSandShaderProgram, "uCubeSize", uCubeSize);
 			uQuickRespawn = false; // turn off!
 			if (uPulseMode) {
 				if (uChladniResAmp != 0.f) lastChladniResAmp = uChladniResAmp;
@@ -313,8 +360,6 @@ int main(void)
 			else {
 				uChladniResAmp = lastChladniResAmp;
 			}
-			//std::cout << "gravity_meters_per_sec: " << uGravityMetersPerSec << std::endl;
-			//std::cout << "grav*time: " << 1.f / framerate * uGravityMetersPerSec << std::endl;
 			glDispatchCompute( NUM_PARTICLES  / WORK_GROUP_SIZE, 1,  1 );
 			glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
 
@@ -354,82 +399,88 @@ int main(void)
 }
 
 
-void Axes( float length )
-{
-
-	static float xx[ ] = { 0.f, 1.f, 0.f, 1.f };
-	static float xy[ ] = { -.5f, .5f, .5f, -.5f };
-	static int xorder[ ] = { 1, 2, -3, 4 };
-	static float yx[ ] = { 0.f, 0.f, -.5f, .5f };
-	static float yy[ ] = { 0.f, .6f, 1.f, 1.f };
-	static int yorder[ ] = { 1, 2, 3, -2, 4 };
-	static float zx[ ] = { 1.f, 0.f, 1.f, 0.f, .25f, .75f };
-	static float zy[ ] = { .5f, .5f, -.5f, -.5f, 0.f, 0.f };
-	static int zorder[ ] = { 1, 2, 3, 4, -5, 6 };
-	const float LENFRAC = 0.10f; // fraction of the length to use as height of the characters:
-	const float BASEFRAC = 1.10f; // fraction of length to use as start location of the characters:
-
-	glBegin( GL_LINE_STRIP );
-		glVertex3f( length, 0., 0. );
-		glVertex3f( 0., 0., 0. );
-		glVertex3f( 0., length, 0. );
-	glEnd( );
-	glBegin( GL_LINE_STRIP );
-		glVertex3f( 0., 0., 0. );
-		glVertex3f( 0., 0., length );
-	glEnd( );
-	float fact = LENFRAC * length;
-	float base = BASEFRAC * length;
-
-	glBegin( GL_LINE_STRIP );
-		for( int i = 0; i < 4; i++ )
-		{
-			int j = xorder[i];
-			if( j < 0 )
-			{
-
-				glEnd( );
-				glBegin( GL_LINE_STRIP );
-				j = -j;
-			}
-			j--;
-			glVertex3f( base + fact*xx[j], fact*xy[j], 0.0 );
-		}
-	glEnd( );
-
-	glBegin( GL_LINE_STRIP );
-		for( int i = 0; i < 5; i++ )
-		{
-			int j = yorder[i];
-			if( j < 0 )
-			{
-
-				glEnd( );
-				glBegin( GL_LINE_STRIP );
-				j = -j;
-			}
-			j--;
-			glVertex3f( fact*yx[j], base + fact*yy[j], 0.0 );
-		}
-	glEnd( );
-
-	glBegin( GL_LINE_STRIP );
-		for( int i = 0; i < 6; i++ )
-		{
-			int j = zorder[i];
-			if( j < 0 )
-			{
-
-				glEnd( );
-				glBegin( GL_LINE_STRIP );
-				j = -j;
-			}
-			j--;
-			glVertex3f( 0.0, fact*zy[j], base + fact*zx[j] );
-		}
-	glEnd( );
-
-}
+//void Axes( float length )
+//{
+//
+//	static float xx[ ] = { 0.f, 1.f, 0.f, 1.f };
+//	static float xy[ ] = { -.5f, .5f, .5f, -.5f };
+//	static int xorder[ ] = { 1, 2, -3, 4 };
+//	static float yx[ ] = { 0.f, 0.f, -.5f, .5f };
+//	static float yy[ ] = { 0.f, .6f, 1.f, 1.f };
+//	static int yorder[ ] = { 1, 2, 3, -2, 4 };
+//	static float zx[ ] = { 1.f, 0.f, 1.f, 0.f, .25f, .75f };
+//	static float zy[ ] = { .5f, .5f, -.5f, -.5f, 0.f, 0.f };
+//	static int zorder[ ] = { 1, 2, 3, 4, -5, 6 };
+//	const float LENFRAC = 0.10f; // fraction of the length to use as height of the characters:
+//	const float BASEFRAC = 1.10f; // fraction of length to use as start location of the characters:
+//
+//	glBegin( GL_LINE_STRIP );
+//		glVertex3f( length, 0., 0. );
+//		glVertex3f( 0., 0., 0. );
+//		glVertex3f( 0., length, 0. );
+//	glEnd( );
+//	glBegin( GL_LINE_STRIP );
+//		glVertex3f( 0., 0., 0. );
+//		glVertex3f( 0., 0., length );
+//	glEnd( );
+//	float fact = LENFRAC * length;
+//	float base = BASEFRAC * length;
+//
+//	glBegin( GL_LINE_STRIP );
+//	std::cout << "X" << std::endl;
+//		for( int i = 0; i < 4; i++ )
+//		{
+//			int j = xorder[i];
+//			if( j < 0 )
+//			{
+//
+//				glEnd( );
+//				glBegin( GL_LINE_STRIP );
+//				j = -j;
+//			}
+//			j--;
+//			glVertex3f( base + fact*xx[j], fact*xy[j], 0.0 );
+//			std::cout << base + fact*xx[j] << ", " << fact * xy[j] << ", " << 0.0 << std::endl;
+//		}
+//	glEnd( );
+//
+//	glBegin( GL_LINE_STRIP );
+//	std::cout << "Y" << std::endl;
+//		for( int i = 0; i < 5; i++ )
+//		{
+//			int j = yorder[i];
+//			if( j < 0 )
+//			{
+//
+//				glEnd( );
+//				glBegin( GL_LINE_STRIP );
+//				j = -j;
+//			}
+//			j--;
+//			glVertex3f( fact*yx[j], base + fact*yy[j], 0.0 );
+//			std::cout << fact*yx[j] << ", " << base + fact*yy[j] << ", " << 0.0 << std::endl;
+//		}
+//	glEnd( );
+//
+//	glBegin( GL_LINE_STRIP );
+//	std::cout << "Z" << std::endl;
+//		for( int i = 0; i < 6; i++ )
+//		{
+//			int j = zorder[i];
+//			if( j < 0 )
+//			{
+//
+//				glEnd( );
+//				glBegin( GL_LINE_STRIP );
+//				j = -j;
+//			}
+//			j--;
+//			glVertex3f( 0.0, fact*zy[j], base + fact*zx[j] );
+//			std::cout << 0.0 << ", " << fact*zy[j] << ", " << base + fact*zx[j] << std::endl;
+//		}
+//	glEnd( );
+//
+//}
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) 
 {
@@ -710,11 +761,11 @@ void initSand() {
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, colSSbo);
 }
 
-void initAxes() {
-	AxesList = glGenLists( 1 );
-	glNewList( AxesList, GL_COMPILE );
-		glLineWidth( 3 );
-			Axes( 1.f );
-		glLineWidth( 1. );
-	glEndList( );
-}
+//void initAxes() {
+//	AxesList = glGenLists( 1 );
+//	glNewList( AxesList, GL_COMPILE );
+//		glLineWidth( 3 );
+//			Axes( 1.f );
+//		glLineWidth( 1. );
+//	glEndList( );
+//}
