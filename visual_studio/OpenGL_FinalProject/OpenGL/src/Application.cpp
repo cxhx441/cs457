@@ -105,10 +105,8 @@ GLuint rotSSbo;
 GLuint rotSpeedSSbo;
 GLuint colSSbo;
 void initSand();
-//void initAxes();
 
 
-//void Axes(float);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
@@ -116,10 +114,15 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void update_viewport_size(GLFWwindow* window);
 void imgui_show_example_frame();
 void imgui_show_sand_frame();
-glm::mat4 mv();
-glm::mat4 mvp();
-glm::mat3 n(glm::mat4 mat);
+glm::mat4 mv() { return view * model; }
+glm::mat4 mvp() { return projection * view * model; }
+glm::mat3 n(glm::mat4 mat) { return glm::mat3(glm::inverseTranspose(mat)); }
 
+// for axes
+void initAxes();
+unsigned int axes_vao;
+unsigned int axes_vbo;
+unsigned int axes_ibo;
 
 int main(void)
 {
@@ -168,59 +171,9 @@ int main(void)
 		GLCall(glBlendEquation(GL_FUNC_ADD)); // default, but being explicit
 
 		initSand();
+		initAxes();
 
-		// axes
-		float axes_positions[] = {
-			 1.0f, 0.0f, 0.0f, // lines
-			 0.0f, 0.0f, 0.0f,
-			 0.0f, 1.0f, 0.0f,
-			 0.0f, 0.0f, 0.0f,
-			 0.0f, 0.0f, 1.0f,
-
-			 1.1f, -0.05f, 0.0f, // X
-			 1.2f,  0.05f, 0.0f,
-			 1.1f,  0.05f, 0.0f,
-			 1.2f, -0.05f, 0.0f,
-
-			 0.0f,  1.1f,  0.0f, // Y
-			 0.0f,  1.16f, 0.0f,
-			-0.05f, 1.2f,  0.0f,
-			 0.0f,  1.16f, 0.0f,
-			 0.05f, 1.2f,  0.0f,
-
-			 0.0f,  0.05f, 1.2f, // Z
-			 0.0f,  0.05f, 1.1f,
-			 0.0f, -0.05f, 1.2f,
-			 0.0f, -0.05f, 1.1f,
-			 0.0f,  0.0f,  1.125f,
-			 0.0f,  0.0f,  1.175f,
-		};
-		unsigned int axes_indices[] = {
-			0, 1, 2, 3, 4,         // lines
-			5, 6, 7, 8,            // X
-			9, 10, 11, 12, 13,     // Y
-			14, 15, 16, 17, 18, 19 // Z	
-		};
-
-		unsigned int axes_vao;
-		GLCall(glGenVertexArrays(1, &axes_vao));
-		GLCall(glBindVertexArray(axes_vao));
-		unsigned int axes_vbo;
-		GLCall(glGenBuffers(1, &axes_vbo));
-		GLCall(glBindBuffer(GL_ARRAY_BUFFER, axes_vbo));
-		GLCall(glBufferData(GL_ARRAY_BUFFER, 3 * 20 * sizeof(float), axes_positions, GL_STATIC_DRAW));
-		GLCall(glEnableVertexAttribArray(0)); // sets to currently bound vao
-		//GLCall(glEnableVertexArrayAttrib(axes_vao, 0)); // should do the same thing? 
-		GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof (float), 0))
-		GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
-		unsigned int axes_ibo;
-		GLCall(glGenBuffers(1, &axes_ibo));
-		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, axes_ibo));
-		GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 20 * sizeof(unsigned int), axes_indices, GL_STATIC_DRAW));
-		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-
-
-		// vertex positions
+		/* SETUP PLATE */
 		float plate_positions[] = {
 			-0.5f, 0.0f, -0.5f,   0.0f, 0.0f,   0.0f, 1.0f, 0.0f, // 0 vertex.xyz, tex.st, normal.xyz
 			 0.5f, 0.0f, -0.5f,   1.0f, 0.0f,   0.0f, 1.0f, 0.0f, // 1
@@ -251,12 +204,14 @@ int main(void)
 		plate_vb.Unbind();
 		plate_ib.Unbind();
 
+
+		/* SETUP SHADERS */
 		Shader axes_shader = Shader("res/shaders/Axes.glsl");
 		Shader plate_shader = Shader("res/shaders/Plate.glsl");
 
 		Renderer renderer;
 
-		// gui setup
+		/* SETUP GUI */
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO(); (void)io;
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
@@ -582,10 +537,6 @@ void imgui_show_example_frame()
 	}
 }
 
-glm::mat4 mv() { return view * model; }
-glm::mat4 mvp() { return projection * view * model; }
-glm::mat3 n(glm::mat4 mat) { return glm::mat3(glm::inverseTranspose(mat)); }
-
 void initSand() {
 	SandShaderProgram = glCreateProgram( );
 	read_compile_link_validate_shader(SandShaderProgram, "res/shaders/Sand/Sand.vert", "vertex");
@@ -679,3 +630,56 @@ void initSand() {
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, colSSbo);
 }
 
+void initAxes() {
+	/* SETUP AXES */
+	float axes_positions[] = {
+		 1.0f, 0.0f, 0.0f, // lines
+		 0.0f, 0.0f, 0.0f,
+		 0.0f, 1.0f, 0.0f,
+		 0.0f, 0.0f, 0.0f,
+		 0.0f, 0.0f, 1.0f,
+
+		 1.1f, -0.05f, 0.0f, // X
+		 1.2f,  0.05f, 0.0f,
+		 1.1f,  0.05f, 0.0f,
+		 1.2f, -0.05f, 0.0f,
+
+		 0.0f,  1.1f,  0.0f, // Y
+		 0.0f,  1.16f, 0.0f,
+		-0.05f, 1.2f,  0.0f,
+		 0.0f,  1.16f, 0.0f,
+		 0.05f, 1.2f,  0.0f,
+
+		 0.0f,  0.05f, 1.2f, // Z
+		 0.0f,  0.05f, 1.1f,
+		 0.0f, -0.05f, 1.2f,
+		 0.0f, -0.05f, 1.1f,
+		 0.0f,  0.0f,  1.125f,
+		 0.0f,  0.0f,  1.175f,
+	};
+	unsigned int axes_indices[] = {
+		0, 1, 2, 3, 4,         // lines
+		5, 6, 7, 8,            // X
+		9, 10, 11, 12, 13,     // Y
+		14, 15, 16, 17, 18, 19 // Z	
+	};
+
+	//unsigned int axes_vao;
+	GLCall(glGenVertexArrays(1, &axes_vao));
+	GLCall(glBindVertexArray(axes_vao));
+
+	//unsigned int axes_vbo;
+	GLCall(glGenBuffers(1, &axes_vbo));
+	GLCall(glBindBuffer(GL_ARRAY_BUFFER, axes_vbo));
+	GLCall(glBufferData(GL_ARRAY_BUFFER, 3 * 20 * sizeof(float), axes_positions, GL_STATIC_DRAW));
+	GLCall(glEnableVertexAttribArray(0)); // sets to currently bound vao
+	//GLCall(glEnableVertexArrayAttrib(axes_vao, 0)); // should do the same thing? 
+	GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof (float), 0))
+	GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+	//unsigned int axes_ibo;
+	GLCall(glGenBuffers(1, &axes_ibo));
+	GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, axes_ibo));
+	GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 20 * sizeof(unsigned int), axes_indices, GL_STATIC_DRAW));
+	GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+}
