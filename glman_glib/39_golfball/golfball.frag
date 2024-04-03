@@ -29,23 +29,23 @@ main( )
     const int gridResolution = 8;
 
     // calculate the lat and long steps
-    float thetaStep = PI / float(gridResolution);
-    float phiStep = 2.0 * PI / float(gridResolution);
+    float thetaStep = 2.0 * PI / float(gridResolution);
+    float phiStep = PI / float(gridResolution);
 
     // calc lat and long of cur frag
     //float theta = atan2(vMC.x, vMC.z); // theta
     //float phi = atan2(vMC.x, vMC.y); // phi
-    float theta = acos(vMC.y); // theta
-    float phi = atan2(vMC.z, vMC.x); // phi
+    float theta = atan2(vMC.z, vMC.x); // phi
+    float phi = acos(vMC.y); // theta
 
     // Calculate the closest circle center base on lat and long
     float closestTheta = round(theta / thetaStep) * thetaStep;
     float closestPhi = round(phi / phiStep) * phiStep;
 
     // calc dist from frag to cosest circle center
-    float distanceToCenter = distance(vMC, vec3(sin(closestTheta) * cos(closestPhi),
-                                                cos(closestTheta),
-                                                sin(closestTheta) * sin(closestPhi)));
+    float distanceToCenter = distance(vMC, vec3(sin(closestPhi) * cos(closestTheta),
+                                                cos(closestPhi),
+                                                sin(closestPhi) * sin(closestTheta)));
 
     // If the distance is within the circle radius, color the fragment
     if (distanceToCenter <= (0.25 * abs(vMC.y) * PI / gridResolution)) {
