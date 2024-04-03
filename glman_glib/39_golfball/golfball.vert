@@ -15,7 +15,7 @@ main( )
 {
 
     vST = gl_MultiTexCoord0.st;
-    vMC = gl_Vertex.xyz;
+    vMC = normalize(gl_Vertex.xyz);
     vec3 tnorm = normalize( gl_NormalMatrix * gl_Normal );
     vec3 ECposition = ( gl_ModelViewMatrix * gl_Vertex ).xyz;
     vLightIntensity = abs( dot( normalize(LIGHTPOS - ECposition), tnorm ) );

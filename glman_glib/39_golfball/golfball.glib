@@ -7,8 +7,6 @@ Vertex       golfball.vert
 Fragment     golfball.frag
 
 Program Dots         \
-    uCount   <1. 5. 100.> \
-    uTol     <0. 0. .5>  \
     #uDiam   <0.1 0.1 1.> \
     #uA      <0 1. 10>   \
     #uAmp    <-5. 0. 5.> \
