@@ -105,7 +105,7 @@ void main() {
 		}
 
 		vec3 reflected = reflect(vel.xyz, normalize(plate_normal));
-		if (reflected.y < 0) reflected *= -1;
+		//if (reflected.y < 0) reflected *= -1;
 
 		// get standard bounce
 		vec3 stnd_bounce = reflected * uBounceFactor;

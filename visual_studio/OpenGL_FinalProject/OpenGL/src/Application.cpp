@@ -611,15 +611,15 @@ void initSand() {
 	struct color *colors = (struct color *) glMapBufferRange( GL_SHADER_STORAGE_BUFFER, 0, NUM_PARTICLES * sizeof(struct color), bufMask );
 	for( int i = 0; i < NUM_PARTICLES; i++ ) {
 		// RainbowColors
-		//colors[ i ].r = ((rand() % 100)) / 100.f;
-		//colors[ i ].g = ((rand() % 100)) / 100.f;
-		//colors[ i ].b = ((rand() % 100)) / 100.f;
-		//colors[ i ].a = 1.;
-		//SAND COLORS
-		colors[ i ].r = (236.f + (rand()%40 -10.f)) / 255.f;
-		colors[ i ].g = (204.f + (rand()%40 -10.f)) / 255.f;
-		colors[ i ].b = (162.f + (rand()%40 -10.f)) / 255.f;
+		colors[ i ].r = ((rand() % 100)) / 100.f;
+		colors[ i ].g = ((rand() % 100)) / 100.f;
+		colors[ i ].b = ((rand() % 100)) / 100.f;
 		colors[ i ].a = 1.;
+		//SAND COLORS
+		//colors[ i ].r = (236.f + (rand()%40 -10.f)) / 255.f;
+		//colors[ i ].g = (204.f + (rand()%40 -10.f)) / 255.f;
+		//colors[ i ].b = (162.f + (rand()%40 -10.f)) / 255.f;
+		//colors[ i ].a = 1.;
 	}
 	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
 
