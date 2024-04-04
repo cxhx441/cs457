@@ -11,6 +11,11 @@ const float PI = 3.14159265;
 
 
 //circle_equation = (s-s0)^2 + (t-t0)^2 = r^2
+vec3 sphericalToCartesian(float theta, float phi) {
+    return vec3(sin(phi) * cos(theta),
+                cos(phi),
+                sin(phi) * sin(theta));
+}
 
 float
 atan2(float y, float x)
@@ -26,29 +31,34 @@ atan2(float y, float x)
 void
 main( )
 {
-    const int gridResolution = 8;
+    //const int gridResolution = 8; // at equator
+    const float circlePatternRadius = 2 * PI / 200; // thru trial and error
+    int gridResolution = int(1.f / circlePatternRadius); // at equator
+    //gridResolution = 8;
 
-    // calculate the lat and long steps
-    float thetaStep = 2.0 * PI / float(gridResolution);
-    float phiStep = PI / float(gridResolution);
 
     // calc lat and long of cur frag
-    //float theta = atan2(vMC.x, vMC.z); // theta
-    //float phi = atan2(vMC.x, vMC.y); // phi
     float theta = atan2(vMC.z, vMC.x); // phi
-    float phi = acos(vMC.y); // theta
+    float phi = acos(vMC.y); // theta // this works because H is unit vector (normalized)
 
-    // Calculate the closest circle center base on lat and long
-    float closestTheta = round(theta / thetaStep) * thetaStep;
-    float closestPhi = round(phi / phiStep) * phiStep;
+    // calculate the lat and long steps
+    float gridResThetaFactor = 1.f; //sin(0.5*theta);
+    float gridResPhiFactor = 1.f; //sin(phi);
+    int adjGridResTheta = int(gridResolution * gridResThetaFactor);
+    int adjGridResPhi = int(gridResolution * gridResPhiFactor);
+    float thetaStep = 2.0 * PI / float(adjGridResTheta);
+    float phiStep = PI / float(adjGridResPhi);
 
-    // calc dist from frag to cosest circle center
-    float distanceToCenter = distance(vMC, vec3(sin(closestPhi) * cos(closestTheta),
-                                                cos(closestPhi),
-                                                sin(closestPhi) * sin(closestTheta)));
+    // Calculate the closest circle center base on lat and long (quantize?)
+    float quantizedTheta = round(theta / thetaStep) * thetaStep;
+    float quantizedPhi = round(phi / phiStep) * phiStep;
+
+    // calc dist from frag to closest circle center
+    float distanceToCenter = distance(vMC, sphericalToCartesian(quantizedTheta, quantizedPhi));
 
     // If the distance is within the circle radius, color the fragment
-    if (distanceToCenter <= (0.25 * abs(vMC.y) * PI / gridResolution)) {
+    //if (distanceToCenter <= (0.25 * abs(vMC.y) * PI / gridResolution)) {
+    if (distanceToCenter <= 0.0314) {
         gl_FragColor = vec4(1.f);
     } else {
         discard;
