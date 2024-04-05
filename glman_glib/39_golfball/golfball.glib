@@ -4,9 +4,11 @@ Perspective 90
 LookAt      0 0 2  0 0 0  0 1 0
 
 Vertex       golfball.vert
-Fragment     golfball.frag
+Fragment     golfball_arclen.frag
 
 Program Dots         \
+    uRadius < 0.001 0.0225 0.31>\
+    uFactor < 0.1 1 2>
     #uDiam   <0.1 0.1 1.> \
     #uA      <0 1. 10>   \
     #uAmp    <-5. 0. 5.> \

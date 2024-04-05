@@ -7,6 +7,7 @@ in vec3  vColor;
 in float vLightIntensity;
 
 uniform float uRadius;
+uniform float uFactor;
 
 const vec3 WHITE = vec3( 1., 1., 1. );
 const float PI = 3.14159265;
@@ -35,35 +36,35 @@ main( )
 {
     //const int gridResolution = 8; // at equator
     //const float circlePatternRadius = 2 * PI / 200; // thru trial and error
+    float arcLen = uRadius * 2.f;
     int gridResolution = int(1.f / uRadius); // at equator
     //gridResolution = 8;
-
 
     // calc lat and long of cur frag
     float theta = atan2(vMC.z, vMC.x); // phi
     float phi = acos(vMC.y); // theta // this works because H is unit vector (normalized)
 
     // calculate the lat and long steps
-    float gridResThetaFactor = 1.f; //sin(0.5*theta);
-    float gridResPhiFactor = 1.f; //sin(phi);
-    int adjGridResTheta = int(gridResolution * gridResThetaFactor);
-    int adjGridResPhi = int(gridResolution * gridResPhiFactor);
-    float thetaStep = 2 * PI / float(adjGridResTheta);
-    float phiStep = PI / float(adjGridResPhi);
+    //int adjGridResTheta = int(gridResolution * gridResThetaFactor);
+    //int adjGridResPhi = int(gridResolution * gridResPhiFactor);
+    //float thetaStep = 2 * PI / float(adjGridResTheta);
+    //float phiStep = PI / float(adjGridResPhi);
+    float phiStep = arcLen * PI;
+    float quantizedPhi = round(phi / phiStep) * phiStep;
 
     // Calculate the closest circle center base on lat and long (quantize?)
+    float thetaStep = arcLen * PI / sin(quantizedPhi);
     float quantizedTheta = round(theta / thetaStep) * thetaStep;
-    float quantizedPhi = round(phi / phiStep) * phiStep;
 
     // calc dist from frag to closest circle center
     float distanceToCenter = distance(vMC, sphericalToCartesian(quantizedTheta, quantizedPhi));
 
     // If the distance is within the circle radius, color the fragment
     //if (distanceToCenter <= (0.25 * abs(vMC.y) * PI / gridResolution)) {
-    if (distanceToCenter <= uRadius) {
+    if (distanceToCenter <= arcLen * uFactor) {
         gl_FragColor = vec4(1.f);
     } else {
-        discard;
+        gl_FragColor = vec4(0.f, 0.f, 0.f, 1.f);
     }
 
     //gl_FragColor = vec4( rgb, 1. );
