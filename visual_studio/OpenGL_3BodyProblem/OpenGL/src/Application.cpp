@@ -26,11 +26,14 @@
 // multiplication factors for input interaction:
 const float ANGFACT = 1.f;
 const float SCLFACT = 0.005f;
-const float MINSCALE = 0.05f;
-const float SCROLL_WHEEL_CLICK_FACTOR = 5.f;
+//const float MINSCALE = 0.05f;
+const float MINSCALE = 1e-30f;
+const float SCROLL_WHEEL_CLICK_FACTOR = 1.f;
 const int LEFT   = 0; // per https://www.glfw.org/docs/3.3/group__buttons.html
 const int RIGHT  = 1;
 const int MIDDLE = 2;
+
+const int TIME_MULTIPLIER = 1000000;
 
 // non-constant global variables:
 int		ActiveButton;			// current button that is down
@@ -103,50 +106,33 @@ glm::f64 gravitationalForce(body* b0, body* b1)
 	if (r == 0) return 0;
 	return (G * b0->mass * b1->mass) / (r*r);
 }
-void updateBodies(body* b0, body* b1, body* b2) {
+void updateBodies(body* b0, body* b1) {
 	// Update positions
 	//b0->position += b0->velocity * (1.f / framerate);
 	//b1->position += b1->velocity * (1.f / framerate);
 	//b2->position += b2->velocity * (1.f / framerate);
-	glm::f64 fr = 1.0f / 120.f;
-	fr *= 10000000;
-	b0->position += b0->velocity * fr;
-	b1->position += b1->velocity * fr;
-	b2->position += b2->velocity * fr;
+	glm::f64 dt = 1.0f / framerate;
+	dt *= TIME_MULTIPLIER;
+	b0->position += b0->velocity * dt;
+	b1->position += b1->velocity * dt;
 
 
-	// Update Velocities
 	glm::f64 gF01 = gravitationalForce(b0, b1);
-	glm::f64 gF02 = gravitationalForce(b0, b2);
-	glm::f64 gF12 = gravitationalForce(b1, b2);
 
 	glm::f64vec3 dir01 = normalize(b1->position - b0->position);
-	glm::f64vec3 dir02 = normalize(b2->position - b0->position);
-	glm::f64vec3 dir10 = normalize(b0->position - b1->position);
-	glm::f64vec3 dir12 = normalize(b2->position - b1->position);
-	glm::f64vec3 dir20 = normalize(b0->position - b2->position);
-	glm::f64vec3 dir21 = normalize(b1->position - b2->position);
+	glm::f64vec3 dir10 = -dir01;
 
 	glm::f64vec3 f01 = dir01 * gF01;
-	glm::f64vec3 f02 = dir02 * gF02;
 	glm::f64vec3 f10 = dir10 * gF01;
-	glm::f64vec3 f12 = dir12 * gF12;
-	glm::f64vec3 f20 = dir20 * gF02;
-	glm::f64vec3 f21 = dir21 * gF12;
 
-	glm::f64vec3 f0 = f01 + f02;
-	glm::f64vec3 f1 = f10 + f12;
-	glm::f64vec3 f2 = f20 + f21;
+	glm::f64vec3 f0 = f01;
+	glm::f64vec3 f1 = f10;
 
 	glm::f64vec3 a0 = f0 / b0->mass;
 	glm::f64vec3 a1 = f1 / b1->mass;
-	glm::f64vec3 a2 = f2 / b2->mass;
 	
-	b0->velocity += a0 * fr;
-	b1->velocity += a1 * fr;
-	b2->velocity += a2 * fr;
-
-
+	b0->velocity += a0 * dt;
+	b1->velocity += a1 * dt;
 }
 
 // for axes
@@ -204,67 +190,19 @@ int main(void)
 		initAxes();
 		initBody();
 		float axes_len = 1.f;
-		body b0;
-		body b1;
-		body b2;
-		//b0.mass = 1e3;
-		//b1.mass = 1e3;
-		//b2.mass = 1e3;
-		//b0.radius = 1;
-		//b1.radius = 2;
-		//b2.radius = 3;
-		//b0.position = glm::f64vec3(1, 0, 0);
-		//b1.position = glm::f64vec3(0, 1, 0);
-		//b2.position = glm::f64vec3(0, 0, 1);
-		//b0.color = glm::vec3(1, 0, 0);
-		//b1.color = glm::vec3(0, 1, 0);
-		//b2.color = glm::vec3(0, 0, 1);
-		//b0.velocity = glm::f64vec3(1.f, 0.f, 1.f) * 0.01;
-		//b1.velocity = glm::f64vec3(1.f, 1.f, 0.f) * 0.01;
-		//b2.velocity = glm::f64vec3(0.f, 1.f, 1.f) * 0.01;
-		//b0.velocity = glm::vec3(0.f);
-		//b1.velocity = glm::vec3(0.f);
-		//b2.velocity = glm::vec3(0.f);
-		//float axes_len = 6.371e6;
-		b0.mass = 5.9722e24;
-		b1.mass = 7.348e22;
-		b2.mass = 1;
-		b0.radius = 6.371e6;
-		b1.radius = 1.7374e6;
-		b2.radius = 0.1;
-		b0.position = glm::f64vec3(0.f);
-		b1.position = glm::f64vec3(0.f, 0.f, 3.84e8);
-		b2.position = glm::f64vec3(1);
-		b0.color = glm::vec3(1, 0, 0);
-		b1.color = glm::vec3(0, 1, 0);
-		b2.color = glm::vec3(0, 0, 1);
-		//b0.velocity = glm::vec3(.1f, 0, 0);
-		//b1.velocity = glm::vec3(0, .1f, 0);
-		//b2.velocity = glm::vec3(0, 0, .1f);
-		b0.velocity = glm::f64vec3(0.f);
-		//b1.velocity = glm::f64vec3(0, 0, gravitationalForce(&b0, &b1));
-		b1.velocity = glm::f64vec3(1022, 0, 0);
-		b2.velocity = glm::f64vec3(0.f);
+		body earth;
+		earth.mass		= 5.9722e24;
+		earth.radius	= 6.371e6;
+		earth.position	= glm::f64vec3(0.f);
+		earth.color		= glm::vec3(1, 0, 0);
+		earth.velocity	= glm::f64vec3(0.f);
 
-		//b0.mass = 5.97e9;
-		//b1.mass = 7.35e7;
-		//b2.mass = 0;
-		//b0.radius = 6.37e-9;
-		//b1.radius = 1.74e-9;
-		//b2.radius = 0.1;
-		//b0.position = glm::f64vec3(0.f);
-		//b1.position = glm::f64vec3(3.84e-7, 0.f, 0.f);
-		//b2.position = glm::f64vec3(1);
-		//b0.color = glm::vec3(1, 0, 0);
-		//b1.color = glm::vec3(0, 1, 0);
-		//b2.color = glm::vec3(0, 0, 1);
-		////b0.velocity = glm::vec3(.1f, 0, 0);
-		////b1.velocity = glm::vec3(0, .1f, 0);
-		////b2.velocity = glm::vec3(0, 0, .1f);
-		//b0.velocity = glm::f64vec3(0.f);
-		////b1.velocity = glm::f64vec3(0, 0, gravitationalForce(&b0, &b1));
-		//b1.velocity = glm::f64vec3(0, 0, 1.f);
-		//b2.velocity = glm::f64vec3(0.f);
+		body moon;
+		moon.mass		= 7.348e22;
+		moon.radius		= 1.7374e6;
+		moon.position	= glm::f64vec3(0.f, 0.f, 3.84e8);
+		moon.color		= glm::vec3(0, 1, 0);
+		moon.velocity	= glm::f64vec3(1022, 0, 0);
 
 		/* SETUP SHADERS */
 		Shader axes_shader = Shader("res/shaders/Axes.glsl");
@@ -309,8 +247,8 @@ int main(void)
 			model = glm::mat4(1);
 			view = glm::lookAt(eye, look, up);
 			//view = glm::lookAt(glm::vec3(1.f), look, up);
-			//projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1000.f);
-			projection = glm::perspective(glm::radians(90.f), 1.f, 0.1f, 1000.f);
+			projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1000.f);
+			//projection = glm::perspective(glm::radians(90.f), 1.f, 0.1f, 1000.f);
 			view = glm::rotate(view, glm::radians(Yrot), glm::vec3(0., 1., 0.));
 			view = glm::rotate(view, glm::radians(Xrot), glm::vec3(1., 0., 0.));
 			view = glm::scale(view, glm::vec3(Scale, Scale, Scale));
@@ -321,31 +259,24 @@ int main(void)
 			GLCall(glBindVertexArray(body_vao));
 			GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, body_ibo));
 
-			// b0
+			// earth
 			GLCall(glPointSize(15 * 2));
-			model = glm::translate(glm::f64mat4(1), b0.position / 1e20);
-			body_shader.SetUniformVec3("uColor", b0.color);
-			body_shader.SetUniform1f("uRadius", b0.radius);
+			model = glm::translate(glm::f64mat4(1), earth.position / 3e8);
+			body_shader.SetUniformVec3("uColor", earth.color);
+			body_shader.SetUniform1f("uRadius", earth.radius);
 			body_shader.SetUniformMat4("uMVP", mvp());
 			GLCall(glDrawElements(GL_POINTS, 1, GL_UNSIGNED_INT, 0));
-			// b1
+			// moon
 			GLCall(glPointSize(15 * 2));
-			model = glm::translate(glm::f64mat4(1), b1.position / 3e8);
-			body_shader.SetUniformVec3("uColor", b1.color);
-			body_shader.SetUniform1f("uRadius", b1.radius);
-			body_shader.SetUniformMat4("uMVP", mvp());
-			GLCall(glDrawElements(GL_POINTS, 1, GL_UNSIGNED_INT, 0));
-			// b2
-			GLCall(glPointSize(15 * 1));
-			model = glm::translate(glm::f64mat4(1), b2.position);
-			body_shader.SetUniformVec3("uColor", b2.color);
-			body_shader.SetUniform1f("uRadius", b2.radius);
+			model = glm::translate(glm::f64mat4(1), moon.position / 3e8);
+			body_shader.SetUniformVec3("uColor", moon.color);
+			body_shader.SetUniform1f("uRadius", moon.radius);
 			body_shader.SetUniformMat4("uMVP", mvp());
 			GLCall(glDrawElements(GL_POINTS, 1, GL_UNSIGNED_INT, 0));
 
 			GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-			updateBodies(&b0, &b1, &b2);
+			updateBodies(&moon, &earth);
 
 			// DRAW AXES
 			axes_shader.Bind();
