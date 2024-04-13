@@ -1,0 +1,138 @@
+#version 430 compatibility
+#extension GL_ARB_compute_shader : enable
+#extension GL_ARB_shader_storage_buffer_object : enable
+
+layout( local_size_x = 128, local_size_y = 1, local_size_z = 1 ) in;
+
+layout( std430, binding=4 ) buffer Pos      { vec4 Positions[]; }; // array of structures 
+
+layout( std430, binding=5 ) buffer Vel      { vec4 Velocities[]; }; // array of structures 
+
+layout( std430, binding=6 ) buffer Rot      { vec4 Rotations[]; }; // array of structures 
+
+layout( std430, binding=7 ) buffer RotSpeed { vec4 RotationSpeeds[]; }; // array of structures 
+
+//layout( std430, binding=8 ) buffer Color    { vec4 Colors[]; }; // array of structures 
+
+
+uniform float uGravityMetersPerSec;
+uniform float uDeltaTime;
+uniform float uSpawnHeight;
+uniform float uDeathHeight;
+uniform float uPlateDim;
+uniform float uBounceFactor;
+uniform int uChladni_N, uChladni_M;
+uniform float uChladni_DX, uChladni_DZ;
+uniform float uChladniResAmp;
+uniform bool uQuickRespawn;
+uniform bool uUseChladniNormals;
+uniform float uTime;
+uniform float uCubeSize;
+float RotMult = .5f; 
+
+const float PI = 3.14159265359;
+const float y_fudge = -0.01;
+
+float PlateHeight;
+vec4 pos, vel;
+vec4 newPos, newVel;
+ivec3 collisionPos, newCollisionPos;
+int collisionIndex, newCollisionIndex;
+uint index;
+
+bool within_plate_boundary(vec4 p){
+	float d = uPlateDim / 2.f;
+	return p.x > -d && p.x < d && p.z > -d && p.z < d  ;
+}
+
+float chladni_res_factor(float x, float z, float n, float m, float L)
+{
+    // range of -2 to 2
+	x += uChladni_DX;
+	z += uChladni_DZ;
+    float chladni_val = cos(n * PI * x / L) * cos(m * PI * z / L) + cos(m * PI * x / L) * cos(n * PI * z / L);
+    // return a range of 0 to 1;
+    return abs(chladni_val) / 2.f;
+}
+
+float random(vec2 st) { return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123); }
+
+void respawn()
+{
+	float rand_xz = random(pos.xz);
+	float rand_zx = random(pos.zx);
+	float rand_t = random(vec2(gl_GlobalInvocationID)) - 0.5;
+	Positions[index].y = uSpawnHeight * (1+rand_t);
+	Positions[index].x = rand_xz * uPlateDim - uPlateDim/2.f;
+	Positions[index].z = rand_zx * uPlateDim - uPlateDim/2.f;
+	Velocities[index] = vec4(0.f, 0.f, 0.f, 1.f);
+	//Rotations[index].w += sign(Rotations[index].w) * 2.5 * uDeltaTime;
+}
+
+void main() {
+	index = gl_GlobalInvocationID.x;	
+
+	pos    = Positions[index];
+	vel    = Velocities[index];
+	newPos = pos + vec4(vel.xyz * uDeltaTime, 1.f);
+	newVel = vel + uGravityMetersPerSec * uDeltaTime;
+	
+	//pos.y -= uCubeSize;
+	//newPos.y -= uCubeSize;
+	//PlateHeight = 0.0025; //+ uCubeSize/2.f;
+	//PlateHeight = uCubeSize;
+	PlateHeight = 0.0;
+
+	if (uQuickRespawn) { 
+		respawn(); 
+	}
+	else if ((pos.y >= PlateHeight && newPos.y <= PlateHeight || newPos == pos) && within_plate_boundary(pos) )
+	//else if (within_plate_boundary(pos) && pos.y >= 0 && newPos.y <= PlateHeight || newPos == pos);
+	{
+		// get plate normal
+		vec3 plate_normal = vec3(0.f, 1.f, 0.f);
+		if (uUseChladniNormals){
+			float d = 0.1f;
+			float west  = chladni_res_factor(pos.x - d, pos.z    , uChladni_N, uChladni_M, uPlateDim);
+			float east  = chladni_res_factor(pos.x + d, pos.z    , uChladni_N, uChladni_M, uPlateDim);
+			float north = chladni_res_factor(pos.x    , pos.z - d, uChladni_N, uChladni_M, uPlateDim);
+			float south = chladni_res_factor(pos.x    , pos.z + d, uChladni_N, uChladni_M, uPlateDim);
+			vec3 stangent = normalize(vec3(d * 2., east-west, 0.    ));
+			vec3 ttangent = normalize(vec3(0     , south-north, d * 2.));
+			plate_normal = normalize(cross( ttangent, stangent ));
+			//if (plate_normal.y <= 0) plate_normal *= -1;
+			//plate_normal = vec3((east-west), 1.f, (south-north));
+		}
+
+		vec3 reflected = reflect(vel.xyz, normalize(plate_normal));
+		//if (reflected.y < 0) reflected *= -1;
+
+		// get standard bounce
+		vec3 stnd_bounce = reflected * uBounceFactor;
+
+		// add velocity from force of moving plate
+		float chladni_val = chladni_res_factor(pos.x, pos.z, uChladni_N, uChladni_M, uPlateDim);
+		vec3 chladni_bounce = plate_normal * chladni_val * uChladniResAmp;
+
+		// combine
+		newVel = vec4(stnd_bounce + chladni_bounce, 1.f);
+		//newVel = vec4(0.0f + chladni_bounce, 1.f);
+
+		// update vars
+		Velocities[index].xyz = newVel.xyz;
+		Positions[index].xyz += newVel.xyz * uDeltaTime;
+	}
+	else if (newPos.y <= uDeathHeight || pos.y <= uDeathHeight)  // RESPAWN
+	{
+		//respawn();
+	}
+	else // FALL NORMALLY
+	{
+		float rot_sign = sign(Rotations[index].w);
+		Rotations[index].w += rot_sign * RotationSpeeds[index].s * RotMult * uDeltaTime;
+		//Rotations[index].w = mod(Rotations[index].w + RotationSpeeds[index].s*RotMult, 6.28);
+		Positions[index] = newPos;
+		Velocities[index].y = newVel.y;
+		Rotations[index].w += sign(Rotations[index].w) * 2.5 * uDeltaTime;
+	}
+}
